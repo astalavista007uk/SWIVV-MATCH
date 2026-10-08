@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS provider_categories text[] NOT NULL DEFAULT '{}'::text[];

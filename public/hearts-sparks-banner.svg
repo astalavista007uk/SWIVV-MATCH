@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-label="Illustration de cœurs et de rencontre amoureuse">
+  <defs>
+    <linearGradient id="hsbg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e6f4f5"/>
+      <stop offset="0.5" stop-color="#fdeef1"/>
+      <stop offset="1" stop-color="#e6f4f5"/>
+    </linearGradient>
+    <g id="sparkle">
+      <path d="M0-14 C2-4 4-2 14 0 C4 2 2 4 0 14 C-2 4 -4 2 -14 0 C-4-2 -2-4 0-14Z"/>
+    </g>
+  </defs>
+  <rect width="1200" height="320" fill="url(#hsbg)"/>
+
+  <!-- floating hearts, dating palette -->
+  <g fill="#ffb3c1">
+    <path d="M100 210c-18-11-30-22-30-38 0-12 9-21 21-21 8 0 14 4 17 10 4-6 10-10 17-10 12 0 21 9 21 21 0 16-12 27-30 38l-8 5-8-5z"/>
+    <path d="M1100 210c-18-11-30-22-30-38 0-12 9-21 21-21 8 0 14 4 17 10 4-6 10-10 17-10 12 0 21 9 21 21 0 16-12 27-30 38l-8 5-8-5z"/>
+    <path d="M250 110c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+    <path d="M950 110c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+  </g>
+  <g fill="#ff6b8a" opacity="0.9">
+    <path d="M180 260c-12-8-20-15-20-26 0-8 6-14 14-14 5 0 10 3 12 7 2-4 7-7 12-7 8 0 14 6 14 14 0 11-8 18-20 26l-6 4-6-4z"/>
+    <path d="M1020 260c-12-8-20-15-20-26 0-8 6-14 14-14 5 0 10 3 12 7 2-4 7-7 12-7 8 0 14 6 14 14 0 11-8 18-20 26l-6 4-6-4z"/>
+  </g>
+  <g fill="#007782" opacity="0.16">
+    <circle cx="320" cy="250" r="6"/>
+    <circle cx="880" cy="250" r="6"/>
+    <circle cx="420" cy="60" r="5"/>
+    <circle cx="780" cy="60" r="5"/>
+  </g>
+
+  <!-- sparkles -->
+  <g fill="#ff6b8a">
+    <use href="#sparkle" x="480" y="80" transform="translate(480 80) scale(1)"/>
+    <use href="#sparkle" x="720" y="80" transform="translate(720 80) scale(0.8)" opacity="0.8"/>
+    <use href="#sparkle" x="600" y="55" transform="translate(600 55) scale(0.6)" opacity="0.6"/>
+  </g>
+  <g fill="#007782" opacity="0.5">
+    <use href="#sparkle" transform="translate(360 160) scale(0.5)"/>
+    <use href="#sparkle" transform="translate(840 160) scale(0.5)"/>
+  </g>
+
+  <!-- left profile -->
+  <g>
+    <circle cx="450" cy="175" r="62" fill="#ffffff" stroke="#007782" stroke-width="7"/>
+    <circle cx="450" cy="156" r="21" fill="#007782"/>
+    <path d="M411 210c6-21 21-32 39-32s33 11 39 32" fill="none" stroke="#007782" stroke-width="13" stroke-linecap="round"/>
+    <g transform="translate(498 215)">
+      <circle r="24" fill="#ff6b8a" stroke="#ffffff" stroke-width="5"/>
+      <path d="M0 8c-8-5-13-10-13-17 0-5 4-9 9-9 3 0 6 2 7 4 1-2 4-4 7-4 5 0 9 4 9 9 0 7-5 12-13 17l-3 2-3-2z" fill="#fff"/>
+    </g>
+  </g>
+
+  <!-- right profile -->
+  <g>
+    <circle cx="750" cy="175" r="62" fill="#ffffff" stroke="#ff6b8a" stroke-width="7"/>
+    <circle cx="750" cy="156" r="21" fill="#ff6b8a"/>
+    <path d="M711 210c6-21 21-32 39-32s33 11 39 32" fill="none" stroke="#ff6b8a" stroke-width="13" stroke-linecap="round"/>
+    <g transform="translate(702 215)">
+      <circle r="24" fill="#007782" stroke="#ffffff" stroke-width="5"/>
+      <path d="M0 8c-8-5-13-10-13-17 0-5 4-9 9-9 3 0 6 2 7 4 1-2 4-4 7-4 5 0 9 4 9 9 0 7-5 12-13 17l-3 2-3-2z" fill="#fff"/>
+    </g>
+  </g>
+
+  <!-- central dating heart burst -->
+  <g>
+    <circle cx="600" cy="165" r="52" fill="#ffffff" stroke="#ffb3c1" stroke-width="4"/>
+    <path d="M600 188c-26-17-45-33-45-57 0-17 13-30 30-30 11 0 20 6 25 14 5-8 14-14 25-14 17 0 30 13 30 30 0 24-19 40-45 57l-10 6-10-6z" fill="#ff6b8a"/>
+    <path d="M592 150c-6-4-10-8-10-14 0-5 4-9 9-9 3 0 6 2 7 4 1-2 4-4 7-4 1 0 2 0 3 1-1 8-7 15-16 22z" fill="#ffffff" opacity="0.85"/>
+  </g>
+  <line x1="505" y1="165" x2="552" y2="165" stroke="#007782" stroke-width="5" stroke-dasharray="10 10" opacity="0.4" stroke-linecap="round"/>
+  <line x1="648" y1="165" x2="695" y2="165" stroke="#ff6b8a" stroke-width="5" stroke-dasharray="10 10" opacity="0.4" stroke-linecap="round"/>
+</svg>

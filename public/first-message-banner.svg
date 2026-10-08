@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-label="Illustration d'un premier message entre deux célibataires">
+  <defs>
+    <linearGradient id="fmbg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e6f4f5"/>
+      <stop offset="0.5" stop-color="#fdeef1"/>
+      <stop offset="1" stop-color="#e6f4f5"/>
+    </linearGradient>
+    <g id="fm-sparkle">
+      <path d="M0-14 C2-4 4-2 14 0 C4 2 2 4 0 14 C-2 4 -4 2 -14 0 C-4-2 -2-4 0-14Z"/>
+    </g>
+  </defs>
+  <rect width="1200" height="320" fill="url(#fmbg)"/>
+
+  <!-- floating mini hearts -->
+  <g fill="#ffb3c1">
+    <path d="M120 220c-18-11-30-22-30-38 0-12 9-21 21-21 8 0 14 4 17 10 4-6 10-10 17-10 12 0 21 9 21 21 0 16-12 27-30 38l-8 5-8-5z"/>
+    <path d="M1080 220c-18-11-30-22-30-38 0-12 9-21 21-21 8 0 14 4 17 10 4-6 10-10 17-10 12 0 21 9 21 21 0 16-12 27-30 38l-8 5-8-5z"/>
+    <path d="M250 100c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+    <path d="M950 100c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+  </g>
+  <g fill="#ff6b8a">
+    <use href="#fm-sparkle" transform="translate(600 62) scale(0.7)" opacity="0.8"/>
+    <use href="#fm-sparkle" transform="translate(330 240) scale(0.5)" opacity="0.6"/>
+    <use href="#fm-sparkle" transform="translate(870 240) scale(0.5)" opacity="0.6"/>
+  </g>
+  <g fill="#007782" opacity="0.45">
+    <use href="#fm-sparkle" transform="translate(420 70) scale(0.5)"/>
+    <use href="#fm-sparkle" transform="translate(780 70) scale(0.5)"/>
+  </g>
+
+  <!-- incoming message: him -->
+  <g>
+    <circle cx="400" cy="215" r="34" fill="#ffffff" stroke="#007782" stroke-width="6"/>
+    <circle cx="400" cy="207" r="12" fill="#007782"/>
+    <path d="M382 231c4-12 12-18 18-18s14 6 18 18" fill="none" stroke="#007782" stroke-width="7" stroke-linecap="round"/>
+    <rect x="450" y="130" width="220" height="76" rx="22" fill="#ffffff" stroke="#007782" stroke-width="6"/>
+    <path d="M450 180l-22 10 22 12z" fill="#ffffff" stroke="#007782" stroke-width="6" stroke-linejoin="round"/>
+    <line x1="478" y1="156" x2="642" y2="156" stroke="#007782" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+    <line x1="478" y1="180" x2="590" y2="180" stroke="#007782" stroke-width="9" stroke-linecap="round" opacity="0.35"/>
+  </g>
+
+  <!-- central heart: the spark -->
+  <g>
+    <circle cx="600" cy="232" r="34" fill="#ff6b8a" stroke="#ffffff" stroke-width="5"/>
+    <path d="M600 242c-14-9-24-18-24-30 0-9 7-16 16-16 6 0 11 3 13 7 3-4 8-7 13-7 9 0 16 7 16 16 0 12-10 21-24 30l-5 3-5-3z" fill="#fff"/>
+  </g>
+
+  <!-- reply message: her -->
+  <g>
+    <rect x="530" y="130" width="220" height="76" rx="22" fill="#ff6b8a"/>
+    <path d="M750 180l22 10-22 12z" fill="#ff6b8a"/>
+    <line x1="558" y1="156" x2="722" y2="156" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.95"/>
+    <line x1="610" y1="180" x2="722" y2="180" stroke="#ffffff" stroke-width="9" stroke-linecap="round" opacity="0.55"/>
+    <circle cx="800" cy="215" r="34" fill="#ffffff" stroke="#ff6b8a" stroke-width="6"/>
+    <circle cx="800" cy="207" r="12" fill="#ff6b8a"/>
+    <path d="M782 231c4-12 12-18 18-18s14 6 18 18" fill="none" stroke="#ff6b8a" stroke-width="7" stroke-linecap="round"/>
+  </g>
+</svg>

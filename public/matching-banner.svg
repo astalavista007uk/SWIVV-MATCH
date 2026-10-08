@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" role="img" aria-label="Illustration de deux profils compatibles reliés par un cœur">
+  <defs>
+    <linearGradient id="mbg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e6f4f5"/>
+      <stop offset="0.5" stop-color="#fdeef1"/>
+      <stop offset="1" stop-color="#e6f4f5"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="240" fill="url(#mbg)"/>
+  <g fill="#ffb3c1">
+    <path d="M70 150c-18-11-30-22-30-38 0-12 9-21 21-21 8 0 14 4 17 10 4-6 10-10 17-10 12 0 21 9 21 21 0 16-12 27-30 38l-8 5-8-5z"/>
+    <path d="M1130 150c-18-11-30-22-30-38 0-12 9-21 21-21 8 0 14 4 17 10 4-6 10-10 17-10 12 0 21 9 21 21 0 16-12 27-30 38l-8 5-8-5z"/>
+  </g>
+  <g fill="#007782" opacity="0.25">
+    <circle cx="180" cy="60" r="6"/>
+    <circle cx="1020" cy="60" r="6"/>
+    <circle cx="240" cy="195" r="5"/>
+    <circle cx="960" cy="195" r="5"/>
+    <circle cx="420" cy="55" r="5"/>
+    <circle cx="780" cy="55" r="5"/>
+  </g>
+  <line x1="470" y1="120" x2="730" y2="120" stroke="#007782" stroke-width="5" stroke-dasharray="14 12" opacity="0.45" stroke-linecap="round"/>
+  <g>
+    <circle cx="420" cy="120" r="58" fill="#ffffff" stroke="#007782" stroke-width="7"/>
+    <circle cx="420" cy="103" r="20" fill="#007782"/>
+    <path d="M383 152c6-20 20-30 37-30s31 10 37 30" fill="none" stroke="#007782" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g>
+    <circle cx="780" cy="120" r="58" fill="#ffffff" stroke="#ff6b8a" stroke-width="7"/>
+    <circle cx="780" cy="103" r="20" fill="#ff6b8a"/>
+    <path d="M743 152c6-20 20-30 37-30s31 10 37 30" fill="none" stroke="#ff6b8a" stroke-width="12" stroke-linecap="round"/>
+  </g>
+  <g fill="#007782">
+    <path d="M600 118c-22-14-38-28-38-48 0-14 11-25 25-25 9 0 17 5 21 12 4-7 12-12 21-12 14 0 25 11 25 25 0 20-16 34-38 48l-8 5-8-5z"/>
+  </g>
+  <g>
+    <rect x="548" y="150" width="104" height="44" rx="22" fill="#ffffff" stroke="#007782" stroke-width="5"/>
+    <text x="600" y="180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="bold" fill="#007782">92 %</text>
+  </g>
+</svg>
