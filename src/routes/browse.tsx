@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, Heart } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchReactionCounts, getPhotoReaction, isMemberUuid, REACTIONS, reactionOf, togglePhotoReaction, type ReactionId } from "@/lib/swivv-reactions";
 import { SWIVV_PROFILES } from "@/lib/swivv-data";
 import { displayPct, load } from "@/routes/matches";
 import { realDistance, useMyCity } from "@/lib/location-distance";
@@ -67,6 +70,47 @@ function SwivvBrowse() {
     "match",
   );
   const [, force] = useState(0);
+  const [myUid, setMyUid] = useState<string | null>(null);
+  // ponytail: reactor+type only, never the photo column (750KB data URLs) — latest reaction per reactor, 200 cap; admin/stats read the full rows when they need photos
+  const [reactRecv, setReactRecv] = useState<Record<string, { emoji: string; label: string }>>({});
+  useEffect(() => {
+    if (!myUid) {
+      setReactRecv({});
+      return;
+    }
+    let live = true;
+    (supabase as any).from("swivv_photo_reactions")
+      .select("reactor_id,reaction,updated_at").eq("owner_id", myUid)
+      .order("updated_at", { ascending: false }).limit(200)
+      .then(({ data }: any) => {
+        if (!live) return;
+        const m: Record<string, { emoji: string; label: string }> = {};
+        for (const r of (data ?? [])) {
+          const id = `u:${r.reactor_id}`;
+          if (!m[id]) {
+            const def = reactionOf(String(r.reaction));
+            m[id] = { emoji: def?.emoji ?? "❤️", label: def?.label ?? "Réaction" };
+          }
+        }
+        setReactRecv(m);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [myUid]);
+  const [openReact, setOpenReact] = useState<string | null>(null);
+  const pendingReact = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setMyUid(data.session?.user.id ?? null)).catch(() => {});
+  }, []);
+  useEffect(() => {
+    const close = (e: PointerEvent) => {
+      if (!(e.target as Element | null)?.closest?.("[data-reactscope]")) setOpenReact(null);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
   const viewer = useMyCity();
   const members = usePublicProfiles();
   // ponytail: seeds + real members in one pool — dedupe by id if a seed ever ships a u: id
@@ -109,7 +153,7 @@ function SwivvBrowse() {
       // ponytail: likes/matches/recus views reuse the text category pipeline — dedicated pages if they need their own layout
       if (search.type === "likes" && !getLikes().includes(p.id)) return false;
       if (search.type === "matches" && !isMatch(p.id)) return false;
-      if (search.type === "recus" && !isLikedBack(p.id)) return false;
+      if (search.type === "recus" && !(isLikedBack(p.id) || reactRecv[p.id])) return false;
       if (gender !== "all" && p.gender !== gender) return false;
       if (onlineOnly && !p.online) return false;
       if (lookingFor !== "all" && p.lookingFor !== lookingFor) return false;
@@ -140,9 +184,50 @@ function SwivvBrowse() {
     // ponytail: ?? guard — one dateless profile used to kill the whole page; backfilled upstream, this just sorts them last
     if (effectiveSort === "recent") sorted.sort((a, b) => (b.joinedAt ?? "").localeCompare(a.joinedAt ?? ""));
     return sorted;
-  }, [query, category, gender, onlineOnly, lookingFor, minAge, maxAge, sort, search.type, viewer, maxDist, pool]);
+  }, [query, category, gender, onlineOnly, lookingFor, minAge, maxAge, sort, search.type, viewer, maxDist, pool, reactRecv]);
 
   const intents = ["all", "Mariage", "Relation sérieuse", "Relation amoureuse", "Belle histoire"];
+
+  // ponytail: one batched counts call per grid (no N+1); refreshed after each successful tap — realtime channel if taps ever need live totals
+  const recentUrls = useMemo(
+    () => (cat === "photos récentes" ? [...new Set(results.flatMap((p) => p.photos))].slice(0, 300) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cat, results],
+  );
+  const [reactCounts, setReactCounts] = useState<Record<string, Partial<Record<ReactionId, number>>>>({});
+  useEffect(() => {
+    let live = true;
+    if (!recentUrls.length) {
+      setReactCounts({});
+      return;
+    }
+    fetchReactionCounts(recentUrls).then((m) => {
+      if (live) setReactCounts(m);
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentUrls.join("|")]);
+  const reactTo = async (key: string, owner: string, photo: string, kind: ReactionId) => {
+    if (pendingReact.current.has(photo)) return;
+    pendingReact.current.add(photo);
+    force((x) => x + 1);
+    try {
+      const r = await togglePhotoReaction(isMemberUuid(owner) ? owner : null, photo, kind);
+      if (!r.ok) {
+        if (r.error === "own") toast.error("Vous ne pouvez pas réagir à vos propres photos.");
+        else toast.error("Réaction non enregistrée. Réessayez.");
+      } else {
+        setOpenReact(null);
+        const m = await fetchReactionCounts(recentUrls);
+        setReactCounts(m);
+      }
+    } finally {
+      pendingReact.current.delete(photo);
+      force((x) => x + 1);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -266,11 +351,23 @@ function SwivvBrowse() {
         </div>
         {cat === "photos récentes" ? (
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {results.flatMap((p) => p.photos.map((src, i) => ({ p, src, i }))).map(({ p, src, i }) => (
-              <article key={`${p.id}-${i}`} className="overflow-hidden rounded-lg bg-white">
+          {results.flatMap((p) => p.photos.map((src, i) => ({ p, src, i }))).map(({ p, src, i }) => (
+            <article key={`${p.id}-${i}`} className="overflow-hidden rounded-lg bg-white">
+              <div className="group relative">
                 <Link to="/member/$id" params={{ id: p.id }} onClick={() => bumpProfileView(p.id)}>
                   <img src={src} alt={`Photo ${i + 1} de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                 </Link>
+                {!(myUid && p.id === `u:${myUid}`) && (
+                  <PhotoReact
+                    photo={src}
+                    open={openReact === `${p.id}-${i}`}
+                    counts={reactCounts[src]}
+                    pending={pendingReact.current.has(src)}
+                    onToggle={() => setOpenReact(openReact === `${p.id}-${i}` ? null : `${p.id}-${i}`)}
+                    onPick={(kind) => reactTo(`${p.id}-${i}`, p.id, src, kind)}
+                  />
+                )}
+              </div>
                 <div className="p-2.5">
                   <p className="text-[15px] font-medium text-[#333]">
                     {p.name}, {p.age}
@@ -290,7 +387,7 @@ function SwivvBrowse() {
                 <Link to="/member/$id" params={{ id: p.id }}>
                   <img src={p.photo} alt={`Photo de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                 </Link>
-                <PhotoCountBadge n={p.photos.length} />
+                <PhotoCountBadge n={p.photos.length} className={search.type === "recus" && getMatches().includes(p.id) ? "left-[49px]" : ""} />
                   <button
                     type="button"
                     onClick={() =>
@@ -313,6 +410,12 @@ function SwivvBrowse() {
                   {(search.type === "matches" || search.type === "recus") && getMatches().includes(p.id) && (
                     <span className="absolute bottom-2 left-2 flex gap-1 rounded-full bg-white/90 p-1.5 shadow-sm">
                       <Heart aria-label="Like réciproque" className="h-4 w-4 fill-red-500 text-red-500" />
+                    </span>
+                  )}
+                  {search.type === "recus" && reactRecv[p.id] && (
+                    <span title={`A réagi à vos photos : ${reactRecv[p.id].label}`} className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2 py-1 text-sm shadow-sm">
+                      <span aria-hidden="true">{reactRecv[p.id].emoji}</span>
+                      <span className="sr-only">A réagi : {reactRecv[p.id].label}</span>
                     </span>
                   )}
                 </div>
@@ -339,6 +442,61 @@ function SwivvBrowse() {
         {results.length === 0 && <p className="mt-6 text-sm text-[#777]">Aucun profil avec ces filtres. Élargis ta recherche.</p>}
       </main>
       <SwivvFooter />
+    </div>
+  );
+}
+
+// ponytail: hover reveals on desktop (CSS group-hover), tap pins on touch (open state) — one markup for both; counts live in the toolbar so cards stay clean; Esc + outside-tap close
+function PhotoReact({ photo, open, counts, pending, onToggle, onPick }: {
+  photo: string;
+  open: boolean;
+  counts: Partial<Record<ReactionId, number>> | undefined;
+  pending: boolean;
+  onToggle: () => void;
+  onPick: (kind: ReactionId) => void;
+}) {
+  const mine = getPhotoReaction(photo);
+  const total = Object.values(counts ?? {}).reduce((a, b) => a + (b ?? 0), 0);
+  return (
+    <div
+      data-reactscope
+      className="absolute inset-x-0 bottom-0 flex flex-col items-end gap-1 p-2"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && open) onToggle();
+      }}
+    >
+      <div
+        role="group"
+        aria-label="Choisir une réaction"
+        className={`flex max-w-full flex-wrap justify-end gap-0.5 rounded-full bg-black/55 px-2 py-1.5 backdrop-blur-sm transition-opacity motion-safe:duration-200 ${open ? "opacity-100" : "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100"}`}
+      >
+        {REACTIONS.map((r) => (
+          <button
+            key={r.id}
+            type="button"
+            title={r.label}
+            aria-label={`Réagir : ${r.label}`}
+            aria-pressed={mine === r.id}
+            disabled={pending}
+            onClick={() => onPick(r.id)}
+            className={`rounded-full px-1.5 py-1 text-xl leading-none transition motion-safe:active:scale-125 ${mine === r.id ? "bg-white/90 ring-2 ring-[#e91e63]" : "hover:bg-white/20"} disabled:opacity-50`}
+          >
+            <span aria-hidden="true">{r.emoji}</span>
+            {(counts?.[r.id] ?? 0) > 0 && <span className="ml-0.5 align-middle text-[11px] font-semibold text-white">{counts?.[r.id]}</span>}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        aria-label={total > 0 ? `Réagir à cette photo (${total} réaction${total > 1 ? "s" : ""})` : "Réagir à cette photo"}
+        className="flex min-h-[36px] min-w-[36px] items-center justify-center gap-1 rounded-full bg-black/55 px-2 text-white backdrop-blur-sm"
+      >
+        <span aria-hidden="true" className="text-lg leading-none">{(mine && reactionOf(mine)?.emoji) || "😊"}</span>
+        {total > 0 && <span className="text-[11px] font-semibold">{total}</span>}
+      </button>
     </div>
   );
 }

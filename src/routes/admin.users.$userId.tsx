@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { audit, useAdminRole } from "@/lib/admin";
+import { reactionOf } from "@/lib/swivv-reactions";
+import { profileCompleteness, REQUIRED_PROFILE_FIELDS } from "@/lib/swivv-auth";
+import { SwivvVoicePlayer } from "@/components/swivv-voice-player";
 
 export const Route = createFileRoute("/admin/users/$userId")({
   component: AdminUserDetail,
@@ -41,6 +44,8 @@ function AdminUserDetail() {
   const [notifs, setNotifs] = useState<any[]>([]);
   const [likesSent, setLikesSent] = useState<any[]>([]);
   const [likesRecv, setLikesRecv] = useState<any[]>([]);
+  // ponytail: no photo column (member photos are ~750KB data URLs) — emoji + reactor + date is enough for moderation; open the Photos tab for the image itself
+  const [photoRx, setPhotoRx] = useState<any[]>([]);
   const [matches, setMatches] = useState<any[]>([]);
   const [blocksOut, setBlocksOut] = useState<any[]>([]);
   const [blocksIn, setBlocksIn] = useState<any[]>([]);
@@ -65,7 +70,8 @@ function AdminUserDetail() {
     const miss = { v: false };
     try {
       const q = supabase as any;
-      const [p, st, n, rep, v, t, c, nt, m, ls, lr, ma, bo, bi, vr, au] = await Promise.all([
+      // ponytail: any[] tuple — 17 parallel fetches exceed Promise.all's inferred arity and collapse to {}; a typed client if this page ever grows more sources
+      const [p, st, n, rep, v, t, c, nt, m, ls, lr, ma, bo, bi, vr, au, rx]: any[] = await Promise.all([
         safe(q.from("swivv_profiles").select("data,updated_at").eq("user_id", userId).maybeSingle(), miss),
         safe(q.from("swivv_user_status").select("status").eq("user_id", userId).maybeSingle(), miss),
         safe(q.from("swivv_internal_notes").select("*").eq("target_kind", "user").eq("target_id", userId).order("created_at", { ascending: false }).limit(50), miss),
@@ -82,6 +88,7 @@ function AdminUserDetail() {
         safe(q.from("swivv_blocks").select("blocker_id,created_at").eq("blocked_id", userId).order("created_at", { ascending: false }).limit(200), miss),
         safe(q.from("swivv_profile_views").select("viewer_id,created_at").eq("viewed_id", userId).order("created_at", { ascending: false }).limit(200), miss),
         safe(q.from("swivv_audit_log").select("action,actor_id,created_at,metadata").eq("target_id", userId).order("created_at", { ascending: false }).limit(100), miss),
+        safe<any[]>(q.from("swivv_photo_reactions").select("reactor_id,reaction,created_at").eq("owner_id", userId).order("created_at", { ascending: false }).limit(200), miss),
       ]);
       setMissing(miss.v);
       if ((p as any)?.data) {
@@ -103,6 +110,7 @@ function AdminUserDetail() {
       setBlocksIn(bi ?? []);
       setViewsRecv(vr ?? []);
       setAuditTrail(au ?? []);
+      setPhotoRx(rx ?? []);
       if ((m ?? []).length > 0) audit("admin.user.messages", "user", userId, { count: (m ?? []).length });
       // resolve counterpart names in one query
       const ids = new Set<string>();
@@ -112,6 +120,7 @@ function AdminUserDetail() {
       }));
       grab(ls ?? [], "liked_id");
       grab(lr ?? [], "liker_id");
+      grab(rx ?? [], "reactor_id");
       grab(ma ?? [], "user_a", "user_b");
       grab(bo ?? [], "blocked_id");
       grab(bi ?? [], "blocker_id");
@@ -215,16 +224,15 @@ function AdminUserDetail() {
 
   const repSent = reports.filter((r) => r.reporter_id === userId);
   const repRecv = reports.filter((r) => r.reported_user_id === userId);
+  // ponytail: same 44-field definition as the app (imported, not copied — a local formula drifted to 80% vs the app's 89% once already)
   const completeness = useMemo(() => {
-    const checks: [string, boolean][] = [
-      ["Bio", !!d.bio],
-      ["Tagline", !!d.tagline],
-      ["Centres d'intérêt", Array.isArray(d.interests) ? d.interests.length > 0 : !!d.interests],
-      ["Métier", !!d.occupation],
-      ["Photos", (d.photos ?? []).length > 0],
-    ];
-    const done = checks.filter(([, ok]) => ok).length;
-    return { pct: Math.round((done / checks.length) * 100), missing: checks.filter(([, ok]) => !ok).map(([k]) => k), photos: (d.photos ?? []).length };
+    const missing = (REQUIRED_PROFILE_FIELDS as string[]).filter((k) => {
+      const v = (d as any)?.[k];
+      if (Array.isArray(v)) return v.length === 0;
+      if (typeof v === "number") return !Number.isFinite(v);
+      return !String(v ?? "").trim();
+    });
+    return { pct: profileCompleteness(d), missing, photos: (d.photos ?? []).length };
   }, [d]);
 
   // ponytail: browser mirrors (data.likes/matches) stand in until the social migration lands — server rows win when both exist; mirrors carry no timestamps
@@ -331,7 +339,7 @@ function AdminUserDetail() {
   }
 
   function exportJson() {
-    const bundle = { userId, exportedAt: new Date().toISOString(), status, profile: d, reports, verif, tickets, cases, notifs, messagesMeta: messages, likesSent, likesRecv, matches, blocksOut, blocksIn, viewsRecv, auditTrail, risk };
+    const bundle = { userId, exportedAt: new Date().toISOString(), status, profile: d, reports, verif, tickets, cases, notifs, messagesMeta: messages, likesSent, likesRecv, photoRx, matches, blocksOut, blocksIn, viewsRecv, auditTrail, risk };
     const url = URL.createObjectURL(new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" }));
     const a = document.createElement("a");
     a.href = url;
@@ -406,6 +414,7 @@ function AdminUserDetail() {
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {stat("Likes envoyés", sentAll.length)}
           {stat("Likes reçus", recvAll.length)}
+          {stat("Réactions photos", photoRx.length)}
           {stat("Matchs", matchAll.length)}
           {stat("Messages", messages.length)}
           {stat("Vues reçues", viewsRecv.length)}
@@ -420,9 +429,11 @@ function AdminUserDetail() {
           {d.tagline ? <p className="text-sm italic text-[#777]">« {d.tagline} »</p> : null}
           {d.bio ? <p className="mt-2 text-sm text-[#555]">{d.bio}</p> : null}
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm lg:grid-cols-3">
-            {Object.entries(d).filter(([k, v]) => !["photos", "likes", "matches", "tagline", "bio"].includes(k) && v !== "" && v != null).map(([k, v]) => (
-              <div key={k}><dt className="text-[#999]">{k}</dt><dd className="break-words text-[#333]">{Array.isArray(v) ? v.join(", ") : String(v)}</dd></div>
-            ))}
+            {Object.entries(d).filter(([k, v]) => !["photo", "photos", "likes", "matches", "tagline", "bio"].includes(k) && v !== "" && v != null).map(([k, v]) => {
+              // ponytail: cap rendered length (a stray dataURL in any future field can't page-stretch again) — full value stays one DB query away
+              const s = Array.isArray(v) ? v.join(", ") : String(v);
+              return <div key={k}><dt className="text-[#999]">{k}</dt><dd className="break-words text-[#333]">{s.length > 120 ? `${s.slice(0, 120)}… (${s.length} caractères)` : s}</dd></div>;
+            })}
           </dl>
           <p className="mt-3 text-sm text-[#555]">Complétion : {completeness.pct} % · photos : {completeness.photos}{completeness.missing.length ? ` · manque : ${completeness.missing.join(", ")}` : ""}</p>
           {canAct && (
@@ -463,6 +474,13 @@ function AdminUserDetail() {
             <h2 className="font-medium text-[#333]">Reçus ({recvAll.length})</h2>
             {rows(recvAll, (x, i) => <li key={i} className="text-[#555]"><MemberLink id={x.id} name={nm(x.id)} /> · {x.at ? fmtDate(x.at) : "date inconnue"}</li>, missing ? "Non collecté." : "Aucun.")}
           </div>
+          <div className="rounded-xl bg-white p-4 shadow-sm">
+            <h2 className="font-medium text-[#333]">Réactions photos reçues ({photoRx.length})</h2>
+            {rows(photoRx, (x, i) => {
+              const def = reactionOf(String(x.reaction));
+              return <li key={i} className="text-[#555]"><span aria-hidden="true">{def?.emoji ?? "❤️"}</span> {def?.label ?? x.reaction} — <MemberLink id={x.reactor_id} name={nm(x.reactor_id)} /> · {x.created_at ? fmtDate(x.created_at) : "date inconnue"}</li>;
+            }, missing ? "Non collecté." : "Aucune.")}
+          </div>
         </section>
       )}
 
@@ -481,7 +499,7 @@ function AdminUserDetail() {
             {messages.map((m: any, i: number) => (
               <li key={`${m.created_at}-${i}`} className="text-[#555]">
                 <span className={`font-medium ${m.sender === "me" ? "text-[#e91e63]" : "text-[#333]"}`}>{m.sender === "me" ? "→" : "←"}</span> <MemberLink id={m.peer_id} name={nm(m.peer_id)} />{" "}
-                {canReadMsgs ? (m.audio_url ? <em className="text-[#999]">[vocal]</em> : (m.body || "—")) : <em className="text-[#999]">[contenu masqué]</em>}{" "}
+                {canReadMsgs ? (m.audio_url ? <SwivvVoicePlayer src={m.audio_url} /> : (m.body || "—")) : <em className="text-[#999]">[contenu masqué]</em>}{" "}
                 <span className="text-xs text-[#999]">· {new Date(m.created_at).toLocaleString("fr-FR")}</span>
               </li>
             ))}

@@ -1,4 +1,4 @@
-import { Link, Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { audit } from "@/lib/admin";
@@ -17,11 +17,11 @@ function AdminUsers() {
   const [err, setErr] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
-  // ponytail: $userId is a child route of /admin/users and this layout owns the outlet — without this the detail page never renders
-  const child = (Route as any).useParams({ strict: false }) as { userId?: string };
+  // ponytail: global useParams (not route-bound — a route only sees its own params, so the child $userId was always invisible here and the Outlet never rendered)
+  const { userId: childUserId } = useParams({ strict: false }) as { userId?: string };
 
   useEffect(() => {
-    if (child?.userId) return;
+    if (childUserId) return;
     setErr(null);
     (async () => {
       try {
@@ -40,7 +40,7 @@ function AdminUsers() {
         setErr(e instanceof Error ? e.message : "Chargement impossible.");
       }
     })();
-  }, [child?.userId, tick]);
+  }, [childUserId, tick]);
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -60,7 +60,7 @@ function AdminUsers() {
       <button type="button" onClick={() => setTick((t) => t + 1)} className="font-medium underline">Réessayer</button>
     </p>
   );
-  if (child?.userId) return <Outlet />;
+  if (childUserId) return <Outlet />;
 
   return (
     <div>
@@ -81,10 +81,10 @@ function AdminUsers() {
       </div>
       <div className="mt-4 space-y-2">
         {list.map((r) => (
-          <Link
+          // ponytail: native anchor, not router Link — client-side param navigation silently dies in some mobile browsers; full load always lands (and exposes the real error if the detail itself is broken)
+          <a
             key={r.user_id}
-            to="/admin/users/$userId"
-            params={{ userId: r.user_id }}
+            href={`/admin/users/${r.user_id}`}
             className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm"
           >
             {r.data?.photos?.[0] ? (
@@ -103,7 +103,7 @@ function AdminUsers() {
             <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${r.status === "active" ? "bg-green-100 text-green-800" : r.status === "suspended" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>
               {r.status}
             </span>
-          </Link>
+          </a>
         ))}
         {list.length === 0 && <p className="text-sm text-[#777]">Aucun résultat.</p>}
       </div>

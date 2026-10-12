@@ -10,6 +10,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { startChatSync } from "@/lib/swivv-store";
+import { initNotifyListeners } from "@/lib/swivv-notify";
 import { signOutSwivv, isEmailConfirmed } from "@/lib/swivv-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -137,6 +138,7 @@ function RootComponent() {
   }, []);
 
   useEffect(() => startChatSync(), []);
+  useEffect(() => initNotifyListeners(), []);
 
   // ponytail: "Rester connecté" unchecked = sign out on fresh browser starts (sessionStorage dies with the browser, localStorage doesn't)
   useEffect(() => {

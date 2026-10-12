@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, CircleHelp, CreditCard, User } from "lucide-react";
+import { Bell, ChartColumn, CircleHelp, CreditCard, User } from "lucide-react";
 
-// ponytail: 4 fixed tabs, generate from array if a 5th page joins
+// ponytail: 5 fixed tabs, generate from array if a 6th page joins
 const TABS = [
   { label: "Profil", to: "/parametres", Icon: User },
+  { label: "Mes statistiques", to: "/statistiques", Icon: ChartColumn },
   { label: "Facturation", to: "/facturation", Icon: CreditCard },
   { label: "Notifications", to: "/notifications", Icon: Bell },
   { label: "Aide", to: "/help", Icon: CircleHelp },

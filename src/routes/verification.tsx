@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { BadgeCheck, Camera } from "lucide-react";
 import { getMyProfile, saveMyProfile } from "@/lib/swivv-auth";
+import { onVerified } from "@/lib/swivv-notify";
 import { useAuth } from "@/hooks/use-auth";
 import { faceDescriptor, isSamePerson } from "@/lib/swivv-face";
 import { SwivvLogo } from "@/components/swivv-logo";
@@ -145,7 +146,12 @@ function VerifyPage() {
         return;
       }
       const p = await getMyProfile();
-      if (p) await saveMyProfile({ ...p, verified: true });
+      if (p && !p.verified) {
+        await saveMyProfile({ ...p, verified: true });
+        void onVerified();
+      } else if (p) {
+        await saveMyProfile({ ...p, verified: true });
+      }
       setResult("ok");
     } catch {
       setErr("Vérification impossible. Réessaie.");

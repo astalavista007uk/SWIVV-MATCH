@@ -37,6 +37,11 @@ export function useUnreadNotifs(): number {
           { event: "INSERT", schema: "public", table: "swivv_notifications", filter: `user_id=eq.${data.user.id}` },
           () => refresh(data.user!.id),
         )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "swivv_notifications", filter: `user_id=eq.${data.user.id}` },
+          () => refresh(data.user!.id),
+        )
         .subscribe() as unknown as { unsubscribe: () => void };
     });
     return () => {
@@ -47,7 +52,7 @@ export function useUnreadNotifs(): number {
   return n;
 }
 
-export async function listNotifs(): Promise<SwivvNotif[]> {
+export async function listNotifs(limit = 50, offset = 0): Promise<SwivvNotif[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   const { data } = await supabase
@@ -55,7 +60,7 @@ export async function listNotifs(): Promise<SwivvNotif[]> {
     .select("id,type,title,message,link,read,created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(offset, offset + limit - 1);
   return (data ?? []) as SwivvNotif[];
 }
 
@@ -64,4 +69,10 @@ export async function markNotifsRead(ids: string[]): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   await supabase.from("swivv_notifications").update({ read: true }).eq("user_id", user.id).in("id", ids);
+}
+
+export async function deleteNotif(id: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from("swivv_notifications").delete().eq("user_id", user.id).eq("id", id);
 }

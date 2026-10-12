@@ -1,5 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { Ban, Flag, Heart, MessageCircle, Mic, Square, X } from "lucide-react";
 import { SWIVV_PROFILES, getProfile, type SwivvProfile } from "@/lib/swivv-data";
 import { displayPct, load, MatchTooltip, topMatches } from "@/routes/matches";
@@ -14,6 +14,7 @@ import { SwivvVoicePlayer } from "@/components/swivv-voice-player";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvProfileView } from "@/components/swivv-profile-view";
+import { realDistance, useMyCity } from "@/lib/location-distance";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/member/$id")({
@@ -25,10 +26,19 @@ export const Route = createFileRoute("/member/$id")({
 
 function MemberPage() {
   const { id } = Route.useParams();
-  const nav = useNavigate();
   const [, force] = useState(0);
   const [reportChoice, setReportChoice] = useState("");
   const [reportDetail, setReportDetail] = useState("");
+  // ponytail: native <details> already toggles on re-click — this only adds outside-click dismiss; dialog element if focus-trapping is ever needed
+  const reportRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const close = (e: PointerEvent) => {
+      if (!reportRef.current?.contains(e.target as Node))
+        reportRef.current?.querySelectorAll("details[open]").forEach((d) => d.removeAttribute("open"));
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, []);
   const seed = getProfile(id);
   // ponytail: real members resolve by uid on demand — extend getProfile with a cache if remote lookups multiply
   const [remote, setRemote] = useState<SwivvProfile | null>(null);
@@ -54,6 +64,7 @@ function MemberPage() {
   }, [profile?.id]);
   // ponytail: all hooks above the early return — profile flips null→remote on real-member loads, hook count must not change
   const [msgOpen, setMsgOpen] = useState(false);
+  const viewer = useMyCity();
 
   if (!profile) {
     if (id.startsWith("u:") && !remoteDone) {
@@ -128,7 +139,7 @@ function MemberPage() {
                   {displayPct(profile, load())}% compatible · {profile.lookingFor}
                 </p>
               }
-              items={topMatches(profile, load())}
+              items={topMatches(profile, load(), 12, realDistance(viewer.city, viewer.country, profile))}
             />
           }
           actions={
@@ -138,9 +149,8 @@ function MemberPage() {
                   type="button"
                   onClick={() =>
                     requireSwivvAuth("like", () => {
-                      const r = toggleLike(profile.id);
+                      toggleLike(profile.id);
                       force((x) => x + 1);
-                      if (r.matched) nav({ to: "/messagerie" });
                     })
                   }
                   aria-pressed={liked}
@@ -176,7 +186,7 @@ function MemberPage() {
                   </button>
                 </div>
               ) : (
-                <div className="mt-2 flex gap-2">
+                <div ref={reportRef} className="mt-2 flex gap-2">
                   {reported ? (
                     <span className="flex flex-1 items-center justify-center rounded-md bg-[#f2f2f2] px-3 py-2 text-sm font-medium text-[#777]">
                       <Flag className="mr-1.5 h-4 w-4" /> Signalé

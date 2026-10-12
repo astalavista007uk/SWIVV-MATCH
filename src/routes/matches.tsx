@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Coffee, Globe, Sparkles, User, Users } from "lucide-react";
+import { Coffee, Globe, Heart, Sparkles, User, Users } from "lucide-react";
 import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
 import { realDistance, useMyCity } from "@/lib/location-distance";
-import { getBlocked, hasSavedMatchCriteria, hasVisitedMatchCriteria, markMatchCriteriaSaved, markMatchCriteriaVisited, MATCH_CRITERIA_KEY as KEY, pullMatchCriteria, pushMatchCriteria } from "@/lib/swivv-store";
+import { getBlocked, getLikes, hasSavedMatchCriteria, hasVisitedMatchCriteria, markMatchCriteriaSaved, markMatchCriteriaVisited, MATCH_CRITERIA_KEY as KEY, pullMatchCriteria, pushMatchCriteria, toggleLike } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
-import { SwivvAuthButtons, openAuthModal, usePublicProfiles } from "@/lib/swivv-auth";
+import { SwivvAuthButtons, openAuthModal, requireSwivvAuth, usePublicProfiles } from "@/lib/swivv-auth";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
@@ -264,7 +264,7 @@ export function MatchTooltip({ badge, items, fem }: { badge: ReactNode; items: s
 }
 
 // ponytail: fixed importance order per spec (not CRITERIA order) — derive from CRITERIA if the list ever grows dynamic; unset/unmatched/unfilled lines drop and the list compresses; values raw as stored (relocate ids mapped, the rest French labels)
-// ponytail: km passed by results grids only — member page omits it and the Distance line drops
+// ponytail: km passed by results grids and the member page alike — the Distance line drops itself when unset, too far, or non-finite
 export function topMatches(p: SwivvProfile, c: Record<string, string>, n = 12, km?: number): string[] {
   const test = (k: string) => CRITERIA.find((x) => x.key === k)!.test(p, (c[k] ?? "").trim());
   const set = (k: string) => (c[k] ?? "").trim() !== "";
@@ -330,6 +330,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
     );
   };
   const [savedFlash, setSavedFlash] = useState(false);
+  const [, force] = useState(0);
   const resultsRef = useRef<HTMLElement>(null);
   // ponytail: server criteria win when strictly newer — local edits push on save
   useEffect(() => {
@@ -341,6 +342,8 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
   }, [user]);
   const sought = form.gender === "Homme" ? "man" : "woman";
   const members = usePublicProfiles();
+  // ponytail: above the logged-out early return (Rules of Hooks) — it self-fills when the profile loads
+  const viewer = useMyCity();
   const cities = [...new Set([...FRANCE_CITIES, ...SWIVV_PROFILES.map((p) => p.city)])].sort((a, b) =>
     a.localeCompare(b, "fr"),
   );
@@ -480,7 +483,6 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
 
   // ponytail: both modes rank live from the form (edit = what you'll save, search = scratch filters) — debounced server scoring if profiles ever leave the seed list
   const crit = form;
-  const viewer = useMyCity();
   const rdist = (p: SwivvProfile) => realDistance(viewer.city, viewer.country, p);
   const results = crit
     ? (() => {
@@ -608,6 +610,21 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                         <img src={p.photo} alt={`Photo de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                       </Link>
                       <PhotoCountBadge n={p.photos.length} />
+                      {/* ponytail: same like-toggle as /browse (auth-gated, rerender via force) — extract a <LikeHeart> if a third grid needs it */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          requireSwivvAuth("like", () => {
+                            toggleLike(p.id);
+                            force((x) => x + 1);
+                          })
+                        }
+                        aria-label={getLikes().includes(p.id) ? `Retirer le like de ${p.name}` : `Liker ${p.name}`}
+                        aria-pressed={getLikes().includes(p.id)}
+                        className="absolute right-2 top-2 rounded-full bg-white/90 p-2 shadow-sm"
+                      >
+                        <Heart className={`h-4 w-4 ${getLikes().includes(p.id) ? "fill-red-500 text-red-500" : "text-[#555]"}`} />
+                      </button>
                       {/* ponytail: CSS-only tooltip (no JS lib) — popover API if positioning ever needs flipping */}
                       <span className="absolute left-2 top-2">
                         <MatchTooltip

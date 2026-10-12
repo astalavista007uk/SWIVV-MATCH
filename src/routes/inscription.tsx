@@ -11,6 +11,7 @@ import {
   trackSave,
 } from "@/lib/swivv-auth";
 import { type SwivvProfile } from "@/lib/swivv-data";
+import { PW_LEVELS, pwScore } from "@/lib/swivv-password";
 import { MATCH_CRITERIA_KEY } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -659,19 +660,50 @@ function SignupPage() {
       {f.gender !== "" && seekingOnly()}
     </>
   );
-  const passwordFields = () =>
-    !hasAccount && !editing ? (
+  const passwordFields = () => {
+    if (hasAccount || editing) return null;
+    const level = pwScore(f.password);
+    const match = f.password !== "" && f.password === f.confirm;
+    const mismatch = f.password !== "" && f.confirm !== "" && f.password !== f.confirm;
+    return (
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label>Ton mot de passe (8 caractères min)</Label>
           <input type="password" value={f.password} onChange={(e) => upd("password", e.target.value)} placeholder="••••••••" autoComplete="new-password" className={inputCls} />
+          <div className="mt-1.5 min-h-[2.5rem]" aria-live="polite">
+            <div className="flex gap-1" role="progressbar" aria-valuemin={0} aria-valuemax={3} aria-valuenow={Math.max(level, 0)} aria-label="Force du mot de passe">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-1.5 flex-1 rounded-full" style={{ backgroundColor: level < 0 || i > level ? "#E5E7EB" : PW_LEVELS[level].color }} />
+              ))}
+            </div>
+            {level >= 0 && (
+              <p className="mt-1 text-xs font-medium" style={{ color: PW_LEVELS[level].color }}>
+                {PW_LEVELS[level].label}
+              </p>
+            )}
+          </div>
         </div>
         <div>
           <Label>Confirme ton mot de passe</Label>
           <input type="password" value={f.confirm} onChange={(e) => upd("confirm", e.target.value)} placeholder="••••••••" autoComplete="new-password" className={inputCls} />
+          <div className="mt-1.5 min-h-[1.25rem]" aria-live="polite">
+            {match ? (
+              <p role="status" className="flex items-center gap-1 text-sm font-medium" style={{ color: "#16A34A" }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Passwords match
+              </p>
+            ) : mismatch ? (
+              <p className="text-sm" style={{ color: "#DC2626" }}>
+                Passwords do not match
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
-    ) : null;
+    );
+  };
   const natFields = () => (
     <div>
       <Label>Ta nationalité</Label>
@@ -1162,7 +1194,8 @@ function SignupPage() {
       if (p) {
         fillFromProfile(p);
         // ponytail: restore the saved position (tab switches/mobile kills reset useState) — persisted below on every move; fresh recompute when nothing saved
-        restorePosition();
+        // (missing-only stats pass skips the restore so the jump effect lands on the first unanswered question, not where you left off)
+        if (!missOnly) restorePosition();
         return;
       }
       // Post-confirm return with no server profile yet: restore entered data instead of blank step 0.
@@ -1183,7 +1216,7 @@ function SignupPage() {
           if (!live || !r) return;
           setDoneProfile(r);
           fillFromProfile(r);
-          restorePosition();
+          if (!missOnly) restorePosition();
         });
       }
     });
@@ -1532,6 +1565,10 @@ function SignupPage() {
   };
   // ponytail: header shows profile-field % (same math as mon-profil) so both pages agree — question count stays internal for resume positioning
   const pct = profileCompleteness(buildProfile());
+  // ponytail: missing-only pass (?revoir=manquantes, linked from stats) jumps over answered questions; a plain visit keeps the sequential order — param read once, no router search plumbing
+  const [missOnly, setMissOnly] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("revoir") === "manquantes");
+  const nextOpen = (from: number) => postQs.findIndex((q, i) => i > from && !isFilled(q.key));
+  const prevOpen = (from: number) => postQs.reduce((found, q, i) => (i < from && !isFilled(q.key) ? i : found), -1);
 
   // ponytail: position survives tab switches (recompute-once covers first ever visit) — per-account so a shared browser never resumes someone else's spot
   const resumeRef = useRef(false);
@@ -1574,11 +1611,13 @@ function SignupPage() {
       }
       setQi(qi + 1);
     } else {
-      if (qi >= postQs.length - 1) {
+      // ponytail: missing-only pass jumps to the next unanswered question (n < 0 = none left → finish) — sequential otherwise
+      const n = missOnly && editing ? nextOpen(qi) : qi + 1;
+      if (n < 0 || n >= postQs.length) {
         void finishPost();
         return;
       }
-      setQi(qi + 1);
+      setQi(n);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -1586,18 +1625,22 @@ function SignupPage() {
   function skipQ() {
     // ponytail: post-phase fully skippable (photos too — mon-profil previews the raw row); pre stays mandatory (no account without e-mail/password/age/consent)
     if (phase === "pre" || !flowQ) return;
-    if (qi >= postQs.length - 1) {
+    const n = missOnly && editing ? nextOpen(qi) : qi + 1;
+    if (n < 0 || n >= postQs.length) {
       void finishPost();
       return;
     }
     setErr(null);
-    setQi(qi + 1);
+    setQi(n);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function backQ() {
     setErr(null);
-    if (qi > 0) setQi(qi - 1);
+    if (missOnly && editing && phase === "post") {
+      const p = prevOpen(qi);
+      if (p >= 0) setQi(p);
+    } else if (qi > 0) setQi(qi - 1);
     else if (phase === "post" && !editing) {
       setPhase("pre");
       setQi(preQs.length - 1);
@@ -1729,6 +1772,22 @@ function SignupPage() {
               {busy ? "Un instant…" : lastPre ? "Créer mon compte" : lastPost ? "Terminer" : "Sauvegarder et continuer"}
             </button>
           </div>
+          {editing && missOnly && (
+            <button
+              type="button"
+              onClick={() => {
+                setMissOnly(false);
+                setPhase("post");
+                setQi(0);
+                setErr(null);
+                try { window.history.replaceState(null, "", "/inscription"); } catch {}
+                window.scrollTo({ top: 0 });
+              }}
+              className="mt-3 w-full text-center text-sm font-medium text-[#e91e63] hover:underline"
+            >
+              Revoir tout mon profil
+            </button>
+          )}
         </main>
         <CguAcceptDialog
           open={cguOpen}

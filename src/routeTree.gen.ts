@@ -13,6 +13,7 @@ import { Route as VerificationRouteImport } from './routes/verification'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as TemoignageRouteImport } from './routes/temoignage'
 import { Route as SwipeRouteImport } from './routes/swipe'
+import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as RechercheAvanceeRouteImport } from './routes/recherche-avancee'
 import { Route as PrivacyCentreRouteImport } from './routes/privacy-centre'
 import { Route as ParametresRouteImport } from './routes/parametres'
@@ -71,6 +72,11 @@ const TemoignageRoute = TemoignageRouteImport.update({
 const SwipeRoute = SwipeRouteImport.update({
   id: '/swipe',
   path: '/swipe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatistiquesRoute = StatistiquesRouteImport.update({
+  id: '/statistiques',
+  path: '/statistiques',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RechercheAvanceeRoute = RechercheAvanceeRouteImport.update({
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof ParametresRoute
   '/privacy-centre': typeof PrivacyCentreRoute
   '/recherche-avancee': typeof RechercheAvanceeRoute
+  '/statistiques': typeof StatistiquesRoute
   '/swipe': typeof SwipeRoute
   '/temoignage': typeof TemoignageRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
@@ -336,6 +343,7 @@ export interface FileRoutesByTo {
   '/parametres': typeof ParametresRoute
   '/privacy-centre': typeof PrivacyCentreRoute
   '/recherche-avancee': typeof RechercheAvanceeRoute
+  '/statistiques': typeof StatistiquesRoute
   '/swipe': typeof SwipeRoute
   '/temoignage': typeof TemoignageRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
@@ -382,6 +390,7 @@ export interface FileRoutesById {
   '/parametres': typeof ParametresRoute
   '/privacy-centre': typeof PrivacyCentreRoute
   '/recherche-avancee': typeof RechercheAvanceeRoute
+  '/statistiques': typeof StatistiquesRoute
   '/swipe': typeof SwipeRoute
   '/temoignage': typeof TemoignageRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
@@ -429,6 +438,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/privacy-centre'
     | '/recherche-avancee'
+    | '/statistiques'
     | '/swipe'
     | '/temoignage'
     | '/terms-and-conditions'
@@ -473,6 +483,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/privacy-centre'
     | '/recherche-avancee'
+    | '/statistiques'
     | '/swipe'
     | '/temoignage'
     | '/terms-and-conditions'
@@ -518,6 +529,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/privacy-centre'
     | '/recherche-avancee'
+    | '/statistiques'
     | '/swipe'
     | '/temoignage'
     | '/terms-and-conditions'
@@ -564,6 +576,7 @@ export interface RootRouteChildren {
   ParametresRoute: typeof ParametresRoute
   PrivacyCentreRoute: typeof PrivacyCentreRoute
   RechercheAvanceeRoute: typeof RechercheAvanceeRoute
+  StatistiquesRoute: typeof StatistiquesRoute
   SwipeRoute: typeof SwipeRoute
   TemoignageRoute: typeof TemoignageRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
@@ -603,6 +616,13 @@ declare module '@tanstack/react-router' {
       path: '/swipe'
       fullPath: '/swipe'
       preLoaderRoute: typeof SwipeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/statistiques': {
+      id: '/statistiques'
+      path: '/statistiques'
+      fullPath: '/statistiques'
+      preLoaderRoute: typeof StatistiquesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recherche-avancee': {
@@ -948,6 +968,7 @@ const rootRouteChildren: RootRouteChildren = {
   ParametresRoute: ParametresRoute,
   PrivacyCentreRoute: PrivacyCentreRoute,
   RechercheAvanceeRoute: RechercheAvanceeRoute,
+  StatistiquesRoute: StatistiquesRoute,
   SwipeRoute: SwipeRoute,
   TemoignageRoute: TemoignageRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,

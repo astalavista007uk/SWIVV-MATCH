@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Bell, LifeBuoy, LogIn, LogOut, Menu, Receipt, Settings } from "lucide-react";
+import { Bell, ChartColumn, LifeBuoy, LogIn, LogOut, Menu, Receipt, Settings } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { SwivvProfile } from "@/lib/swivv-data";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +13,7 @@ import { NotifBadge, SwivvTopIcons } from "@/components/swivv-top-icons";
 export type SwivvUser = { name: string; email: string; nationalities: string[] };
 
 // ponytail: single % definition (flow header + mon-profil) — 44 fields mirroring PRE_Q+POST_Q; 0 counts as filled
-const REQUIRED_PROFILE_FIELDS: (keyof SwivvProfile)[] = ["name", "birthdate", "gender", "seeking", "city", "country", "lookingFor", "maritalStatus", "tagline", "bio", "heightCm", "weightKg", "hairColor", "eyeColor", "bodyStyle", "ethnicity", "selfAppearance", "bestFeature", "occupation", "education", "drink", "smoke", "drugs", "eatingHabits", "employmentStatus", "annualIncome", "livingSituation", "willingToRelocate", "hasPets", "wantsMorePets", "haveChildren", "wantMoreChildren", "brothersCount", "sistersCount", "birthRank", "parentsMaritalStatus", "nationality", "firstLanguage", "bornOrConverted", "religion", "religiousValues", "familyValues", "interests", "photos"];
+export const REQUIRED_PROFILE_FIELDS: (keyof SwivvProfile)[] = ["name", "birthdate", "gender", "seeking", "city", "country", "lookingFor", "maritalStatus", "tagline", "bio", "heightCm", "weightKg", "hairColor", "eyeColor", "bodyStyle", "ethnicity", "selfAppearance", "bestFeature", "occupation", "education", "drink", "smoke", "drugs", "eatingHabits", "employmentStatus", "annualIncome", "livingSituation", "willingToRelocate", "hasPets", "wantsMorePets", "haveChildren", "wantMoreChildren", "brothersCount", "sistersCount", "birthRank", "parentsMaritalStatus", "nationality", "firstLanguage", "bornOrConverted", "religion", "religiousValues", "familyValues", "interests", "photos"];
 
 export function profileCompleteness(p: SwivvProfile | null | undefined): number {
   if (!p) return 0;
@@ -623,6 +623,7 @@ export function SwivvAuthButtons() {
           />
           <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-white p-1.5 shadow-lg">
             <Link to="/parametres" className={itemCls}><Settings className={itemIcon} />Réglages du profil</Link>
+            <Link to="/statistiques" className={itemCls}><ChartColumn className={itemIcon} />Mes statistiques</Link>
             <Link to="/facturation" className={itemCls}><Receipt className={itemIcon} />Facturation</Link>
             <Link to="/notifications" className={itemCls}><Bell className={itemIcon} />Notifications</Link>
             <Link to="/help" className={itemCls}><LifeBuoy className={itemIcon} />Centre d&apos;aide</Link>

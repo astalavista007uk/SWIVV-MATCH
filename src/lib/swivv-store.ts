@@ -81,6 +81,7 @@ export type SwivvSettings = {
   rtMessages: boolean;
   rtLiked: boolean;
   rtViewed: boolean;
+  rtReactions: boolean;
   rtFavourite: boolean;
   rtPotential: boolean;
 };
@@ -94,6 +95,7 @@ const DEFAULT_SETTINGS: SwivvSettings = {
   rtMessages: true,
   rtLiked: true,
   rtViewed: true,
+  rtReactions: true,
   rtFavourite: true,
   rtPotential: true,
 };
@@ -331,16 +333,17 @@ export function reportMember(id: string, by?: string, reason?: string) {
   if (!isReported(id)) write(REPORTED_KEY, [...read<string[]>(REPORTED_KEY, []), id]);
   // ponytail: reports double as the moderation outbox (this device only) — server table + admin role when a real back-office lands
   logModReport({ target: id, by: by ?? "", at: new Date().toISOString(), detail: reason });
-  // ponytail: real-user reports also land in the server queue (seed ids stay local-only) — reason comes from the profile dialog, free text lands verbatim in category
-  if (id.startsWith("u:")) {
+  // ponytail: any real-user id reaches the server queue (bare uuid or u:-prefixed — the profile page passes bare) — seeds stay local-only; warn (not throw) so a failed report is visible instead of silent
+  const bare = id.startsWith("u:") ? id.slice(2) : id;
+  if (isUuid(bare)) {
     supabase.auth.getUser().then(({ data }) => {
       if (!data.user) return;
-      void supabase.from("swivv_reports").insert({
+      void (supabase as any).from("swivv_reports").insert({
         reporter_id: data.user.id,
-        reported_user_id: id.slice(2),
+        reported_user_id: bare,
         category: reason ?? "other",
         description: by ? `Signalé par ${by}` : null,
-      });
+      }).then((r: { error: unknown }) => { if (r.error) console.warn("[swivv] report mirror skipped", (r.error as any)?.message ?? r.error); });
     });
   }
 }

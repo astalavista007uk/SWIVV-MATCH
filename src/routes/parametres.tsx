@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SwivvAuthButtons, getMyProfile, openAuthModal, signOutSwivv, useSwivvUser } from "@/lib/swivv-auth";
 import { clearSwivvLocal, getAppLang, isProfileHidden, setAppLang, setProfileHidden } from "@/lib/swivv-store";
 import { deleteAccount as deleteAuthUser } from "@/lib/delete-account.functions";
+import { onSecurityEvent } from "@/lib/swivv-notify";
+import { sendSecurityEmail } from "@/lib/notify.functions";
 import { SwivvSettingsTabs } from "@/components/swivv-settings-tabs";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
@@ -95,6 +97,8 @@ function SettingsPage() {
     }
     setNewEmail("");
     setMsg("Vérifie ta nouvelle adresse e-mail pour confirmer le changement.");
+    void onSecurityEvent("Ton adresse e-mail a été modifiée.");
+    void sendSecurityEmail({ data: { label: "Ton adresse e-mail a été modifiée." } }).catch(() => {});
     return true;
   }
 
@@ -129,6 +133,8 @@ function SettingsPage() {
     setPw("");
     setPw2("");
     setMsg("Mot de passe mis à jour.");
+    void onSecurityEvent("Ton mot de passe a été modifié.");
+    void sendSecurityEmail({ data: { label: "Ton mot de passe a été modifié." } }).catch(() => {});
     return true;
   }
 
