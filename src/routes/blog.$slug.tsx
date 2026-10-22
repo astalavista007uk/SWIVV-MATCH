@@ -1,13 +1,70 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Clock, ChevronRight, Heart } from "lucide-react";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useState } from "react";
+import { ArrowLeft, Clock, ChevronRight, Heart, Share2, Check } from "lucide-react";
 import { SwivvLogo } from "@/components/swivv-logo";
-import { SwivvAuthButtons } from "@/lib/swivv-auth";
+import { SwivvAuthButtons, useSwivvUser } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { getBannerStyle, getPostBySlug, getRelatedPosts } from "@/lib/blog-data";
+import { ldJson, OG_IMAGE, pageHead, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/blog/$slug")({
-  head: () => ({ meta: [{ title: "Blog — SWIVV" }] }),
+  head: ({ params }) => {
+    const post = getPostBySlug(params.slug);
+    if (!post) return { meta: [{ title: "Blog — SWIVV MATCH" }] };
+    const url = `${SITE_URL}/blog/${post.slug}`;
+    const base = pageHead(
+      `${post.title} — Blog SWIVV MATCH`,
+      post.excerpt,
+      `/blog/${post.slug}`,
+      "article",
+    );
+    return {
+      meta: [
+        ...base.meta,
+        { property: "og:image", content: OG_IMAGE },
+        { property: "article:published_time", content: post.date },
+      ],
+      links: base.links,
+      scripts: [
+        ldJson({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "BlogPosting",
+              headline: post.title,
+              description: post.excerpt,
+              datePublished: post.date,
+              dateModified: post.date,
+              inLanguage: "fr-FR",
+              mainEntityOfPage: { "@type": "WebPage", "@id": url },
+              // ponytail: raster article image (the built-in thumbnails are SVG, which many crawlers reject) — swap for per-post JPGs when available
+              image: OG_IMAGE,
+              author: { "@type": "Organization", name: "Équipe SWIVV" },
+              publisher: {
+                "@type": "Organization",
+                name: "SWIVV MATCH",
+                logo: {
+                  "@type": "ImageObject",
+                  url: `${SITE_URL}/swivv-match-logo-transparent.png`,
+                },
+              },
+            },
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Blog", item: `${SITE_URL}/blog` },
+                { "@type": "ListItem", position: 2, name: post.title, item: url },
+              ],
+            },
+          ],
+        }),
+      ],
+    };
+  },
+  loader: ({ params }) => {
+    if (!getPostBySlug(params.slug)) throw notFound();
+  },
   component: BlogPostPage,
 });
 
@@ -18,22 +75,26 @@ function formatDate(iso: string) {
 function BlogPostPage() {
   const { slug } = Route.useParams();
   const post = getPostBySlug(slug);
+  const user = useSwivvUser();
+  const [copied, setCopied] = useState(false);
 
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-3xl px-4 py-8">
-          <Link to="/blog" className="mb-4 inline-flex items-center gap-1 text-sm text-[#555]">
-            <ArrowLeft className="h-4 w-4" /> Blog
-          </Link>
-          <div className="rounded-xl border border-dashed border-border p-10 text-center text-[#777]">
-            Article introuvable.
-          </div>
-        </div>
-        <SwivvFooter />
-      </div>
-    );
-  }
+  // ponytail: native share sheet first (mobile), clipboard fallback (desktop) — no third-party SDKs; per-network buttons if analytics ever needs the channel
+  const share = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post?.title ?? "Blog SWIVV", text: post?.excerpt, url });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
+  if (!post) return null;
 
   const related = getRelatedPosts(slug, 3);
   const bannerStyle = getBannerStyle(slug);
@@ -43,9 +104,6 @@ function BlogPostPage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <Link to="/blog" className="text-sm text-[#555]">
-          Blog
-          </Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -128,12 +186,30 @@ function BlogPostPage() {
           </div>
         )}
 
+        {/* Signup CTA (logged-out only — one shared banner, no per-article copy) */}
+        {!user && (
+          <div className="mt-8 rounded-2xl bg-[#e91e63] p-6 text-center text-white">
+            <p className="text-lg font-semibold">Trouvez votre Swivv</p>
+            <p className="mt-1 text-sm text-white/85">Inscription gratuite, sans carte bancaire.</p>
+            <Link to="/inscription" className="mt-4 inline-block rounded-md bg-white px-6 py-2.5 font-medium text-[#e91e63]">
+              Créer mon profil gratuit
+            </Link>
+          </div>
+        )}
+
         {/* Share / back */}
         <div className="mt-8 flex items-center justify-between border-t border-border pt-4">
           <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-[#e91e63]">
             <ArrowLeft className="h-4 w-4" /> Tous les articles
           </Link>
-          <span className="text-sm text-[#999]">© SWIVV</span>
+          <button
+            type="button"
+            onClick={share}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3.5 py-1.5 text-sm font-medium text-[#555] hover:text-[#e91e63]"
+          >
+            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Share2 className="h-4 w-4" />}
+            {copied ? "Lien copié !" : "Partager"}
+          </button>
         </div>
 
         {/* Related posts */}

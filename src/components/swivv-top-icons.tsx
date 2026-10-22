@@ -11,7 +11,7 @@ export function MessageHeartBadge() {
   return (
     <span
       aria-label={`${n} message${n > 1 ? "s" : ""} non lu${n > 1 ? "s" : ""}`}
-      className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
+      className="absolute right-1 -top-0.5 flex h-4 w-4 items-center justify-center"
     >
       <Heart className="h-4 w-4" fill="#E91E63" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
@@ -31,7 +31,7 @@ export function NotifBadge() {
     >
       <Heart className="h-4 w-4" fill="#E91E63" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
-        {n > 9 ? "9+" : n}
+        {n > 99 ? "99+" : n}
       </span>
     </span>
   );

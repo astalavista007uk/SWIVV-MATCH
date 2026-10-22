@@ -1,13 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Heart, X, Zap } from "lucide-react";
 import { SWIVV_PROFILES } from "@/lib/swivv-data";
-import { getBlocked, getLikes, toggleLike } from "@/lib/swivv-store";
+import { getLikes, isThreadBlocked, subscribe, toggleLike } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
 import { SwivvAuthButtons, openAuthModal, requireSwivvAuth } from "@/lib/swivv-auth";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/swipe")({
   head: () => ({ meta: [{ title: "SWIVV SWIPE — SWIVV" }] }),
@@ -16,6 +17,17 @@ export const Route = createFileRoute("/swipe")({
 
 function SwipePage() {
   const { user, loading } = useAuth();
+  const nav = useNavigate();
+  // ponytail: own avatar read once from the header cache — no profile fetch, the modal only needs a thumbnail
+  const [myPhoto] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("swivv-avatar");
+    } catch {
+      return null;
+    }
+  });
+  // ponytail: matched profile kept only for the "C'est un match" popup — never persisted, the real match row already lives in MATCHES_KEY
+  const [match, setMatch] = useState<typeof SWIVV_PROFILES[number] | null>(null);
   // ponytail: sessionStorage (per-tab, dies with the tab) — move to profile row in DB if skip-history ever needs to survive devices
   const [passed, setPassed] = useState<Set<string>>(() => {
     try {
@@ -33,6 +45,8 @@ function SwipePage() {
     }
   }, [passed]);
   const [, setTick] = useState(0);
+  // ponytail: block/unblock reshapes the deck instantly — store subscribe reuses the existing tick
+  useEffect(() => subscribe(() => setTick((x) => x + 1)), []);
   const [flash, setFlash] = useState<string | null>(null);
   const [dx, setDx] = useState(0);
   const [live, setLive] = useState(false);
@@ -50,8 +64,7 @@ function SwipePage() {
   })();
 
   const deck = useMemo(() => {
-    const blocked = new Set(getBlocked());
-    return SWIVV_PROFILES.filter((p) => !blocked.has(p.id) && (!sought || p.gender === sought) && !passed.has(p.id));
+    return SWIVV_PROFILES.filter((p) => !isThreadBlocked(p.id) && (!sought || p.gender === sought) && !passed.has(p.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sought, passed]);
   const next = deck[1];
@@ -104,7 +117,8 @@ function SwipePage() {
     requireSwivvAuth("like", () => {
       // ponytail: like recorded + match auto-check via toggleLike — real push/email to the other user when accounts message each other
       const r = toggleLike(p.id);
-      show(r.matched ? `C'est un match avec ${p.name} !` : `${p.name} a été notifié de ton like.`);
+      if (r.matched) setMatch(p);
+      else show(`${p.name} a été notifié de ton like.`);
       setPassed((s) => new Set(s).add(p.id));
     });
   }
@@ -149,7 +163,7 @@ function SwipePage() {
         </h1>
         {!p ? (
           <div className="mt-6 text-center">
-            <img src="/swivv-s.png" alt="SWIVV" className="mx-auto h-16 w-16 object-contain" />
+            <img src="/apple-touch-icon.png" alt="SWIVV" className="mx-auto h-16 w-16 rounded-xl object-contain" />
             <p className="mt-2 text-sm text-[#777]">Plus de profils pour l'instant. Reviens plus tard !</p>
             <Link to="/browse" search={{ q: "", type: "", location: "" }} className="mt-3 inline-block font-medium text-[#007782] hover:underline">
               Parcourir les profils
@@ -252,6 +266,41 @@ function SwipePage() {
         )}
         <p className="mt-3 text-center text-xs text-[#999]">Glisse vers la gauche pour passer, vers la droite pour liker — ou utilise les boutons.</p>
       </main>
+
+      <Dialog open={!!match} onOpenChange={(o) => !o && setMatch(null)}>
+        {/* ponytail: italic-black Nunito instead of a brush script — one more font family for one heading is a network request, add when branding insists */}
+        <DialogContent className="max-w-sm border-0 bg-[#17171a] p-8 text-center text-white">
+          <DialogTitle className="text-4xl font-black italic text-white">C'est un match !</DialogTitle>
+          <DialogDescription className="text-sm text-white/80">
+            Toi et {match?.name} vous êtes likés mutuellement.
+          </DialogDescription>
+          <div className="my-2 flex items-center justify-center gap-5">
+            <img src={myPhoto || "/swivv-s.png"} alt="Ta photo" className="h-28 w-28 rounded-full border-4 border-white object-cover" />
+            <img src={match?.photo} alt={match ? `Photo de ${match.name}` : ""} className="h-28 w-28 rounded-full border-4 border-white object-cover" />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (!match) return;
+              try {
+                sessionStorage.setItem("swivv-active-chat", match.id);
+              } catch {}
+              setMatch(null);
+              nav({ to: "/messagerie" });
+            }}
+            className="w-full rounded-full bg-gradient-to-r from-[#ff5722] to-[#e91e63] px-6 py-3 font-bold uppercase tracking-wide text-white hover:brightness-110"
+          >
+            Envoyer un message
+          </button>
+          <button
+            type="button"
+            onClick={() => setMatch(null)}
+            className="w-full rounded-full border border-white/60 px-6 py-3 font-bold uppercase tracking-wide text-white hover:bg-white/10"
+          >
+            Continuer à swiper
+          </button>
+        </DialogContent>
+      </Dialog>
       <SwivvFooter />
     </div>
   );

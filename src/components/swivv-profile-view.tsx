@@ -98,11 +98,13 @@ type Props = {
   after?: ReactNode;
   /** When set, the gallery becomes editable (Mon Profil only): add/remove + save. */
   onSavePhotos?: (photos: string[]) => Promise<string | null>;
+  /** When set, each gallery photo renders this (member-page reaction toolbar, Mon Profil reaction strip). */
+  reactToolbar?: (photo: string) => ReactNode;
 };
 
 // ponytail: edit UI lives in the gallery, save stays with the caller —
 // a crop/reorder step if photo polish is ever asked for
-function EditableGallery({ profile, onSavePhotos }: { profile: SwivvProfile; onSavePhotos: (photos: string[]) => Promise<string | null> }) {
+function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: SwivvProfile; onSavePhotos: (photos: string[]) => Promise<string | null>; reactToolbar?: (photo: string) => ReactNode }) {
   const [photos, setPhotos] = useState<string[]>(() => (profile.photos ?? []).slice(0, 5));
   const [idx, setIdx] = useState(0);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
@@ -164,22 +166,26 @@ function EditableGallery({ profile, onSavePhotos }: { profile: SwivvProfile; onS
         {photos[idx] ? (
           <img src={photos[idx]} alt={`Photo de ${profile.name}`} className="aspect-[4/5] w-full object-cover" />
         ) : (
-          <p className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-[#ccc] px-6 text-center text-sm text-[#999]">Aucune photo - Cliquez sur le bouton + en bas pour ajouter vos photos.</p>
+          <p className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-[#ccc] px-6 text-center text-sm text-[#999]">Aucune photo - Clique sur le bouton + en bas pour ajouter tes photos.</p>
         )}
         {idx === 0 && photos.length > 0 && (
           <span className="absolute right-2 top-2 rounded-full bg-[#e91e63] px-2 py-0.5 text-[11px] font-medium text-white">
             Principale
           </span>
         )}
-        {idx > 0 && photos[idx] && (
-          <button
-            type="button"
-            onClick={() => move(idx, 0)}
-            className="absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white hover:bg-black/80"
-          >
-            Faire de cette photo la principale
-          </button>
-        )}
+        {/* ponytail: strip + principale-button stack bottom-center (never overlap) — the strip itself is flow-positioned, only this wrapper is absolute */}
+        <div className="absolute inset-x-0 bottom-2 flex flex-col items-center gap-1.5">
+          {photos[idx] ? reactToolbar?.(photos[idx]) : null}
+          {idx > 0 && photos[idx] && (
+            <button
+              type="button"
+              onClick={() => move(idx, 0)}
+              className="whitespace-nowrap rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white hover:bg-black/80"
+            >
+              Faire de cette photo la principale
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex flex-wrap gap-2 p-3">
         {photos.map((src, i) => (
@@ -259,7 +265,7 @@ function EditableGallery({ profile, onSavePhotos }: { profile: SwivvProfile; onS
 
 /** Full SWIVV profile layout: gallery + all criteria sections. Shared by
  *  member pages and "Mon profil" so signup questions always match display. */
-export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos }: Props) {
+export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos, reactToolbar }: Props) {
   const [photoIdx, setPhotoIdx] = useState(0);
   const viewer = useMyCity();
   const dist = realDistance(viewer.city, viewer.country, profile);
@@ -269,14 +275,17 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos 
       <div className="grid gap-6 md:grid-cols-[340px_1fr]">
         <div>
           {onSavePhotos ? (
-            <EditableGallery profile={profile} onSavePhotos={onSavePhotos} />
+            <EditableGallery profile={profile} onSavePhotos={onSavePhotos} reactToolbar={reactToolbar} />
           ) : (
           <div className="overflow-hidden rounded-xl bg-white">
-            <img
-              src={profile.photos[photoIdx]}
-              alt={`Photo de ${profile.name}`}
-              className="aspect-[4/5] w-full object-cover"
-            />
+            <div className="group relative">
+              <img
+                src={profile.photos[photoIdx]}
+                alt={`Photo de ${profile.name}`}
+                className="aspect-[4/5] w-full object-cover"
+              />
+              {profile.photos[photoIdx] ? reactToolbar?.(profile.photos[photoIdx]) : null}
+            </div>
             <div className="flex gap-2 p-3">
               {profile.photos.map((src, i) => (
                 <button
@@ -370,7 +379,7 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos 
             ["Silhouette", profile.bodyStyle],
             ["Origine", profile.ethnicity],
             ["Style", profile.selfAppearance],
-            ["Plus bel atout", <BestFeatureValue text={profile.bestFeature} firstLanguage={profile.firstLanguage} />],
+            ["Plus beaux atouts", <BestFeatureValue text={profile.bestFeature} firstLanguage={profile.firstLanguage} />],
           ]}
         />
       </section>
@@ -400,8 +409,6 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos 
           items={[
             ["Statut matrimonial", profile.maritalStatus],
             ["Enfants", profile.haveChildren],
-            ["Nombre d'enfants", profile.childrenCount ?? "—"],
-            ["Âges des enfants", profile.childrenAges],
             ["Veut (d'autres) enfants", profile.wantMoreChildren],
             ["Frères et sœurs", siblingSummary(profile)],
             ["Rang dans la fratrie", birthRankLabel(profile)],

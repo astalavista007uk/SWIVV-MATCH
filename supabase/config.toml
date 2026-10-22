@@ -1,6 +1,5 @@
 project_id = "swivv-standalone"
 
-# ponytail: ports off both the repo's 5432x (trade-base) and the standalone copy's 5434x (the original sniffer) — third local stack needs its own lane if ever run side-by-side
 [api]
 port = 55321
 [db]

@@ -2,17 +2,22 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyRawProfile, openAuthModal, profileCompleteness, SwivvAuthButtons } from "@/lib/swivv-auth";
-import { mediaUrl, toggleBlock } from "@/lib/swivv-store";
+import { PROFILE_FIELD_LABELS as FIELD_LABELS } from "@/lib/swivv-profile-fields";
+import { autoReciprocates, getLikes, getMatches, mediaUrl, toggleBlock } from "@/lib/swivv-store";
 import { breakdown, creationsByDay, modeReaction, REACTIONS, topPhoto, type ActiveReaction, type ReactionEvent } from "@/lib/swivv-reactions";
 import { SwivvSettingsTabs } from "@/components/swivv-settings-tabs";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
+import { HINT_SKIN } from "@/components/swivv-hint";
 import { useAuth } from "@/hooks/use-auth";
-import type { SwivvProfile } from "@/lib/swivv-data";
+import { ArrowUpRight, CircleAlert, Eye, Heart, Lightbulb, TriangleAlert, Users } from "lucide-react";
+import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
 
 export const Route = createFileRoute("/statistiques")({
   head: () => ({ meta: [{ title: "Mes statistiques — SWIVV" }] }),
+  // ponytail: tab rides ?tab= so Retour lands on the exact tab (browser history, no extra state) — unknown values fall back to overview
+  validateSearch: (s: Record<string, unknown>) => ({ tab: STAT_TAB_IDS.includes(s.tab as string) ? (s.tab as string) : "overview" }),
   component: StatsPage,
 });
 
@@ -27,22 +32,16 @@ const PERIODS = [
   { days: 0, label: "Depuis mon inscription" },
 ] as const;
 
-const FIELD_LABELS: Record<string, string> = {
-  name: "Nom", birthdate: "Date de naissance", gender: "Genre", seeking: "Recherche", city: "Ville", country: "Pays",
-  lookingFor: "Type de relation recherché", maritalStatus: "Situation matrimoniale", tagline: "Titre du profil", bio: "Présentation",
-  heightCm: "Taille", weightKg: "Poids", hairColor: "Couleur de cheveux", eyeColor: "Couleur des yeux", bodyStyle: "Silhouette",
-  ethnicity: "Origine", selfAppearance: "Style", bestFeature: "Atout", occupation: "Profession", education: "Études",
-  drink: "Alcool", smoke: "Tabac", drugs: "Drogues", eatingHabits: "Alimentation", employmentStatus: "Emploi",
-  annualIncome: "Revenus", livingSituation: "Logement", willingToRelocate: "Mobilité", hasPets: "Animaux",
-  wantsMorePets: "Autres animaux souhaités", haveChildren: "Enfants", wantMoreChildren: "Autres enfants souhaités",
-  brothersCount: "Frères", sistersCount: "Sœurs", birthRank: "Rang dans la fratrie", parentsMaritalStatus: "Situation des parents",
-  nationality: "Nationalité", firstLanguage: "Langue maternelle", bornOrConverted: "Parcours religieux", religion: "Religion",
-  religiousValues: "Valeurs religieuses", familyValues: "Valeurs familiales", interests: "Centres d'intérêt", photos: "Photos",
-};
 const REPORT_STATUS: Record<string, string> = {
   new: "Reçu", investigating: "En cours d'examen", waiting: "En attente", resolved: "Résolu", dismissed: "Classé sans suite",
 };
+// ponytail: status drives the pill skin (same level-skin idea as Mon profil tips) — extend here if new report states appear
+const REPORT_SKIN: Record<string, string> = {
+  new: "bg-red-100 text-[#DC2626]", investigating: "bg-orange-100 text-[#F97316]", waiting: "bg-orange-100 text-[#F97316]", resolved: "bg-green-100 text-[#16A34A]", dismissed: "bg-[#f2f2f2] text-[#777]",
+};
 const GENERIC_TAGLINES = ["salut", "coucou", "hello", "hey", "je cherche", "cherche quelqu", "a decouvrir", "à découvrir", "femme cherche", "homme cherche"];
+
+const STAT_TAB_IDS = ["overview", "profil", "likes", "messages", "visibilite", "securite"];
 
 type Peer = { id: string; name: string; photo?: string; blocked: boolean };
 type Ev = { at: number; id: string };
@@ -64,53 +63,87 @@ function Bars({ a, b, days }: { a: number[]; b: number[]; days: number }) {
   const max = Math.max(1, ...a, ...b);
   return (
     <div role="img" aria-label={`Visites et likes reçus par jour sur les ${days} derniers jours`}>
+      {/* ponytail: h-full on the day wrapper — % bar heights collapse against an indefinite parent (that was the invisible chart) */}
       <div className="flex h-28 items-end gap-[3px]">
         {a.map((v, i) => (
-          <span key={i} className="flex flex-1 items-end justify-center gap-[2px]">
-            <span className="w-full rounded-sm bg-[#e91e63]/70" style={{ height: `${Math.max(v > 0 ? 6 : 1, (v / max) * 100)}%` }} title={`${v} visites`} />
-            <span className="w-full rounded-sm bg-[#16A34A]/70" style={{ height: `${Math.max(b[i] > 0 ? 6 : 1, (b[i] / max) * 100)}%` }} title={`${b[i]} likes`} />
+          <span key={i} className="flex h-full flex-1 items-end justify-center gap-[2px]">
+            <span className="group/hint relative w-full rounded-sm bg-[#e2e2e6]" style={{ height: `${Math.max(v > 0 ? 6 : 1, (v / max) * 100)}%` }}>
+              <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{v} visites</span>
+            </span>
+            <span className="group/hint relative w-full rounded-sm bg-[#e91e63]" style={{ height: `${Math.max(b[i] > 0 ? 6 : 1, (b[i] / max) * 100)}%` }}>
+              <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{b[i]} likes</span>
+            </span>
           </span>
         ))}
       </div>
       <div className="mt-2 flex gap-4 text-xs text-[#777]">
-        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e91e63]/70" />Visites</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#16A34A]/70" />Likes reçus</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e2e2e6]" />Visites</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e91e63]" />Likes reçus</span>
       </div>
     </div>
   );
 }
 
-function Kpi({ label, value, sub }: { label: string; value: string | number; sub?: string | null }) {
+// ponytail: single SVG arc (pathLength=100) instead of segmented ticks or a chart lib — ticks are decoration, upgrade only if asked
+function Gauge({ pct }: { pct: number }) {
+  const v = Math.max(0, Math.min(100, Math.round(pct)));
   return (
-    <div className="rounded-xl border border-border bg-white p-4">
-      <p className="text-2xl font-semibold text-[#333]">{value}</p>
-      <p className="mt-1 text-sm font-medium text-[#555]">{label}</p>
-      {sub ? <p className="mt-1 text-xs text-[#777]">{sub}</p> : null}
+    <div role="img" aria-label={`Profil complété à ${v} %`} className="relative mx-auto w-full max-w-[220px]">
+      <svg viewBox="0 0 200 112" className="w-full">
+        <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#ececee" strokeWidth="16" strokeLinecap="round" />
+        <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#e91e63" strokeWidth="16" strokeLinecap="round" pathLength={100} strokeDasharray={`${v} 100`} />
+      </svg>
+      <p className="absolute inset-x-0 bottom-0 text-center text-4xl font-semibold text-[#1b1b1e]">{v}<span className="text-base font-normal text-[#777]"> %</span></p>
+    </div>
+  );
+}
+
+// ponytail: 4 tones cycle across grids (all colors already in the codebase — no new palette); new metric = new <Tile>, no new component
+const TONES = [
+  "bg-[#1b1b1e] text-white",
+  "bg-white text-[#333] border border-border",
+  "bg-[#e91e63] text-white",
+  "bg-[#16A34A] text-white",
+] as const;
+
+function Tile({ label, value, sub, tone = 0 }: { label: string; value: string | number; sub?: string | null; tone?: number }) {
+  const t = TONES[tone % TONES.length];
+  const subCls = t.startsWith("bg-white") ? "text-[#777]" : "text-white/70";
+  return (
+    <div className={`flex min-h-[128px] flex-col justify-between rounded-[22px] p-5 ${t}`}>
+      <p className="text-4xl font-bold leading-none">{value}</p>
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        {sub ? <p className={`mt-0.5 text-xs ${subCls}`}>{sub}</p> : null}
+      </div>
     </div>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-6 rounded-xl border border-border bg-white p-4 sm:p-5">
+    <section className="mt-6 rounded-[20px] border border-[#ececee] bg-white p-4 sm:p-5">
       <h2 className="text-base font-semibold text-[#333]">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
 }
 
-const emptyState = "Continuez à compléter votre profil et à découvrir les autres membres. Vos statistiques apparaîtront ici au fur et à mesure de votre activité.";
+const emptyState = "Continue à compléter ton profil et à découvrir les autres membres. Tes statistiques apparaîtront ici au fur et à mesure de ton activité.";
 
 function StatsPage() {
   const { user, loading } = useAuth();
   const [period, setPeriod] = useState<number>(30);
-  const [tab, setTab] = useState("overview");
+  const { tab } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const setTab = (t: string) => navigate({ search: { tab: t } });
   const [data, setData] = useState<null | {
     profile: SwivvProfile | null;
     views: ViewEv[]; likesSent: LikeEv[]; likesGot: LikeEv[]; matches: MatchEv[];
     chats: { peer: string; sender: string; voice: boolean; attach: boolean; at: number }[];
     reports: { id: string; category: string; at: number; status: string }[];
     blocks: { id: string; at: number }[];
+    blockedBy: { id: string; at: number }[];
     reactActive: ActiveReaction[];
     reactEvents: ReactionEvent[];
     peers: Record<string, Peer>;
@@ -128,7 +161,7 @@ function StatsPage() {
       try {
         const uid = user.id;
         const db = supabase as any;
-        const [prof, v, ls, lg, m, c, r, b, ra, re] = await Promise.all([
+        const [prof, v, ls, lg, m, c, r, b, bb, ra, re, ro] = await Promise.all([
           getMyRawProfile(),
           db.from("swivv_profile_views").select("viewer_id,created_at").eq("viewed_id", uid).order("created_at", { ascending: false }).limit(CAP),
           db.from("swivv_likes").select("liked_id,created_at").eq("liker_id", uid).order("created_at", { ascending: false }).limit(CAP),
@@ -138,17 +171,43 @@ function StatsPage() {
           db.from("swivv_chats").select("peer_id,sender,audio_url,image_url,created_at").eq("user_id", uid).order("created_at", { ascending: true }).limit(CAP * 2),
           db.from("swivv_reports").select("id,category,created_at,status").eq("reporter_id", uid).order("created_at", { ascending: false }).limit(CAP),
           db.from("swivv_blocks").select("blocked_id,created_at").eq("blocker_id", uid).order("created_at", { ascending: false }).limit(CAP),
+          // ponytail: who-blocked-me is readable since the blocked_read policy — who-reported-me stays forbidden (RLS + anti-retaliation), sanctions arrive via staff bell rows instead
+          db.from("swivv_blocks").select("blocker_id,created_at").eq("blocked_id", uid).order("created_at", { ascending: false }).limit(CAP),
           // ponytail: 200-row cap is bytes, not stinginess — photos are ~750KB data URLs and 1000 rows would pull ~750MB; server-side aggregates if reaction volume ever needs the full tail
           db.from("swivv_photo_reactions").select("photo,reaction,reactor_id,created_at,updated_at").eq("owner_id", uid).order("updated_at", { ascending: false }).limit(200),
           db.from("swivv_photo_reaction_events").select("photo,event,reaction,reactor_id,created_at").eq("owner_id", uid).order("created_at", { ascending: false }).limit(200),
+          // ponytail: owner ids only (never photos) — the outgoing half of the mutual check below
+          db.from("swivv_photo_reactions").select("owner_id").eq("reactor_id", uid).limit(CAP),
         ]);
         const views: ViewEv[] = (v.data ?? []).map((x: any) => ({ viewer: String(x.viewer_id), at: Date.parse(x.created_at) || 0 }));
         const likesSent: LikeEv[] = (ls.data ?? []).map((x: any) => ({ other: String(x.liked_id), at: Date.parse(x.created_at) || 0 }));
         const likesGot: LikeEv[] = (lg.data ?? []).map((x: any) => ({ other: String(x.liker_id), at: Date.parse(x.created_at) || 0 }));
+        // ponytail: seeds never reach the server (the mirror only fires for uuids) — local likes join Likes envoyés so the count matches the heart state; dateless entries render "date inconnue" like matches below
+        {
+          const seen = new Set(likesSent.map((x) => x.other));
+          for (const id of getLikes()) {
+            const bare = id.replace(/^u:/, "");
+            if (!seen.has(bare)) {
+              seen.add(bare);
+              likesSent.push({ other: bare, at: 0, id: "" });
+            }
+          }
+        }
         const matches: MatchEv[] = (m.data ?? []).map((x: any) => ({ other: String(x.user_a) === uid ? String(x.user_b) : String(x.user_a), at: Date.parse(x.created_at) || 0 }));
+        // ponytail: local matches join server rows so stats agree with Likes reçus/Matches (seeds + pre-mirror pairs have no server row); server dates win, dateless entries render "date inconnue" and skip period counts
+        const seenMatch = new Set(matches.map((x) => x.other));
+        for (const id of getMatches()) {
+          const bare = id.replace(/^u:/, "");
+          if (!seenMatch.has(bare)) {
+            seenMatch.add(bare);
+            // ponytail: id mirrors server rows (linkless — stats match links never resolved bare uuids); fix the link target if Voir ever needs to work here
+            matches.push({ other: bare, at: 0, id: "" });
+          }
+        }
         const chats = (c.data ?? []).map((x: any) => ({ peer: String(x.peer_id), sender: String(x.sender), voice: !!x.audio_url, attach: !!x.image_url, at: Date.parse(x.created_at) || 0 }));
         const reports = (r.data ?? []).map((x: any) => ({ id: String(x.id), category: String(x.category ?? "Autre"), at: Date.parse(x.created_at) || 0, status: String(x.status ?? "new") }));
         const blocks = (b.data ?? []).map((x: any) => ({ id: String(x.blocked_id), at: Date.parse(x.created_at) || 0 }));
+        const blockedBy = (bb.data ?? []).map((x: any) => ({ id: String(x.blocker_id), at: Date.parse(x.created_at) || 0 }));
         // ponytail: join against the photos I actually own — forged/deleted-photo rows never reach the stats; « récent/ancien » below means latest/earliest reaction activity (per-photo upload dates don't exist)
         const owned = new Set(((prof as SwivvProfile | null)?.photos ?? []) as string[]);
         const reactActive: ActiveReaction[] = (ra.data ?? [])
@@ -157,8 +216,32 @@ function StatsPage() {
         const reactEvents: ReactionEvent[] = (re.data ?? [])
           .filter((x: any) => owned.has(String(x.photo)))
           .map((x: any) => ({ photo: String(x.photo), event: x.event as ReactionEvent["event"], reaction: (x.reaction ?? null) as ReactionEvent["reaction"], reactor: String(x.reactor_id), at: Date.parse(x.created_at) || 0 }));
-        const ids = [...new Set([...views.map((x) => x.viewer), ...likesSent.map((x) => x.other), ...likesGot.map((x) => x.other), ...matches.map((x) => x.other)])]
-          .filter((id) => UUID.test(id)).slice(0, 200);
+        // ponytail: mutual = incoming (like|reaction) AND outgoing (like|reaction) — one-sided rows (post-unlike leftovers, pre-mirror pairs) never render as mutuals; seeds have no server rows so the 1-in-3 stand-in stays the incoming signal
+        {
+          const bare = (id: string) => id.replace(/^u:/, "");
+          const out = new Set([...likesSent.map((x) => x.other), ...((ro.data ?? []) as any[]).map((x) => String(x.owner_id)), ...getLikes().map(bare)]);
+          const inc = new Set([...likesGot.map((x) => x.other), ...reactActive.map((x) => x.reactor)]);
+          const isMutual = (other: string) =>
+            UUID.test(other)
+              ? out.has(other) && inc.has(other)
+              : out.has(other) && autoReciprocates(other);
+          for (let i = matches.length - 1; i >= 0; i--) {
+            if (!isMutual(matches[i].other)) matches.splice(i, 1);
+          }
+        }
+        // ponytail: surviving seed matches join Likes reçus (a seed match means they liked back — seeds leave no server rows); one-sided seed likes stay unknowable and never appear here
+        {
+          const seen = new Set(likesGot.map((x) => x.other));
+          for (const x of matches) {
+            if (!UUID.test(x.other) && !seen.has(x.other)) {
+              seen.add(x.other);
+              likesGot.push({ other: x.other, at: 0, id: "" });
+            }
+          }
+        }
+        // ponytail: chat peers included (their rows key u:-prefixed, profiles key bare) + u: aliases below — one normalization point so no section renders "Membre supprimé" for a reachable peer
+        const ids = [...new Set([...views.map((x) => x.viewer), ...likesSent.map((x) => x.other), ...likesGot.map((x) => x.other), ...matches.map((x) => x.other), ...chats.map((m: any) => m.peer), ...blockedBy.map((x: any) => x.id)])]
+          .map((id) => String(id).replace(/^u:/, "")).filter((id) => UUID.test(id)).slice(0, 200);
         const peers: Record<string, Peer> = {};
         if (ids.length) {
           const pr = await db.from("swivv_profiles").select("user_id,data").in("user_id", ids);
@@ -167,9 +250,19 @@ function StatsPage() {
             peers[String(row.user_id)] = { id: String(row.user_id), name: d.name || "Membre", photo: mediaUrl(d.photos?.[0]), blocked: false };
           }
         }
-        const blockedSet = new Set(blocks.map((x: { id: string }) => x.id));
-        for (const id of Object.keys(peers)) peers[id].blocked = blockedSet.has(id);
-        if (live) setData({ profile: prof, views, likesSent, likesGot, matches, chats, reports, blocks, reactActive, reactEvents, peers });
+        const blockedSet = new Set(blocks.map((x: { id: string }) => String(x.id).replace(/^u:/, "")));
+        // ponytail: peers key mixed bare/u: across sections — compare bare or blocked flags silently miss
+        const isB = (id: string) => blockedSet.has(String(id).replace(/^u:/, ""));
+        for (const id of Object.keys(peers)) peers[id].blocked = isB(id);
+        // ponytail: seed matches never have profile rows — resolve names/photos locally so they don't render "Membre supprimé"
+        for (const other of [...matches, ...likesSent, ...likesGot].map((x) => x.other).concat(chats.map((m: any) => m.peer))) {
+          if (!peers[other]) {
+            const s = SWIVV_PROFILES.find((p) => p.id === other);
+            if (s) peers[other] = { id: other, name: s.name, photo: mediaUrl(s.photos?.[0]), blocked: false };
+          }
+        }
+        for (const k of Object.keys(peers)) if (UUID.test(k) && !peers[`u:${k}`]) peers[`u:${k}`] = peers[k];
+        if (live) setData({ profile: prof ?? null, views, likesSent, likesGot, matches, chats, reports, blocks, blockedBy, reactActive, reactEvents, peers });
       } catch {
         if (live) setFailed(true);
       }
@@ -276,6 +369,9 @@ function StatsPage() {
   }
 
   const peerName = (id: string) => data?.peers[id]?.name ?? "Membre supprimé";
+  const myPct = data ? profileCompleteness(data.profile) : 0;
+  const myPhoto = data?.profile?.photos?.[0] ? mediaUrl(String(data.profile.photos[0])) : undefined;
+  const myName = String((data?.profile as SwivvProfile | null)?.name ?? "Moi");
   const TABS = [
     { id: "overview", label: "Vue d'ensemble" },
     { id: "profil", label: "Mon profil" },
@@ -295,18 +391,31 @@ function StatsPage() {
       </header>
       <SwivvCategoryNav />
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="text-2xl font-medium text-[#333]">Mes statistiques</h1>
         <SwivvSettingsTabs />
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <label htmlFor="stats-period" className="text-sm text-[#555]">Période :</label>
-          <select id="stats-period" value={period} onChange={(e) => setPeriod(Number(e.target.value))} className="rounded-md border border-border bg-white px-3 py-2 text-sm">
-            {PERIODS.map((p) => (<option key={p.label} value={p.days}>{p.label}</option>))}
-          </select>
+        <div className="mt-4 rounded-[28px] bg-[#e6eaef] p-2 sm:p-3">
+        <div className="rounded-[22px] bg-white p-5 sm:p-7">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-[#1b1b1e]">Mes statistiques</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="stats-period" className="text-sm text-[#555]">Période :</label>
+            <select id="stats-period" value={period} onChange={(e) => setPeriod(Number(e.target.value))} className="rounded-full border border-[#ececee] bg-[#f7f7f8] px-3 py-2 text-sm">
+              {PERIODS.map((p) => (<option key={p.label} value={p.days}>{p.label}</option>))}
+            </select>
+          </div>
         </div>
-        <div role="tablist" aria-label="Sections des statistiques" className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {data && s && (
+          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
+            <p className="flex items-center gap-2 text-sm"><Eye className="h-4 w-4 text-[#e91e63]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.viewsP.length}</span><span className="text-[#777]">Visites</span></p>
+            <p className="flex items-center gap-2 text-sm"><Heart className="h-4 w-4 text-[#e91e63]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.gotP.length}</span><span className="text-[#777]">Likes reçus</span></p>
+            <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-[#e91e63]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{data.matches.length}</span><span className="text-[#777]">Matches</span></p>
+          </div>
+        )}
+        <div role="tablist" aria-label="Sections des statistiques" className="mt-5 flex gap-1 overflow-x-auto rounded-full bg-[#f1f2f4] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => (
             <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
-              className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium ${tab === t.id ? "border-[#e91e63] bg-[#e91e63] text-white" : "border-border bg-white text-[#555] hover:text-[#e91e63]"}`}>
+              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${tab === t.id ? "bg-[#1b1b1e] text-white" : "text-[#555] hover:text-[#1b1b1e]"}`}>
               {t.label}
             </button>
           ))}
@@ -314,24 +423,53 @@ function StatsPage() {
 
         {failed && (
           <div className="mt-6 rounded-xl border border-border bg-white p-4 text-sm text-[#555]">
-            Impossible de charger vos statistiques. <button type="button" onClick={() => window.location.reload()} className="font-medium text-[#e91e63] hover:underline">Réessayer</button>
+            Impossible de charger tes statistiques. <button type="button" onClick={() => window.location.reload()} className="font-medium text-[#e91e63] hover:underline">Réessayer</button>
           </div>
         )}
-        {!data && !failed && <p className="mt-6 text-sm text-[#777]">Chargement de vos statistiques…</p>}
+        {!data && !failed && <p className="mt-6 text-sm text-[#777]">Chargement de tes statistiques…</p>}
 
         {data && s && tab === "overview" && (
           <>
-            <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Kpi label="Visites de profil" value={s.viewsP.length} sub={period === 0 ? `${s.uniqViewers} visiteurs uniques` : (deltaText(s.viewsP.length, s.viewsPrev.length) ?? `${s.uniqViewers} visiteurs uniques`)} />
-              <Kpi label="Likes reçus" value={s.gotP.length} sub={period === 0 ? undefined : (deltaText(s.gotP.length, s.gotPrev.length) ?? undefined)} />
-              <Kpi label="Matches" value={data.matches.length} sub={period === 0 ? undefined : `${s.matchesP.length} nouveaux sur la période`} />
-              <Kpi label="Conversations" value={s.convoList.length} sub={period === 0 ? `${s.withReply.length} avec réponse` : `${s.startedP.length} commencées · ${s.repliedP.length} avec réponse`} />
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Kpi label="Likes envoyés" value={period === 0 ? data.likesSent.length : s.sentP.length} />
-              <Kpi label="Messages envoyés / reçus" value={`${s.totSent} / ${s.totGot}`} />
-              <Kpi label="Vocaux envoyés / reçus" value={`${s.voiceS} / ${s.voiceG}`} />
-              <Kpi label="Signalements / Blocs" value={`${data.reports.length} / ${data.blocks.length}`} />
+            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+              <div className="rounded-[20px] border border-[#ececee] p-5">
+                <p className="text-sm font-semibold text-[#1b1b1e]">Mon profil</p>
+                <div className="mt-3 flex items-center gap-3">
+                  {myPhoto ? (
+                    <img src={myPhoto} alt="" loading="lazy" className="h-12 w-12 rounded-full object-cover" />
+                  ) : (
+                    <span aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fce4ec] font-semibold text-[#e91e63]">{myName.charAt(0).toUpperCase()}</span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[#1b1b1e]">{myName}</p>
+                    <p className="text-xs text-[#777]">Profil complété à {myPct} %</p>
+                  </div>
+                </div>
+                <Link to="/mon-profil" className="mt-4 block rounded-full bg-[#f1f2f4] px-4 py-2 text-center text-sm font-medium text-[#1b1b1e] hover:bg-[#e6eaef]">Voir mon profil</Link>
+              </div>
+              <div className="rounded-[20px] border border-[#ececee] p-5">
+                <p className="text-sm font-semibold text-[#1b1b1e]">Performance</p>
+                <div className="mt-2"><Gauge pct={myPct} /></div>
+                <p className="mt-1 text-center text-xs text-[#777]">{data.matches.length} matches · {s.convoList.length} conversations</p>
+                <div className="mt-4 rounded-[16px] bg-[#1b1b1e] p-4 text-white">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium">Ton rapport</p>
+                    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs">{s.convoList.length} conversations</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-white/70">{s.withReply.length} avec réponse</p>
+                    <Link to="/messagerie" aria-label="Ouvrir la messagerie" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1b1b1e]"><ArrowUpRight className="h-5 w-5" /></Link>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-[20px] border border-[#ececee] p-5">
+                <p className="text-sm font-semibold text-[#1b1b1e]">Analytique</p>
+                <div className="mt-3"><Bars a={s.av} b={s.al} days={s.chartDays} /></div>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.sentP.length}</p><p className="text-[11px] text-[#777]">Likes envoyés</p></div>
+                  <div className="rounded-xl bg-[#1b1b1e] p-2 text-white"><p className="text-lg font-semibold">{s.totSent + s.totGot}</p><p className="text-[11px] text-white/70">Messages</p></div>
+                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.matchesP.length}</p><p className="text-[11px] text-[#777]">Nouveaux matches</p></div>
+                </div>
+              </div>
             </div>
             <Section title="Activité récente">
               <div className="flex flex-wrap gap-2">
@@ -341,8 +479,7 @@ function StatsPage() {
                 </select>
                 <input value={histQ} onChange={(e) => { setHistQ(e.target.value); setHistN(20); }} placeholder="Rechercher un membre…" aria-label="Rechercher un membre" className="rounded-md border border-border px-3 py-2 text-sm" />
               </div>
-              <HistoryList data={data} histType={histType} histQ={histQ} histN={histN} peerName={peerName} />
-              <button type="button" onClick={() => setHistN((n) => n + 20)} className="mt-3 text-sm font-medium text-[#e91e63] hover:underline">Afficher plus</button>
+              <HistoryList data={data} histType={histType} histQ={histQ} histN={histN} setHistN={setHistN} peerName={peerName} />
             </Section>
           </>
         )}
@@ -351,10 +488,15 @@ function StatsPage() {
 
         {data && s && tab === "likes" && (
           <>
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <Tile tone={1} label="Likes reçus" value={data.likesGot.length} />
+              <Tile tone={0} label="Likes envoyés" value={data.likesSent.length} />
+              <Tile tone={2} label="Matches mutuels" value={data.matches.length} />
+            </div>
             <Section title="Likes et interactions">
               <p className="text-sm text-[#555]">
                 {data.likesSent.length} envoyés · {data.likesGot.length} reçus · {data.matches.length} matches mutuels.
-                {data.likesSent.length > 0 && ` ${data.matches.length} de vos likes sont devenus des matches.`}
+                {data.likesSent.length > 0 && ` ${data.matches.length} de tes likes sont devenus des matches.`}
               </p>
               {data.matches.length === 0 && data.likesGot.length === 0 && <p className="mt-2 text-sm text-[#777]">{emptyState}</p>}
             </Section>
@@ -368,16 +510,16 @@ function StatsPage() {
         {data && s && tab === "messages" && (
           <>
             <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Kpi label="Messages envoyés" value={s.totSent} />
-              <Kpi label="Messages reçus" value={s.totGot} />
-              <Kpi label="Vocaux envoyés / reçus" value={`${s.voiceS} / ${s.voiceG}`} />
-              <Kpi label="Photos envoyées / reçues" value={`${s.attS} / ${s.attG}`} />
+              <Tile tone={0} label="Messages envoyés" value={s.totSent} />
+              <Tile tone={1} label="Messages reçus" value={s.totGot} />
+              <Tile tone={2} label="Vocaux envoyés / reçus" value={`${s.voiceS} / ${s.voiceG}`} />
+              <Tile tone={3} label="Photos envoyées / reçues" value={`${s.attS} / ${s.attG}`} />
             </div>
             <Section title="Taux de réponse">
               {s.startedP.length < 5 ? (
                 <p className="text-sm text-[#777]">Échantillon trop petit pour un taux fiable ({s.startedP.length} conversation{s.startedP.length > 1 ? "s" : ""} commencée{s.startedP.length > 1 ? "s" : ""} sur la période). Les chiffres ci-dessous restent indicatifs.</p>
               ) : (
-                <p className="text-sm text-[#555]">{s.repliedP.length} de vos {s.startedP.length} conversations commencées ont reçu une réponse ({Math.round((s.repliedP.length / s.startedP.length) * 100)} %). Le volume de messages ne mesure pas la compatibilité.</p>
+                <p className="text-sm text-[#555]">{s.repliedP.length} de tes {s.startedP.length} conversations commencées ont reçu une réponse ({Math.round((s.repliedP.length / s.startedP.length) * 100)} %). Le volume de messages ne mesure pas la compatibilité.</p>
               )}
               <p className="mt-2 text-sm text-[#555]">
                 {s.convoList.length} correspondant{s.convoList.length > 1 ? "s" : ""} distinct{s.convoList.length > 1 ? "s" : ""} · en moyenne {s.convoList.length ? ((s.totSent + s.totGot) / s.convoList.length).toFixed(1) : "0"} messages échangés par conversation (envoyés + reçus).
@@ -436,20 +578,25 @@ function StatsPage() {
 
         {data && tab === "securite" && (
           <>
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <Tile tone={0} label="Signalements" value={data.reports.length} />
+              <Tile tone={1} label="Membres bloqués" value={data.blocks.length} />
+              <Tile tone={2} label="M'ont bloqué" value={data.blockedBy.length} />
+            </div>
             <Section title="Mes signalements">
-              {data.reports.length === 0 ? <p className="text-sm text-[#777]">Vous n&apos;avez soumis aucun signalement.</p> : (
+              {data.reports.length === 0 ? <p className="text-sm text-[#777]">Tu n&apos;as soumis aucun signalement.</p> : (
                 <ul className="divide-y divide-border">
                   {data.reports.map((r) => (
                     <li key={r.id} className="py-2.5 text-sm">
                       <p className="font-medium text-[#333]">{r.category}</p>
-                      <p className="text-xs text-[#777]">{fmtDate(r.at)} · Statut : {REPORT_STATUS[r.status] ?? r.status}</p>
+                      <p className="mt-1 text-xs text-[#777]">{fmtDate(r.at)} · <span className={`inline-block rounded-full px-2.5 py-0.5 font-medium ${REPORT_SKIN[r.status] ?? "bg-[#f2f2f2] text-[#777]"}`}>{REPORT_STATUS[r.status] ?? r.status}</span></p>
                     </li>
                   ))}
                 </ul>
               )}
             </Section>
             <Section title="Mes blocs">
-              {data.blocks.length === 0 ? <p className="text-sm text-[#777]">Vous n&apos;avez bloqué aucun membre.</p> : (
+              {data.blocks.length === 0 ? <p className="text-sm text-[#777]">Tu n&apos;as bloqué aucun membre.</p> : (
                 <ul className="divide-y divide-border">
                   {data.blocks.map((bl) => (
                     <li key={bl.id} className="flex items-center gap-3 py-2.5">
@@ -458,7 +605,7 @@ function StatsPage() {
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(bl.id)}</p>
                         <p className="text-xs text-[#777]">{fmtDate(bl.at)} · Actif</p>
                       </div>
-                      <button type="button" onClick={() => { toggleBlock(bl.id); data.blocks = data.blocks.filter((x) => x.id !== bl.id); setData({ ...data }); }} className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">
+                      <button type="button" onClick={() => { toggleBlock(bl.id); data.blocks = data.blocks.filter((x) => x.id !== bl.id); setData({ ...data }); }} className="shrink-0 rounded-full border border-[#e91e63] px-4 py-1.5 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/10">
                         Débloquer
                       </button>
                     </li>
@@ -466,8 +613,25 @@ function StatsPage() {
                 </ul>
               )}
             </Section>
+            <Section title="Membres qui m'ont bloqué">
+              {data.blockedBy.length === 0 ? <p className="text-sm text-[#777]">Aucun membre ne t&apos;a bloqué.</p> : (
+                <ul className="divide-y divide-border">
+                  {data.blockedBy.map((bl) => (
+                    <li key={bl.id} className="flex items-center gap-3 py-2.5">
+                      <PeerBadge id={bl.id} data={data} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-[#333]">{peerName(bl.id)}</p>
+                        <p className="text-xs text-[#777]">{fmtDate(bl.at)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
           </>
         )}
+        </div>
+        </div>
       </main>
       <SwivvFooter />
     </div>
@@ -486,9 +650,9 @@ function PeerBadge({ id, data }: { id: string; data: { peers: Record<string, Pee
   );
 }
 
-function HistoryList({ data, histType, histQ, histN, peerName }: {
+function HistoryList({ data, histType, histQ, histN, setHistN, peerName }: {
   data: { views: ViewEv[]; likesSent: LikeEv[]; likesGot: LikeEv[]; matches: MatchEv[]; peers: Record<string, Peer> };
-  histType: string; histQ: string; histN: number; peerName: (id: string) => string;
+  histType: string; histQ: string; histN: number; setHistN: (f: (n: number) => number) => void; peerName: (id: string) => string;
 }) {
   const q = histQ.trim().toLowerCase();
   const all: { at: number; label: string; id: string; key: string }[] = [
@@ -497,16 +661,19 @@ function HistoryList({ data, histType, histQ, histN, peerName }: {
     ...(histType === "all" || histType === "got" ? data.likesGot.map((x, i) => ({ at: x.at, label: "Like reçu", id: x.other, key: `g${i}` })) : []),
     ...(histType === "all" || histType === "match" ? data.matches.map((x, i) => ({ at: x.at, label: "Match mutuel", id: x.other, key: `m${i}` })) : []),
   ].filter((e) => !q || peerName(e.id).toLowerCase().includes(q))
-    .sort((x, y) => y.at - x.at).slice(0, histN);
+    .sort((x, y) => y.at - x.at);
+  // ponytail: "Afficher plus" lives here where the total is known — a dead button at the end of the list otherwise
+  const shown = all.slice(0, histN);
   if (!all.length) return <p className="mt-2 text-sm text-[#777]">Aucune activité pour ce filtre.</p>;
   return (
+    <>
     <ul className="mt-2 divide-y divide-border">
-      {all.map((e) => (
+      {shown.map((e) => (
         <li key={e.key} className="flex items-center gap-3 py-2">
           <PeerBadge id={e.id} data={data} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm text-[#333]"><span className="font-medium">{e.label}</span> — {peerName(e.id)}</p>
-            <p className="text-xs text-[#999]">{fmtDT(e.at)}</p>
+            <p className="text-xs text-[#999]">{e.at ? fmtDT(e.at) : "date inconnue"}</p>
           </div>
           {!data.peers[e.id]?.blocked && UUID.test(e.id) && (
             <Link to="/member/$id" params={{ id: e.id }} className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">Voir</Link>
@@ -514,6 +681,10 @@ function HistoryList({ data, histType, histQ, histN, peerName }: {
         </li>
       ))}
     </ul>
+    {all.length > histN && (
+      <button type="button" onClick={() => setHistN((n) => n + 20)} className="mt-3 text-sm font-medium text-[#e91e63] hover:underline">Afficher plus</button>
+    )}
+    </>
   );
 }
 
@@ -548,24 +719,19 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
         ) : (
           <>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Kpi label="Réactions reçues" value={s.reactTotal} sub={period === 0 ? "actives en ce moment" : (deltaText(s.newP.length, s.newPrev.length) ?? "sur la période")} />
-              <Kpi label="Membres ayant réagi" value={s.reactorsP.size} sub={period === 0 ? "au total" : (deltaText(s.reactorsP.size, s.reactorsPrev.size) ?? "sur la période")} />
-              <Kpi label="Photos avec réactions" value={s.photosP.size} sub={period === 0 ? "au total" : "sur la période"} />
-              <div className="rounded-xl border border-border bg-white p-4">
+              <Tile tone={0} label="Réactions reçues" value={s.reactTotal} sub={period === 0 ? "actives en ce moment" : (deltaText(s.newP.length, s.newPrev.length) ?? "sur la période")} />
+              <Tile tone={1} label="Membres ayant réagi" value={s.reactorsP.size} sub={period === 0 ? "au total" : (deltaText(s.reactorsP.size, s.reactorsPrev.size) ?? "sur la période")} />
+              <Tile tone={2} label="Photos avec réactions" value={s.photosP.size} sub={period === 0 ? "au total" : "sur la période"} />
+              <div className="flex min-h-[128px] flex-col justify-between rounded-[22px] bg-[#16A34A] p-5 text-white">
                 {top ? (
                   <span className="flex items-center gap-3">
-                    <img src={mediaUrl(top.photo)} alt="" loading="lazy" className="h-12 w-12 rounded-lg object-cover" />
-                    <span>
-                      <span className="block text-2xl font-semibold text-[#333]">{top.n}</span>
-                      <span className="mt-1 block text-sm font-medium text-[#555]">Photo la plus réactive</span>
-                    </span>
+                    <img src={mediaUrl(top.photo)} alt="" loading="lazy" className="h-12 w-12 rounded-2xl object-cover" />
+                    <span className="block text-4xl font-bold leading-none">{top.n}</span>
                   </span>
                 ) : (
-                  <>
-                    <p className="text-2xl font-semibold text-[#333]">—</p>
-                    <p className="mt-1 text-sm font-medium text-[#555]">Photo la plus réactive</p>
-                  </>
+                  <p className="text-4xl font-bold leading-none">—</p>
                 )}
+                <p className="text-sm font-medium">Photo la plus réactive</p>
               </div>
             </div>
             <h3 className="mt-5 text-sm font-semibold text-[#333]">Répartition des réactions actives</h3>
@@ -584,7 +750,9 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
             <h3 className="mt-5 text-sm font-semibold text-[#333]">Nouvelles réactions par jour</h3>
             <div role="img" aria-label={`Nouvelles réactions par jour sur les ${s.chartDays} derniers jours`} className="mt-2 flex h-20 items-end gap-[3px]">
               {s.reactChart.map((v, i) => (
-                <span key={i} className="w-full rounded-sm bg-[#e91e63]/70" style={{ height: `${Math.max(v > 0 ? 8 : 2, (v / max) * 100)}%` }} title={`${v} nouvelles réactions`} />
+                <span key={i} className="group/hint relative w-full rounded-sm bg-[#e91e63]/70" style={{ height: `${Math.max(v > 0 ? 8 : 2, (v / max) * 100)}%` }}>
+                  <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{v} nouvelles réactions</span>
+                </span>
               ))}
             </div>
           </>
@@ -634,10 +802,10 @@ function LikeList({ title, list, data, peerName, dir, match }: {
               <PeerBadge id={x.other} data={data} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-[#333]">{peerName(x.other)}</p>
-                <p className="text-xs text-[#999]">{match ? "Match mutuel" : dir === "got" ? "Vous a liké" : "Vous avez liké"} · {fmtDT(x.at)}</p>
+                <p className="text-xs text-[#999]">{match ? "Match mutuel" : dir === "got" ? "T'a liké" : "Tu as liké"} · {x.at ? fmtDT(x.at) : "date inconnue"}</p>
               </div>
               {!data.peers[x.other]?.blocked && UUID.test(x.other) && (
-                <Link to="/member/$id" params={{ id: x.other }} className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">Voir le profil</Link>
+                <Link to="/member/$id" params={{ id: x.other }} className="shrink-0 rounded-full bg-[#e91e63] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">Voir le profil</Link>
               )}
             </li>
           ))}
@@ -666,24 +834,24 @@ function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | n
   // ponytail: profile-edit tips deep-link the missing-only pass (?revoir=manquantes) — a plain /inscription visit would restore the saved position instead of the first gap
   const FLOW = "/inscription?revoir=manquantes";
   const tips: Tip[] = [];
-  if (!photos.length) tips.push({ level: "À compléter", text: "Vous n'avez pas de photo de profil. Ajoutez une photo claire et récente qui vous représente bien.", to: "/mon-profil", cta: "Ajouter une photo" });
-  else if (photos.length === 1) tips.push({ level: "Recommandé", text: "Votre profil ne contient qu'une seule photo. Ajouter une photo supplémentaire pourrait donner une vision plus complète de votre profil.", to: "/mon-profil", cta: "Ajouter une photo" });
-  if (!tagline) tips.push({ level: "À compléter", text: "Votre titre est vide. Une phrase distinctive aide les autres membres à vous remarquer.", to: FLOW, cta: "Modifier mon profil" });
-  else if (tagline.length < 10 || generic) tips.push({ level: "Recommandé", text: `Votre titre (« ${tagline} ») est très court ou générique. Inspirez-vous de vos centres d'intérêt pour le rendre plus personnel — par exemple à partir de « ${(profile?.interests ?? []).slice(0, 2).join(", ") || "vos loisirs"} ». Ce n'est qu'une piste, à valider par vous.`, to: FLOW, cta: "Modifier mon profil" });
-  else if (capsRatio > 0.7 && tagline.length > 5) tips.push({ level: "Optionnel", text: "Votre titre est presque tout en majuscules, ce qui peut donner une impression de cri. Envisagez une casse normale.", to: FLOW, cta: "Modifier mon profil" });
-  if (!bio) tips.push({ level: "À compléter", text: "Votre section « À propos de moi » est vide. Ajoutez quelques phrases pour aider les autres membres à mieux vous connaître et à entamer la conversation.", to: FLOW, cta: "Compléter ma présentation" });
-  else if (bio.length < 50) tips.push({ level: "Recommandé", text: "Votre présentation est très courte. Quelques phrases sur vos valeurs, vos loisirs ou vos intentions aideraient à démarrer des échanges.", to: FLOW, cta: "Compléter ma présentation" });
-  else if (bio.length > 1500) tips.push({ level: "Optionnel", text: "Votre présentation est très longue. Une version plus concise a plus de chances d'être lue en entier.", to: FLOW, cta: "Modifier mon profil" });
-  if (!(profile?.interests ?? []).length) tips.push({ level: "Recommandé", text: "Ajoutez vos centres d'intérêt : c'est le moyen le plus simple de donner aux autres une accroche pour vous écrire.", to: FLOW, cta: "Modifier mon profil" });
-  if (views > 5 && got === 0) tips.push({ level: "Recommandé", text: "Vous recevez des visites, mais peu de likes. Pensez à vérifier votre photo principale et votre présentation. L'activité dépend aussi des préférences, de la localisation et du nombre de membres actifs.", to: "/mon-profil", cta: "Revoir mon profil" });
-  if (convos > 0) tips.push({ level: "Optionnel", text: `Vous avez ${convos} conversation${convos > 1 ? "s" : ""} en cours. Continuez à privilégier les échanges qui vous intéressent réellement.`, to: "/messagerie", cta: "Voir mes messages" });
+  if (!photos.length) tips.push({ level: "À compléter", text: "Tu n'as pas de photo de profil. Ajoute une photo claire et récente qui te représente bien.", to: "/mon-profil", cta: "Ajouter une photo" });
+  else if (photos.length === 1) tips.push({ level: "Recommandé", text: "Ton profil ne contient qu'une seule photo. Ajouter une photo supplémentaire pourrait donner une vision plus complète de ton profil.", to: "/mon-profil", cta: "Ajouter une photo" });
+  if (!tagline) tips.push({ level: "À compléter", text: "Ton titre est vide. Une phrase distinctive aide les autres membres à te remarquer.", to: FLOW, cta: "Modifier mon profil" });
+  else if (tagline.length < 10 || generic) tips.push({ level: "Recommandé", text: `Ton titre (« ${tagline} ») est très court ou générique. Inspire-toi de tes centres d'intérêt pour le rendre plus personnel — par exemple à partir de « ${(profile?.interests ?? []).slice(0, 2).join(", ") || "tes loisirs"} ». Ce n'est qu'une piste, à valider par toi.`, to: FLOW, cta: "Modifier mon profil" });
+  else if (capsRatio > 0.7 && tagline.length > 5) tips.push({ level: "Optionnel", text: "Ton titre est presque tout en majuscules, ce qui peut donner une impression de cri. Envisage une casse normale.", to: FLOW, cta: "Modifier mon profil" });
+  if (!bio) tips.push({ level: "À compléter", text: "Ta section « À propos de moi » est vide. Ajoute quelques phrases pour aider les autres membres à mieux te connaître et à entamer la conversation.", to: FLOW, cta: "Compléter ma présentation" });
+  else if (bio.length < 50) tips.push({ level: "Recommandé", text: "Ta présentation est très courte. Quelques phrases sur tes valeurs, tes loisirs ou tes intentions aideraient à démarrer des échanges.", to: FLOW, cta: "Compléter ma présentation" });
+  else if (bio.length > 1500) tips.push({ level: "Optionnel", text: "Ta présentation est très longue. Une version plus concise a plus de chances d'être lue en entier.", to: FLOW, cta: "Modifier mon profil" });
+  if (!(profile?.interests ?? []).length) tips.push({ level: "Recommandé", text: "Ajoute tes centres d'intérêt : c'est le moyen le plus simple de donner aux autres une accroche pour t'écrire.", to: FLOW, cta: "Modifier mon profil" });
+  if (views > 5 && got === 0) tips.push({ level: "Recommandé", text: "Tu reçois des visites, mais peu de likes. Pense à vérifier ta photo principale et ta présentation. L'activité dépend aussi des préférences, de la localisation et du nombre de membres actifs.", to: "/mon-profil", cta: "Revoir mon profil" });
+  if (convos > 0) tips.push({ level: "Optionnel", text: `Tu as ${convos} conversation${convos > 1 ? "s" : ""} en cours. Continue à privilégier les échanges qui t'intéressent réellement.`, to: "/messagerie", cta: "Voir mes messages" });
 
   return (
     <>
       <Section title="Complétude du profil">
         <div className="flex items-center gap-4">
-          <p className="text-3xl font-semibold text-[#e91e63]">{pct} %</p>
-          <p className="text-sm text-[#555]">Ce score mesure la complétude de votre profil, pas votre attractivité ni vos chances de rencontrer quelqu&apos;un.</p>
+          <p className="whitespace-nowrap text-3xl font-semibold text-[#e91e63]">{pct}&nbsp;%</p>
+          <p className="text-sm text-[#555]">Ce score mesure la complétude de ton profil, pas ton attractivité ni tes chances de rencontrer quelqu&apos;un.</p>
         </div>
         {missing.length > 0 ? (
           <p className="mt-2 text-sm text-[#555]">Sections incomplètes : {missing.slice(0, 12).map((k) => FIELD_LABELS[String(k)] ?? String(k)).join(", ")}{missing.length > 12 && ` (+${missing.length - 12} autres)`}.</p>
@@ -692,20 +860,33 @@ function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | n
         )}
         {pct < 100 && (
           <a href="/inscription?revoir=manquantes" className="mt-3 inline-block rounded-md bg-[#e91e63] px-5 py-2.5 text-sm font-medium text-white">
-            Complétez votre profil maintenant
+            Complète ton profil maintenant
           </a>
         )}
       </Section>
       <Section title="Comment améliorer mon profil ?">
-        {tips.length === 0 ? <p className="text-sm text-[#777]">Rien à signaler : votre profil est bien rempli. Les suggestions apparaîtront ici si quelque chose manque.</p> : (
+        {tips.length === 0 ? <p className="text-sm text-[#777]">Rien à signaler : ton profil est bien rempli. Les suggestions apparaîtront ici si quelque chose manque.</p> : (
           <ul className="space-y-3">
-            {tips.map((t, i) => (
-              <li key={i} className="rounded-lg border border-border p-3">
-                <p className={`text-xs font-semibold ${t.level === "À compléter" ? "text-[#DC2626]" : t.level === "Recommandé" ? "text-[#F97316]" : "text-[#777]"}`}>{t.level}</p>
-                <p className="mt-1 text-sm text-[#333]">{t.text}</p>
-                <a href={t.to} className="mt-2 inline-block text-sm font-medium text-[#e91e63] hover:underline">{t.cta}</a>
+            {tips.map((t, i) => {
+              // ponytail: level drives the whole card skin (bg + bar + icon) — one map, no per-level branches
+              const skin = t.level === "À compléter"
+                ? { card: "border-red-200 bg-red-50", bar: "bg-[#DC2626]", text: "text-[#DC2626]", Icon: CircleAlert }
+                : t.level === "Recommandé"
+                  ? { card: "border-orange-200 bg-orange-50", bar: "bg-[#F97316]", text: "text-[#F97316]", Icon: TriangleAlert }
+                  : { card: "border-border bg-[#f7f7f7]", bar: "bg-[#999]", text: "text-[#777]", Icon: Lightbulb };
+              return (
+              <li key={i} className={`flex gap-3 overflow-hidden rounded-xl border ${skin.card}`}>
+                <span className={`w-1.5 shrink-0 ${skin.bar}`} aria-hidden="true" />
+                <div className="min-w-0 flex-1 py-3 pr-3">
+                  <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${skin.text}`}>
+                    <skin.Icon className="h-4 w-4" />{t.level}
+                  </p>
+                  <p className="mt-1 text-sm text-[#333]">{t.text}</p>
+                  <a href={t.to} className="mt-2 inline-block rounded-full bg-[#e91e63] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">{t.cta}</a>
+                </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </Section>

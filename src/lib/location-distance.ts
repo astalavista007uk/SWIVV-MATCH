@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMyProfile } from "@/lib/swivv-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 // ponytail: ported from swoov's location-distance, upgraded from haversine to a baked-in OSRM
 // road matrix (fetched 2026-09-22, directions averaged) — no runtime API, no geolib dep;
@@ -73,16 +73,29 @@ export function realDistance(
 }
 
 /** Viewer's saved city (empty until the profile loads — callers fall back gracefully). */
-export function useMyCity(): { city: string; country: string } {
+export function useMyCity(): { city: string; country: string; ready: boolean } {
   const [c, setC] = useState({ city: "", country: "" });
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     let live = true;
-    getMyProfile().then((p) => {
-      if (live && p?.city) setC({ city: p.city, country: p.country });
-    });
+    (async () => {
+      // ponytail: two text columns, not the whole data blob (photos are ~750KB data URLs) — distance sorts settle with seeking instead of after photo megabytes
+      try {
+        const { data: s } = await supabase.auth.getSession();
+        const uid = s.session?.user.id;
+        if (!uid) return;
+        const { data } = await (supabase as any)
+          .from("swivv_profiles")
+          .select("data->>city,data->>country")
+          .eq("user_id", uid)
+          .maybeSingle();
+        if (live && data?.city) setC({ city: String(data.city), country: String(data.country ?? "") });
+      } catch {}
+      if (live) setReady(true);
+    })();
     return () => {
       live = false;
     };
   }, []);
-  return c;
+  return { ...c, ready };
 }

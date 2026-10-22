@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, ChartColumn, CircleHelp, CreditCard, User } from "lucide-react";
+import { Bell, ChartColumn, CircleHelp, CreditCard, Sparkles, User } from "lucide-react";
 
-// ponytail: 5 fixed tabs, generate from array if a 6th page joins
+// ponytail: fixed tabs, generate from array if more pages join
 const TABS = [
   { label: "Profil", to: "/parametres", Icon: User },
   { label: "Mes statistiques", to: "/statistiques", Icon: ChartColumn },
-  { label: "Facturation", to: "/facturation", Icon: CreditCard },
+  { label: "SWIVV PROGRESS", to: "/progress", Icon: Sparkles },
+  { label: "Relevés d'accès", to: "/facturation", Icon: CreditCard },
   { label: "Notifications", to: "/notifications", Icon: Bell },
   { label: "Aide", to: "/help", Icon: CircleHelp },
 ] as const;
@@ -13,7 +14,7 @@ const TABS = [
 /** Horizontal icon tabs linking the hamburger menu pages to each other. */
 export function SwivvSettingsTabs() {
   return (
-    <nav aria-label="Réglages" className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Réglages" className="mt-4 flex flex-wrap gap-2">
       {TABS.map(({ label, to, Icon }) => (
         <Link
           key={to}

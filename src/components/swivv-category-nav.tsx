@@ -46,7 +46,8 @@ const CATEGORY_ICONS: Record<string, ComponentType<{ className?: string; "aria-h
 // ponytail: one category row rendered under every page header — don't re-add per-page copies
 export function SwivvCategoryNav() {
   return (
-    <nav aria-label="Catégories" className="border-b border-border bg-background">
+    <nav aria-label="Catégories" className="border-b border-border bg-[#e9e7e4]">
+      {/* ponytail: grey band against the lighter page header (one-tone split, revert to bg-background if flat is preferred) — brand tint if grey ever feels dull */}
       {/* ponytail: tight wrap fits 2 lines on ~360px+ screens, may take 3 below 320px — scroll row if link count grows */}
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-1 sm:py-0.5 text-[14px] text-black md:flex-nowrap md:justify-start md:gap-7 md:overflow-x-auto md:text-[15px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {CATEGORIES.map((c) => {

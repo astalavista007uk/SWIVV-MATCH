@@ -3,16 +3,22 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/terms-and-conditions")({
-  head: () => ({ meta: [{ title: "Conditions d'utilisation — SWIVV" }] }),
+  head: () =>
+    pageHead(
+      "Conditions d'utilisation — SWIVV MATCH",
+      "Conditions d'utilisation de SWIVV MATCH : règles du service, engagements des membres, modération et sécurité.",
+      "/terms-and-conditions",
+    ),
   component: TermsPage,
 });
 
 const SECTIONS = [
   {
     t: "1. Le service",
-    d: "SWIVV est un site de rencontres : profils, likes, matchs et messagerie privée. L'inscription et les fonctions de base sont gratuites. Il faut avoir 18 ans ou plus pour s'inscrire.",
+    d: "SWIVV est un site de rencontres : profils, likes, matchs et messagerie privée. Tout est gratuit, sans carte bancaire, sans abonnement. Il faut avoir 18 ans ou plus pour s'inscrire.",
   },
   {
     t: "2. Tes engagements",
@@ -42,7 +48,6 @@ function TermsPage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <span className="text-sm text-[#777]">Conditions</span>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -62,8 +67,7 @@ function TermsPage() {
           ))}
         </div>
         <p className="mt-6 text-sm text-[#777]">
-          Version juridique complète : <Link to="/legal/terms" className="text-[#e91e63] underline">conditions d'utilisation détaillées</Link> ·{" "}
-          <Link to="/legal/privacy" className="text-[#e91e63] underline">politique de confidentialité</Link>
+          Données et confidentialité : <Link to="/privacy-centre" className="text-[#e91e63] underline">centre de confidentialité</Link>
         </p>
       </main>
       <SwivvFooter />

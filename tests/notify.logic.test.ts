@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { badgeText, digestDue, emailAllowed, emailKey, previewForEmail, validLink, windowElapsed } from "../src/lib/swivv-notify.logic";
+import { badgeText, digestDue, emailAllowed, emailKey, latestBy, previewForEmail, sameMember, validLink, windowElapsed } from "../src/lib/swivv-notify.logic";
 
 const H = 3600e3;
 describe("windows", () => {
@@ -43,5 +43,16 @@ describe("email gating", () => {
   });
   test("badge cap", () => {
     expect(badgeText(0)).toBe("0"); expect(badgeText(9)).toBe("9"); expect(badgeText(10)).toBe("9+"); expect(badgeText(-3)).toBe("0");
+  });
+  test("sameMember ignores u: prefix", () => {
+    expect(sameMember("u:abc", "abc")).toBe(true);
+    expect(sameMember("abc", "u:abc")).toBe(true);
+    expect(sameMember("u:abc", "u:abc")).toBe(true);
+    expect(sameMember("abc", "abd")).toBe(false);
+  });
+  test("latestBy keeps newest per key", () => {
+    const rows = [{ k: "a", t: 1 }, { k: "b", t: 5 }, { k: "a", t: 9 }, { k: "b", t: 2 }];
+    expect(latestBy(rows, (r) => r.k, (r) => r.t)).toEqual([{ k: "a", t: 9 }, { k: "b", t: 5 }]);
+    expect(latestBy([], (r: { k: string }) => r.k, () => 0)).toEqual([]);
   });
 });

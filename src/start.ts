@@ -1,11 +1,17 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
+import { PRIVATE_PATH } from "./lib/seo";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
-const errorMiddleware = createMiddleware().server(async ({ next }) => {
+const errorMiddleware = createMiddleware().server(async ({ next, pathname }) => {
   try {
-    return await next();
+    const result = await next();
+    // ponytail: noindex header covers every private route in one place — robots.txt only asks crawlers not to fetch, it never protects data
+    if (PRIVATE_PATH.test(pathname)) {
+      result.response.headers.set("x-robots-tag", "noindex, nofollow");
+    }
+    return result;
   } catch (error) {
     if (error != null && typeof error === "object" && "statusCode" in error) {
       throw error;

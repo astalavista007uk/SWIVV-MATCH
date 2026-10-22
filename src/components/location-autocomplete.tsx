@@ -20,7 +20,7 @@ type Props = {
 };
 
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
-const APP_UA = "PETBASE/1.0";
+const APP_UA = "SWIVV/1.0";
 const CACHE_TTL = 10 * 60 * 1000;
 
 const queryCache = new Map<string, { data: LocationSuggestion[]; ts: number }>();
@@ -58,7 +58,7 @@ export function LocationAutocomplete({ value, onChange, onSelect, placeholder, c
   const [open, setOpen] = useState(false);
   const [highlightedIdx, setHighlightedIdx] = useState(-1);
   const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastRequestRef = useRef<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);

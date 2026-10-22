@@ -41,7 +41,6 @@ function TemoignagePage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <span className="text-sm text-[#777]">Témoignage</span>
           <SwivvAuthButtons />
         </div>
       </header>

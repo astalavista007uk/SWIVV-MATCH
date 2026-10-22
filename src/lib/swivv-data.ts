@@ -2,13 +2,15 @@ export type SwivvProfile = {
   id: string;
   name: string;
   age: number;
-  /** ISO birthdate (signup only — used to recompute age on edit). */
+  /** Legacy signup input — never persisted: age is stored and exact DOB must not be member-readable. */
   birthdate?: string;
   gender: "woman" | "man";
   city: string;
   country: string;
   distanceKm: number;
   photo: string;
+  /** 320px list-card copy of `photo` (generated on save) — keeps feeds small. */
+  thumb?: string;
   photos: string[];
   tagline: string;
   bio: string;
@@ -68,9 +70,9 @@ export type SwivvProfile = {
   verified: boolean;
 };
 
-// High-res portraits (Unsplash, w=600 — sharp on cards + detail pages)
+// ponytail: w=400 q=70 (cards render ≤192px wide; detail pages upscale slightly) — bump to w=600 if full-screen photo views ever need it
 const U = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&crop=faces&w=600&q=80`;
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&crop=faces&w=400&q=70`;
 const WOMEN = [
   "photo-1494790108377-be9c29b29330",
   "photo-1438761681033-6461ffad8d80",
@@ -1278,11 +1280,6 @@ export function getProfile(id: string) {
 
 const photoUrl = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&crop=faces&w=600&q=80`;
-
-/** Portrait choices for the signup photo picker (full URLs). */
-export function swivvPhotoChoices(gender: "woman" | "man"): string[] {
-  return (gender === "woman" ? WOMEN : MEN).map(photoUrl);
-}
 
 /** Total children in the member's family (siblings + the member). */
 export function siblingTotal(p: SwivvProfile): number {

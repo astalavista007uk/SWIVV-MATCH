@@ -7,13 +7,19 @@ import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { MODERATION_EMAIL } from "@/lib/swivv-email-templates";
 import { supabase } from "@/integrations/supabase/client";
-import { sendContactConfirmation } from "@/lib/contact.functions";
+import { submitContactTicket } from "@/lib/contact.functions";
+import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact-us")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    subject: typeof search.subject === "string" ? search.subject : "",
+  validateSearch: (search: Record<string, unknown>): { subject?: string } => ({
+    subject: typeof search.subject === "string" ? search.subject : undefined,
   }),
-  head: () => ({ meta: [{ title: "Nous contacter — SWIVV" }] }),
+  head: () =>
+    pageHead(
+      "Contacter SWIVV MATCH",
+      "Contacte l'équipe SWIVV MATCH : question sur ton compte, signalement d'abus, problème technique ou demande de suppression de données.",
+      "/contact-us",
+    ),
   component: ContactPage,
 });
 
@@ -22,7 +28,7 @@ const SUBJECTS = [
   "Signaler un abus ou un faux profil",
   "Problème de match ou de message",
   "Signaler un problème technique",
-  "Suggérez une fonctionnalité",
+  "Suggère une fonctionnalité",
   "Supprimer mes données",
   "Partenariat / Presse",
   "Autre",
@@ -36,13 +42,13 @@ type KbEntry = { keys: string[]; text: string; to?: string; link?: string };
 
 const KB: KbEntry[] = [
   { keys: ["match", "compatible", "pourcentage", "%"], text: "Le % sur chaque profil vient de tes critères Mes Matches : plus tu remplis de critères correspondants, plus il grimpe. Change tes critères puis « Sauvegarder et rechercher » pour voir les chiffres se mettre à jour partout.", to: "/matches", link: "Ouvrir Mes Matches" },
-  { keys: ["like", "liker", "coeur"], text: "Touche le cœur sur un profil ou glisse sa photo vers la droite dans SWIVV Swipe. S'il te like en retour, c'est un match et la discussion se débloque.", to: "/swipe", link: "Ouvrir SWIVV Swipe" },
+  { keys: ["like", "liker", "coeur"], text: "Touche le cœur sur un profil ou glisse sa photo vers la droite dans SWIVV Swipe. Tu peux déjà lui écrire ; s'il te like en retour, c'est un match et les vocaux et photos se débloquent.", to: "/swipe", link: "Ouvrir SWIVV Swipe" },
   { keys: ["recu", "reçu"], text: "L'icône cœur pleine en haut affiche tes Likes reçus : les profils qui t'ont liké. C'est aussi là que naissent tes futurs matches.", to: "/browse" },
   { keys: ["message", "discuter", "discussion", "conversation"], text: "Va dans Messages (l'enveloppe en haut), choisis une conversation et écris. Tes messages se synchronisent entre ton téléphone et ton ordinateur.", to: "/messagerie", link: "Ouvrir Messages" },
   { keys: ["appel", "appeler", "telephone", "téléphone", "video", "vidéo", "camera", "caméra"], text: "Les appels vidéo sont réservés aux matches mutuels : sur son profil, clique « Demander un appel », confirme, et l'appel démarre dès qu'il accepte. Autorise micro et caméra dans ton navigateur (version https sur téléphone).", to: "/comment-ca-marche", link: "Comment ça marche" },
   { keys: ["vocal", "voix", "audio", "micro"], text: "Avec un match mutuel, touche le micro dans la conversation pour enregistrer un vocal, ■ pour envoyer, ✕ pour annuler. Écoutable des deux côtés, sur téléphone comme ordinateur." },
-  { keys: ["photo", "image", "avatar"], text: "Ajoute jusqu'à 5 photos (2,5 Mo max) : directement sur Mon Profil en cliquant + sous ta photo principale, ou à l'étape 5 de l'inscription. La première photo devient ta photo principale.", to: "/mon-profil", link: "Mon profil" },
-  { keys: ["inscription", "inscrire", "compte", "creer", "créer"], text: "Crée ton profil depuis « Créer mon profil » : 6 étapes (compte, profil, apparence, style de vie, famille, photos), 18 ans minimum, CGU à lire jusqu'en bas et 2 cases à cocher.", to: "/inscription", link: "Créer mon profil" },
+  { keys: ["photo", "image", "avatar"], text: "Ajoute jusqu'à 5 photos (2,5 Mo max) : directement sur Mon Profil en cliquant + sous ta photo principale, ou à l'étape 6 de l'inscription. La première photo devient ta photo principale.", to: "/mon-profil", link: "Mon profil" },
+  { keys: ["inscription", "inscrire", "compte", "creer", "créer"], text: "Crée ton compte depuis « Créer mon profil » en 2 minutes (18 ans minimum, CGU à lire jusqu'en bas et 2 cases à cocher), puis complète ton profil à ton rythme.", to: "/inscription", link: "Créer mon profil" },
   { keys: ["18", "age", "âge", "majeur"], text: "SWIVV est réservé aux 18 ans et plus : tu le certifies en cochant la première case à l'inscription." },
   { keys: ["cgu", "cgv", "condition", "cookie", "confidentialite", "confidentialité"], text: "Tout est en bas de page : CGU détaillées, CGV, cookies, confidentialité. Tu dois les accepter (case à cocher) pour t'inscrire." },
   { keys: ["distance", "km", "loin", "ville"], text: "Les distances sont de vraies distances route depuis ta ville (Paris → Nice ≈ 930 km). Vérifie que ta ville est bien renseignée dans ton profil si un chiffre te surprend." },
@@ -52,13 +58,13 @@ const KB: KbEntry[] = [
   { keys: ["bloquer", "bloque", "signaler", "abus", "faux", "arnaque", "harcelement", "harcèlement"], text: "Sur la page du profil : Bloquer (il disparaît et ne peut plus te contacter) ou Signaler (notre modération examine). En cas de danger immédiat, contacte aussi les autorités.", },
   { keys: ["securite", "sécurité", "conseil", "rencontre", "rendez-vous"], text: "Premier rendez-vous : lieu public, préviens un proche, garde tes moyens de transport. Le détail est dans « Comment ça marche », section 7.", to: "/comment-ca-marche", link: "Conseils sécurité" },
   { keys: ["notification", "notif", "alerte"], text: "Gère likes, messages et nouveautés depuis Paramètres. Si tu ne reçois rien sur téléphone, vérifie aussi les autorisations du navigateur." },
-  { keys: ["prix", "tarif", "gratuit", "payant", "abonnement", "premium"], text: "L'inscription et les fonctions de base sont gratuites. Les options payantes éventuelles sont détaillées dans les CGV avant tout paiement." },
+  { keys: ["prix", "tarif", "gratuit", "payant", "abonnement", "premium"], text: "Tout est gratuit sur SWIVV : inscription, profils, likes, matchs et messages, sans carte bancaire. Les CGV le confirment." },
   { keys: ["parrainage", "inviter", "ami", "parrain"], text: "Invite tes amis célibataires depuis la page d'accueil : plus de profils de qualité, plus de belles rencontres." },
   { keys: ["bug", "marche pas", "erreur", "probleme", "problème", "charge"], text: "Essaie d'abord : recharger la page (Ctrl+Maj+R), te reconnecter, ou un autre navigateur. Si ça persiste, décris-le dans le formulaire ci-dessous avec ton téléphone et ton navigateur." },
   { keys: ["mot de passe", "connexion", "connecter", "oublie", "oublié"], text: "Utilise « Mot de passe oublié » sur l'écran de connexion pour recevoir un lien de réinitialisation. Vérifie tes spams." },
   { keys: ["temoignage", "témoignage", "histoire"], text: "Raconte ta belle histoire sur la page Témoignage : elle pourra inspirer la communauté.", to: "/temoignage", link: "Partager mon témoignage" },
   { keys: ["swipe", "glisser"], text: "Dans SWIVV Swipe, glisse la photo vers la droite pour liker, vers la gauche pour passer. La carte suit ton doigt et la suivante apparaît dessous.", to: "/swipe", link: "SWIVV Swipe" },
-  { keys: ["humain", "conseiller", "equipe", "équipe", "support", "email", "e-mail"], text: "Je transmets aux humains ! Utilise le formulaire ci-dessous, l'équipe SWIVV répond en moins de 24 h." },
+  { keys: ["humain", "conseiller", "equipe", "équipe", "support", "email", "e-mail"], text: "Je transmets aux humains ! Utilise le formulaire ci-dessous, l'équipe SWIVV répond en général sous 1 à 2 jours ouvrés." },
 ];
 
 function normalize(s: string): string {
@@ -164,42 +170,35 @@ function ContactPage() {
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !message.trim()) return;
-    // ponytail: logged-in messages also open a server ticket for the admin inbox — mailto stays the delivery path until SMTP lands
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: t } = await supabase.from("swivv_support_tickets").insert({
-        user_id: user.id,
-        subject: `[Site] ${subject}`,
-        category: "other",
-      }).select("id").single();
-      const tid = (t as { id: string } | null)?.id;
-      if (tid) {
-        await supabase.from("swivv_support_messages").insert({
-          ticket_id: tid,
-          author_id: user.id,
-          is_staff: false,
-          body: `${message.trim()}\n\n— ${name.trim()} (${email.trim()})`,
-        });
-      }
+    if (!name.trim() || !email.trim() || !message.trim() || sending) return;
+    // ponytail: ticket lands in the admin inbox for everyone (logged-out included) via one server call — no mailto hop, nothing dies in a missing mail client
+    setSending(true);
+    setFailed(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const r = await submitContactTicket({
+        data: {
+          name: name.trim(),
+          email: email.trim(),
+          subject,
+          message: message.trim(),
+          fileNames: files.map((f) => f.name),
+          userId: user?.id ?? null,
+        },
+      });
+      if (r?.ok) setSent(true);
+      else setFailed(true);
+    } catch {
+      setFailed(true);
+    } finally {
+      setSending(false);
     }
-    // ponytail: fire-and-forget confirmation (no-op until the sender domain is verified) — mailto below stays the delivery path meanwhile
-    void sendContactConfirmation({
-      data: {
-        firstName: name.trim().split(/\s+/)[0] ?? name.trim(),
-        email: email.trim(),
-        subject,
-        message: message.trim(),
-      },
-    }).catch(() => null);
-    const subjectLine = encodeURIComponent(`[SWIVV] ${subject} — ${name.trim()}`);
-    const body = encodeURIComponent(`${message.trim()}\n\n— ${name.trim()} (${email.trim()})${files.length ? `\nPièces jointes à renvoyer depuis ta messagerie : ${files.map((f) => f.name).join(", ")}` : ""}`);
-    window.location.href = `mailto:${MODERATION_EMAIL}?subject=${subjectLine}&body=${body}`;
-    setSent(true);
   }
 
   return (
@@ -207,7 +206,6 @@ function ContactPage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <span className="text-sm text-[#777]">Nous contacter</span>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -221,7 +219,7 @@ function ContactPage() {
         </p>
         <h1 className="mt-1 text-3xl font-medium text-[#333]">Parlons-nous</h1>
         <p className="mt-2 text-[#777]">
-          Une question, un abus à signaler, un témoignage à partager ? Réponse en moins de 24 h.
+          Une question, un abus à signaler, un témoignage à partager ? Réponse en général sous 1 à 2 jours ouvrés.
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -246,11 +244,29 @@ function ContactPage() {
         {chatOpen && <SupportChat />}
 
         {sent ? (
-          <div className="mt-6 rounded-xl bg-green-50 p-6 text-center">
-            <p className="font-medium text-green-800">Message envoyé, merci {name.trim()} !</p>
-            <p className="mt-1 text-sm text-green-700">
-              L'équipe SWIVV te répondra à {email.trim()} au sujet de « {subject} ».
+          <div className="mt-6 rounded-2xl bg-white px-6 py-12 text-center shadow-sm">
+            {/* ponytail: hand-drawn SVG version of the attached thank-you art (envelope + green check) — swap for the hosted image if brand ever wants it pixel-exact */}
+            <svg width="150" height="120" viewBox="0 0 150 120" className="mx-auto" role="img" aria-label="Message reçu">
+              <rect x="15" y="38" width="120" height="72" rx="6" fill="#e6eaf2" />
+              <path d="M15 44 L75 86 L135 44" fill="none" stroke="#d3d9e6" strokeWidth="4" strokeLinejoin="round" />
+              <path d="M15 104 L62 66 M135 104 L88 66" stroke="#dfe4ee" strokeWidth="4" />
+              <rect x="43" y="6" width="64" height="62" rx="10" fill="#22c55e" />
+              <path d="M63 36 L73 46 L89 28" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="mt-6 text-4xl font-bold text-[#111]">Merci !</p>
+            <p className="mx-auto mt-3 max-w-md text-sm text-[#777]">
+              Ton message a bien été reçu, merci {name.trim()} ! L&apos;équipe SWIVV MATCH te répondra à {email.trim()} dans les plus brefs délais.
             </p>
+            <p className="mt-8 text-sm text-[#777]">Cordialement,</p>
+            <p className="mt-1 text-sm text-[#777]">L&apos;équipe SWIVV MATCH</p>
+            {/* ponytail: local reset only (clears the form for a new subject) — router reload if a clean URL state ever matters */}
+            <button
+              type="button"
+              onClick={() => { setSent(false); setName(""); setEmail(""); setMessage(""); setFiles([]); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              className="mt-8 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white hover:bg-[#c2185b]"
+            >
+              Contacte-nous pour un autre sujet
+            </button>
           </div>
         ) : (
           <form id="contact-form" onSubmit={submit} className="mt-6 space-y-4 rounded-2xl bg-white p-6 shadow-sm sm:p-8">
@@ -321,7 +337,7 @@ function ContactPage() {
                 className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
               />
             </div>
-            {/* ponytail: files stay client-side, no upload yet — send to backend/storage when the form sends for real */}
+            {/* ponytail: files stay client-side (names ride in the ticket, staff reclaims them by e-mail) — real upload to storage when attachments need to travel with the ticket */}
             <div>
               <label htmlFor="docs" className="mb-1.5 block text-sm font-medium text-[#333]">
                 Documents (3 maximum)
@@ -330,7 +346,13 @@ function ContactPage() {
                 id="docs"
                 type="file"
                 multiple
-                onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 3))}
+                onChange={(e) => {
+                  // ponytail: append (each picker opens a new folder, replacing would drop the rest) — dedupe on name+size, cap at 3
+                  const picked = Array.from(e.target.files ?? []);
+                  e.target.value = "";
+                  if (!picked.length) return;
+                  setFiles((prev) => [...prev, ...picked.filter((p) => !prev.some((x) => x.name === p.name && x.size === p.size))].slice(0, 3));
+                }}
                 className="w-full rounded-md border border-border px-3 py-2.5 text-sm text-[#555] file:mr-3 file:rounded-md file:border-0 file:bg-[#e91e63]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#e91e63]"
               />
               {!!files.length && (
@@ -353,11 +375,16 @@ function ContactPage() {
             </div>
             <button
               type="submit"
-              disabled={!name.trim() || !email.trim() || !message.trim()}
+              disabled={!name.trim() || !email.trim() || !message.trim() || sending}
               className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white disabled:opacity-40"
             >
-              Envoyer
+              {sending ? "Envoi…" : "Envoyer"}
             </button>
+            {failed && (
+              <p role="alert" className="text-center text-sm font-medium text-red-600">
+                Envoi impossible pour le moment — vérifie ta connexion et réessaie.
+              </p>
+            )}
             <p className="text-center text-xs text-[#999]">
               En cas d'urgence (menace, chantage), contacte aussi les autorités locales.
             </p>

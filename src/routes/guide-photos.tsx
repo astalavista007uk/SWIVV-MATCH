@@ -4,9 +4,15 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/guide-photos")({
-  head: () => ({ meta: [{ title: "Guide photos — SWIVV" }] }),
+  head: () =>
+    pageHead(
+      "Guide photos de profil — SWIVV MATCH",
+      "Guide photos SWIVV MATCH : quelles photos sont acceptées, quelles erreurs éviter et comment mettre en valeur ton profil.",
+      "/guide-photos",
+    ),
   component: PhotoGuidePage,
 });
 
@@ -121,7 +127,7 @@ function PhotoGuidePage() {
           <Link to="/verification" className="rounded-md bg-[#e91e63] px-5 py-2.5 text-sm font-medium text-white">
             Vérifier mes photos avec un selfie
           </Link>
-          <Link to="/inscription" className="rounded-md border border-border px-5 py-2.5 text-sm font-medium text-[#555]">
+          <Link to="/mon-profil" className="rounded-md border border-border px-5 py-2.5 text-sm font-medium text-[#555]">
             Modifier mes photos
           </Link>
         </div>

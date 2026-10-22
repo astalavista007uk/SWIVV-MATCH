@@ -5,6 +5,9 @@ import { audit, useAdminRole } from "@/lib/admin";
 import { reactionOf } from "@/lib/swivv-reactions";
 import { profileCompleteness, REQUIRED_PROFILE_FIELDS } from "@/lib/swivv-auth";
 import { SwivvVoicePlayer } from "@/components/swivv-voice-player";
+import { useSignedMediaMap } from "@/lib/swivv-store";
+import { notifySuspended } from "@/lib/admin";
+import { trackEvent } from "@/lib/track";
 
 export const Route = createFileRoute("/admin/users/$userId")({
   component: AdminUserDetail,
@@ -53,6 +56,7 @@ function AdminUserDetail() {
   const [auditTrail, setAuditTrail] = useState<any[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [related, setRelated] = useState<any[]>([]);
+  const [email, setEmail] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
   const [draft, setDraft] = useState("");
   const [warnMsg, setWarnMsg] = useState("");
@@ -62,7 +66,10 @@ function AdminUserDetail() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [tlKind, setTlKind] = useState("all");
+  // ponytail: staff reads via the is_staff() bucket policy — same 1h signed URLs as members
+  const signed = useSignedMediaMap(messages.map((m: any) => m.audio_url));
   const canAct = level >= 80;
+  const canMod = level >= 50;
   const canReadMsgs = level >= 50;
 
   async function refresh() {
@@ -71,7 +78,7 @@ function AdminUserDetail() {
     try {
       const q = supabase as any;
       // ponytail: any[] tuple — 17 parallel fetches exceed Promise.all's inferred arity and collapse to {}; a typed client if this page ever grows more sources
-      const [p, st, n, rep, v, t, c, nt, m, ls, lr, ma, bo, bi, vr, au, rx]: any[] = await Promise.all([
+      const [p, st, n, rep, v, t, c, nt, m, ls, lr, ma, bo, bi, vr, au, rx, em]: any[] = await Promise.all([
         safe(q.from("swivv_profiles").select("data,updated_at").eq("user_id", userId).maybeSingle(), miss),
         safe(q.from("swivv_user_status").select("status").eq("user_id", userId).maybeSingle(), miss),
         safe(q.from("swivv_internal_notes").select("*").eq("target_kind", "user").eq("target_id", userId).order("created_at", { ascending: false }).limit(50), miss),
@@ -89,6 +96,7 @@ function AdminUserDetail() {
         safe(q.from("swivv_profile_views").select("viewer_id,created_at").eq("viewed_id", userId).order("created_at", { ascending: false }).limit(200), miss),
         safe(q.from("swivv_audit_log").select("action,actor_id,created_at,metadata").eq("target_id", userId).order("created_at", { ascending: false }).limit(100), miss),
         safe<any[]>(q.from("swivv_photo_reactions").select("reactor_id,reaction,created_at").eq("owner_id", userId).order("created_at", { ascending: false }).limit(200), miss),
+        safe<string>(q.rpc("staff_user_email", { target_id: userId }), miss),
       ]);
       setMissing(miss.v);
       if ((p as any)?.data) {
@@ -111,6 +119,7 @@ function AdminUserDetail() {
       setViewsRecv(vr ?? []);
       setAuditTrail(au ?? []);
       setPhotoRx(rx ?? []);
+      setEmail(em ?? null);
       if ((m ?? []).length > 0) audit("admin.user.messages", "user", userId, { count: (m ?? []).length });
       // resolve counterpart names in one query
       const ids = new Set<string>();
@@ -235,11 +244,20 @@ function AdminUserDetail() {
     return { pct: profileCompleteness(d), missing, photos: (d.photos ?? []).length };
   }, [d]);
 
-  // ponytail: browser mirrors (data.likes/matches) stand in until the social migration lands — server rows win when both exist; mirrors carry no timestamps
+  // ponytail: server UNION browser mirror (dedup by bare id) — seeds never reach the server, so either/or undercounts the moment both exist; mirrors carry no timestamps
   const mirrorIds = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
-  const sentAll = likesSent.length ? likesSent.map((x) => ({ id: x.liked_id as string, at: x.created_at as string | null, approx: false })) : mirrorIds(d.likes).map((id) => ({ id, at: null as string | null, approx: true }));
-  const recvAll = likesRecv.length ? likesRecv.map((x) => ({ id: x.liker_id as string, at: x.created_at as string | null, approx: false })) : [];
-  const matchAll = matches.length ? matches.map((x) => ({ id: (x.user_a === userId ? x.user_b : x.user_a) as string, at: x.created_at as string | null, approx: false })) : mirrorIds(d.matches).map((id) => ({ id: id.startsWith("u:") ? id.slice(2) : id, at: null as string | null, approx: true }));
+  const bareId = (id: string) => (id.startsWith("u:") ? id.slice(2) : id);
+  const sentBase = likesSent.map((x) => ({ id: x.liked_id as string, at: x.created_at as string | null, approx: false }));
+  const sentSeen = new Set(sentBase.map((x) => bareId(x.id)));
+  const sentAll = [...sentBase, ...mirrorIds(d.likes).filter((id) => !sentSeen.has(bareId(id))).map((id) => ({ id, at: null as string | null, approx: true }))];
+  const recvBase = likesRecv.map((x) => ({ id: x.liker_id as string, at: x.created_at as string | null, approx: false }));
+  const recvSeen = new Set(recvBase.map((x) => bareId(x.id)));
+  // ponytail: seeds leave no incoming rows — a mirror match means they liked back, so seed matches join Likes reçus as approx; one-sided seed likes stay unknowable
+  const recvSeed = mirrorIds(d.matches).map(bareId).filter((id) => !/^[0-9a-f-]{36}$/i.test(id) && !recvSeen.has(id)).map((id) => ({ id, at: null as string | null, approx: true }));
+  const recvAll = [...recvBase, ...recvSeed];
+  const matchBase = matches.map((x) => ({ id: (x.user_a === userId ? x.user_b : x.user_a) as string, at: x.created_at as string | null, approx: false }));
+  const matchSeen = new Set(matchBase.map((x) => bareId(x.id)));
+  const matchAll = [...matchBase, ...mirrorIds(d.matches).map(bareId).filter((id) => !matchSeen.has(id)).map((id) => ({ id, at: null as string | null, approx: true }))];
 
   const timeline = useMemo(() => {
     const ev: { at: string; kind: string; label: string }[] = [];
@@ -269,6 +287,8 @@ function AdminUserDetail() {
 
   async function setAccountStatus(next: string, days?: number) {
     setMsg(null);
+    // ponytail: native confirm (one line, no modal state) — the ban keeps its custom double-confirm panel below
+    if (next === "suspended" && typeof window !== "undefined" && !window.confirm(`Suspendre ce compte ${days ? `pour ${days} jour(s)` : ""} ? L'action est enregistrée dans l'audit.`)) return;
     const until = next === "suspended" && days ? new Date(Date.now() + days * 864e5).toISOString() : null;
     const { error } = await (supabase as any).from("swivv_user_status").upsert(
       { user_id: userId, status: next, reason: null, until, updated_by: (await supabase.auth.getUser()).data.user?.id },
@@ -281,6 +301,7 @@ function AdminUserDetail() {
     setStatus(next);
     setConfirmBan(false);
     audit(`admin.user.${next}`, "user", userId, days ? { days } : undefined);
+    if (next === "suspended") notifySuspended(userId, "modération");
     setMsg(next === "active" ? "Compte restauré." : `Statut → ${next}${until ? ` jusqu'au ${new Date(until).toLocaleDateString("fr-FR")}` : ""}.`);
   }
 
@@ -376,7 +397,7 @@ function AdminUserDetail() {
               <span className={`rounded-full px-2 py-0.5 ${riskCls}`}>⚠ risque {risk.level}</span>
               <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-[#555]">Premium : non collecté</span>
             </p>
-            <p className="mt-0.5 text-xs text-[#999]">Membre depuis le {fmtDate(d.joinedAt)} · actif : {d.lastActive ? fmtDate(d.lastActive) : "—"} · complétion {completeness.pct} %</p>
+            <p className="mt-0.5 text-xs text-[#999]">Membre depuis le {fmtDate(d.joinedAt)} · actif : {d.lastActive ? fmtDate(d.lastActive) : "—"} · complétion {completeness.pct} %{email ? ` · ${email}` : ""}</p>
           </div>
           <div className="ml-auto flex flex-wrap gap-2">
             {canAct && (
@@ -384,6 +405,18 @@ function AdminUserDetail() {
                 <button type="button" onClick={() => setAccountStatus("suspended", Number(suspendFor))} className="rounded-md bg-amber-600 px-3 py-1.5 text-sm font-medium text-white">Suspendre</button>
                 <button type="button" onClick={() => setConfirmBan(true)} className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white">Bannir</button>
                 <button type="button" onClick={() => setAccountStatus("active")} className="rounded-md border border-border px-3 py-1.5 text-sm text-[#555]">Restaurer</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // ponytail: marks deleted in swivv_user_status (revocable, audited) — actual auth.users erasure needs service_role, see the export/audit trail
+                    if (!window.confirm("Marquer ce compte SUPPRIMÉ ? Le profil disparaît, l'audit garde la trace.")) return;
+                    if (!window.confirm("Confirmation finale — initier la suppression.")) return;
+                    setAccountStatus("deleted");
+                  }}
+                  className="rounded-md border border-red-200 px-3 py-1.5 text-sm text-red-700"
+                >
+                  Supprimer…
+                </button>
                 <button type="button" onClick={exportJson} className="rounded-md border border-border px-3 py-1.5 text-sm text-[#555]">Export JSON</button>
               </>
             )}
@@ -499,7 +532,7 @@ function AdminUserDetail() {
             {messages.map((m: any, i: number) => (
               <li key={`${m.created_at}-${i}`} className="text-[#555]">
                 <span className={`font-medium ${m.sender === "me" ? "text-[#e91e63]" : "text-[#333]"}`}>{m.sender === "me" ? "→" : "←"}</span> <MemberLink id={m.peer_id} name={nm(m.peer_id)} />{" "}
-                {canReadMsgs ? (m.audio_url ? <SwivvVoicePlayer src={m.audio_url} /> : (m.body || "—")) : <em className="text-[#999]">[contenu masqué]</em>}{" "}
+                {canReadMsgs ? (m.audio_url ? <SwivvVoicePlayer src={signed[m.audio_url] ?? m.audio_url} /> : (m.body || "—")) : <em className="text-[#999]">[contenu masqué]</em>}{" "}
                 <span className="text-xs text-[#999]">· {new Date(m.created_at).toLocaleString("fr-FR")}</span>
               </li>
             ))}
@@ -557,6 +590,28 @@ function AdminUserDetail() {
       {tab === "Vérification" && (
         <section className="mt-3 rounded-xl bg-white p-4 shadow-sm">
           <p className="text-xs text-[#999]">Le badge « vérifié » du profil est auto-déclaré côté client — seules les demandes ci-dessous font foi.</p>
+          {canMod && (
+            <button
+              type="button"
+              onClick={async () => {
+                setMsg(null);
+                const { error } = await (supabase as any)
+                  .from("swivv_verification_requests")
+                  .insert({ user_id: userId, kind: "profile", status: "pending" });
+                if (error) {
+                  setMsg(error.message);
+                  return;
+                }
+                audit("admin.user.verify_request", "user", userId);
+                trackEvent("verification_requested");
+                setMsg("Vérification demandée au membre.");
+                refresh();
+              }}
+              className="mt-2 rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white"
+            >
+              Demander une vérification
+            </button>
+          )}
           {rows(verif, (x, i) => <li key={i} className="text-[#555]">{x.kind} · {x.status} · {fmtDate(x.created_at)}</li>, "Aucune demande.")}
         </section>
       )}

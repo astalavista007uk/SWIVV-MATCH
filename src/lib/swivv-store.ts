@@ -1,5 +1,8 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/track";
+import { sameMember } from "@/lib/swivv-notify.logic";
+import { blockPing } from "@/lib/notify.functions";
 
 export type ChatMessage = {
   id: string;
@@ -84,6 +87,7 @@ export type SwivvSettings = {
   rtReactions: boolean;
   rtFavourite: boolean;
   rtPotential: boolean;
+  appPromoDismissed: boolean;
 };
 const DEFAULT_SETTINGS: SwivvSettings = {
   msgBadge: true,
@@ -98,6 +102,7 @@ const DEFAULT_SETTINGS: SwivvSettings = {
   rtReactions: true,
   rtFavourite: true,
   rtPotential: true,
+  appPromoDismissed: false,
 };
 
 export function getSettings(): SwivvSettings {
@@ -107,6 +112,15 @@ export function getSettings(): SwivvSettings {
 
 export function setSetting<K extends keyof SwivvSettings>(k: K, v: SwivvSettings[K]) {
   write(SETTINGS_KEY, { ...getSettings(), [k]: v });
+}
+
+// ponytail: relies on the native shell tagging its WebView — append "SwivvApp" to the UA or inject window.__SWIVV_NATIVE__ true; plain browsers never match
+export function isNativeApp(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return (
+    navigator.userAgent.includes("SwivvApp") ||
+    (window as { __SWIVV_NATIVE__?: boolean }).__SWIVV_NATIVE__ === true
+  );
 }
 
 // ponytail: app language only picks the translation target for now (UI stays French) — full i18n if a 2nd locale ships
@@ -128,7 +142,7 @@ export function setAppLang(v: string) {
 }
 
 export function clearSwivvLocal() {
-  for (const k of [LIKES_KEY, MATCHES_KEY, BLOCKED_KEY, REPORTED_KEY, CHATS_KEY, READ_KEY, SETTINGS_KEY, HIDDEN_KEY, VIEWS_KEY, FAVS_KEY, MATCH_CRITERIA_KEY, MATCH_CRITERIA_AT_KEY]) {
+  for (const k of [LIKES_KEY, MATCHES_KEY, BLOCKED_KEY, BLOCKEDBY_KEY, REPORTED_KEY, CHATS_KEY, READ_KEY, SETTINGS_KEY, HIDDEN_KEY, VIEWS_KEY, FAVS_KEY, MATCH_CRITERIA_KEY, MATCH_CRITERIA_AT_KEY]) {
     try {
       localStorage.removeItem(k);
     } catch {
@@ -182,6 +196,11 @@ export function toggleLike(id: string): { liked: boolean; matched: boolean } {
   let matched = false;
   if (likes.has(id)) {
     likes.delete(id);
+    // ponytail: unlike dissolves the match too (a fresh like re-verifies both sides) — pre-fix server rows need one SQL delete if ever observed
+    if (matches.has(id)) {
+      matches.delete(id);
+      write(MATCHES_KEY, [...matches]);
+    }
   } else {
     likes.add(id);
     if (!matches.has(id) && autoReciprocates(id)) {
@@ -193,15 +212,30 @@ export function toggleLike(id: string): { liked: boolean; matched: boolean } {
   write(LIKES_KEY, [...likes]);
   void pushLikes();
   const liked = likes.has(id);
-  if (isUuid(id)) void mirrorSocial(liked ? "like" : "unlike", id);
+  // ponytail: member ids ride "u:"-prefixed in state but bare in uuid columns — strip once here so the server mirror actually fires (it never did for members)
+  const bareId = id.replace(/^u:/, "");
+  if (isUuid(bareId)) void mirrorSocial(liked ? "like" : "unlike", bareId);
   return { liked, matched };
 }
 
 /** Deterministic stand-in for "they liked/favourited me back": 1 id in 3 reciprocates. */
-function autoReciprocates(id: string): boolean {
+export function autoReciprocates(id: string): boolean {
   let hash = 0;
   for (const c of id) hash = (hash * 31 + c.charCodeAt(0)) % 997;
   return hash % 3 === 0;
+}
+
+/** Add-only like: photo reactions record a real outgoing like without ever unliking (toggleLike would flip an existing like off). */
+/* ponytail: mirror runs on every call, not just the add — likes recorded while the member-id mirror was dead have no server row yet; the upsert + mutual check are idempotent so re-asserting heals them */
+export async function ensureLike(id: string): Promise<void> {
+  const likes = new Set(getLikes());
+  if (!likes.has(id)) {
+    likes.add(id);
+    write(LIKES_KEY, [...likes]);
+    void pushLikes();
+  }
+  const bare = id.replace(/^u:/, "");
+  if (isUuid(bare)) void mirrorSocial("like", bare);
 }
 
 // ponytail: likes+matches live in swivv_profiles.data (no new table); union-merge, last writer wins, unlikes don't delete server-side yet
@@ -239,13 +273,32 @@ async function mirrorSocial(kind: "like" | "unlike" | "block" | "unblock", targe
     console.warn("[swivv] social mirror skipped", error.message ?? error);
     return;
   }
+  // ponytail: unlike dissolves the server match row too (both orientations collapse to sorted [a,b]) — stats/admin read this table, so leaving it would show phantom mutuals
+  if (kind === "unlike") {
+    const [a, b] = [uid, target].sort();
+    const { error: dmErr } = await q.from("swivv_matches").delete().eq("user_a", a).eq("user_b", b);
+    if (dmErr) console.warn("[swivv] match dissolve skipped", dmErr.message ?? dmErr);
+    return;
+  }
   // ponytail: a match row means REAL mutual consent (reverse like exists) — the 1-in-3 auto-match stays a local UX stand-in and never reaches the server
   if (kind === "like") {
     const { data: back } = await q.from("swivv_likes").select("liker_id").eq("liker_id", target).eq("liked_id", uid).maybeSingle();
-    if (back) {
+    // ponytail: reactions count as likes both ways — a reverse reaction is consent too; the completing device unlocks voice/files at once via the local match below
+    const { data: backRx } = back
+      ? { data: null }
+      : await q.from("swivv_photo_reactions").select("reactor_id").eq("owner_id", uid).eq("reactor_id", target).limit(1);
+    if (back || (Array.isArray(backRx) && backRx.length > 0)) {
       const [a, b] = [uid, target].sort();
       const { error: mErr } = await q.from("swivv_matches").upsert({ user_a: a, user_b: b }, { onConflict: "user_a,user_b" });
       if (mErr) console.warn("[swivv] match mirror skipped", mErr.message ?? mErr);
+      // ponytail: local ids ride "u:"-prefixed — the completing device joins the same list hearts use, so voice/files unlock at once
+      const mid = `u:${target}`;
+      const matches = new Set(getMatches());
+      if (!matches.has(mid)) {
+        matches.add(mid);
+        write(MATCHES_KEY, [...matches]);
+        void pushLikes();
+      }
     }
   }
 }
@@ -261,6 +314,15 @@ export async function pullLikes(uid: string) {
   const d = (row?.data ?? {}) as { likes?: string[]; matches?: string[] };
   write(LIKES_KEY, [...new Set([...getLikes(), ...(d.likes ?? [])])]);
   write(MATCHES_KEY, [...new Set([...getMatches(), ...(d.matches ?? [])])]);
+  // ponytail: real server matches (mutual completed on ANY device) join the local unlock list — the completing device adds it live via mirrorSocial, everyone else re-syncs here at boot; RLS restricts rows to my own
+  try {
+    const { data: mm } = await (supabase as any).from("swivv_matches").select("user_a,user_b").or(`user_a.eq.${uid},user_b.eq.${uid}`).limit(200);
+    const counterparts = ((mm ?? []) as { user_a: string; user_b: string }[]).map((m) => (m.user_a === uid ? m.user_b : m.user_a));
+    const srv = new Set(counterparts.map((c) => `u:${c}`));
+    // ponytail: prune local-only matches with no outgoing like (pre-fix unlikes left them behind) — server rows re-merge regardless of device
+    const liked = new Set(getLikes());
+    write(MATCHES_KEY, [...new Set([...getMatches().filter((m) => liked.has(m) || srv.has(m)), ...srv])]);
+  } catch {}
   await pushLikes();
 }
 
@@ -318,9 +380,34 @@ export function getBlocked(): string[] {
   return read<string[]>(BLOCKED_KEY, []);
 }
 
+/** Block check immune to u:-prefix mismatches (server rows are bare, UI ids ride prefixed). */
+export function isBlockedId(id: string, list: string[] = getBlocked()): boolean {
+  return list.some((b) => sameMember(b, id));
+}
+
+const BLOCKEDBY_KEY = "swivv:blockedby:v1";
+/** Members who blocked me (server truth, synced at boot) — drives the blocked-side banner, icon, and send refusal. */
+export function getBlockedBy(): string[] {
+  if (typeof localStorage === "undefined") return [];
+  return read<string[]>(BLOCKEDBY_KEY, []);
+}
+export function isBlockedById(id: string, list: string[] = getBlockedBy()): boolean {
+  return list.some((b) => sameMember(b, id));
+}
+/** Either direction blocked — searches hide, composers refuse, threads banner. */
+export function isThreadBlocked(id: string): boolean {
+  return isBlockedId(id) || isBlockedById(id);
+}
+
 export function toggleBlock(id: string): boolean {
   const blocked = toggleId(BLOCKED_KEY, id);
-  if (isUuid(id)) void mirrorSocial(blocked ? "block" : "unblock", id);
+  // ponytail: same u:-strip as likes (member ids ride prefixed, uuid columns are bare) — without it the server mirror never fires for members
+  const bare = id.replace(/^u:/, "");
+  if (isUuid(bare)) {
+    void mirrorSocial(blocked ? "block" : "unblock", bare);
+    // ponytail: only the blocker is told (private confirmation) — the blocked member learns nothing, per blocking-privacy rules
+    void blockPing({ data: { target: bare, action: blocked ? "blocked" : "unblocked" } }).catch(() => {});
+  }
   return blocked;
 }
 
@@ -343,7 +430,20 @@ export function reportMember(id: string, by?: string, reason?: string) {
         reported_user_id: bare,
         category: reason ?? "other",
         description: by ? `Signalé par ${by}` : null,
-      }).then((r: { error: unknown }) => { if (r.error) console.warn("[swivv] report mirror skipped", (r.error as any)?.message ?? r.error); });
+      }).then((r: { error: unknown }) => {
+        if (r.error) console.warn("[swivv] report mirror skipped", (r.error as any)?.message ?? r.error);
+        // ponytail: central event tracking (never blocks the report) — activity feed reads swivv_events going forward
+        else trackEvent("report_filed", { category: reason ?? "other" });
+        // ponytail: reporter confirmation on server success only (local-only seed reports stay silent) — no names, no details
+        if (!r.error) {
+          void (supabase as any).from("swivv_notifications").insert({
+            user_id: data.user.id,
+            type: "info",
+            title: "Signalement envoyé",
+            message: "Merci, notre équipe de modération va l'examiner.",
+          });
+        }
+      });
     });
   }
 }
@@ -533,12 +633,13 @@ export async function pullMatchCriteria(): Promise<Record<string, string> | null
   const { data } = await supabase.auth.getSession();
   const uid = data.session?.user.id;
   if (!uid) return null;
+  // ponytail: projection, not the whole data blob (photos are ~750KB data URLs) — this now runs at every app boot, not just on Mes Matches
   const { data: row } = await (supabase as any)
     .from("swivv_profiles")
-    .select("data")
+    .select("data->matchCriteria")
     .eq("user_id", uid)
     .maybeSingle();
-  const server = (row?.data as { matchCriteria?: { form: Record<string, string>; savedAt: number } } | null)?.matchCriteria;
+  const server = (row as { matchCriteria?: { form: Record<string, string>; savedAt: number } } | null)?.matchCriteria;
   const localRaw = (() => {
     try {
       return localStorage.getItem(MATCH_CRITERIA_KEY);
@@ -553,8 +654,17 @@ export async function pullMatchCriteria(): Promise<Record<string, string> | null
       return null;
     }
   })();
-  // ponytail: legacy saves have no stamp — treat this browser's copy as now and upload it
+  const adopt = (form: Record<string, string>, at: number) => {
+    try {
+      localStorage.setItem(MATCH_CRITERIA_KEY, JSON.stringify(form));
+      localStorage.setItem(MATCH_CRITERIA_AT_KEY, String(at));
+    } catch {}
+    notify();
+    return form;
+  };
+  // ponytail: unstamped local copies are signup stubs, never explicit saves — the server copy always wins over them (uploading the stub here once clobbered a good phone-saved copy with an age-only stub)
   if (localRaw && atRaw == null) {
+    if (server?.form) return adopt(server.form, server.savedAt);
     try {
       await pushMatchCriteria(JSON.parse(localRaw) as Record<string, string>);
     } catch {}
@@ -562,13 +672,7 @@ export async function pullMatchCriteria(): Promise<Record<string, string> | null
   }
   if (server?.form) {
     const localAt = Number(atRaw ?? 0) || 0;
-    if (server.savedAt > localAt || !localRaw) {
-      try {
-        localStorage.setItem(MATCH_CRITERIA_KEY, JSON.stringify(server.form));
-        localStorage.setItem(MATCH_CRITERIA_AT_KEY, String(server.savedAt));
-      } catch {}
-      return server.form;
-    }
+    if (server.savedAt > localAt || !localRaw) return adopt(server.form, server.savedAt);
     return null;
   }
   // ponytail: first-login upload — local saves made before sync existed have no server copy yet
@@ -589,9 +693,10 @@ export function bumpProfileView(id: string) {
   if (typeof localStorage === "undefined" || !id) return;
   const v = read<Record<string, number>>(VIEWS_KEY, {});
   write(VIEWS_KEY, { ...v, [id]: (v[id] ?? 0) + 1 });
-  // ponytail: one server row per viewer→viewed per session (caps write volume; drop the guard if per-view history ever matters) — seeds skipped, honest counts only
-  if (!isUuid(id)) return;
-  const k = `pv:${id}`;
+  // ponytail: one server row per viewer→viewed per session (caps write volume; drop the guard if per-view history ever matters) — member ids ride u:-prefixed (strip once or the mirror never fires), seeds skipped, honest counts only
+  const bare = id.replace(/^u:/, "");
+  if (!isUuid(bare)) return;
+  const k = `pv:${bare}`;
   try {
     if (sessionStorage.getItem(k)) return;
     sessionStorage.setItem(k, "1");
@@ -599,8 +704,9 @@ export function bumpProfileView(id: string) {
   void (async () => {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user.id;
-    if (!uid || !isUuid(uid)) return;
-    const { error } = await (supabase as any).from("swivv_profile_views").insert({ viewer_id: uid, viewed_id: id });
+    // ponytail: own views never count (vanity numbers + they poison the popular sort) — local counter gated at the call site, which knows identity synchronously
+    if (!uid || !isUuid(uid) || uid === bare) return;
+    const { error } = await (supabase as any).from("swivv_profile_views").insert({ viewer_id: uid, viewed_id: bare });
     if (error) console.warn("[swivv] view mirror skipped", error.message ?? error);
   })();
 }
@@ -615,7 +721,9 @@ export function useRecusCount(): number {
   return getRecusCount();
 }
 
-export function sendChat(id: string, text: string) {
+export function sendChat(id: string, text: string): string | null {
+  // ponytail: one central block guard for all three senders (text/voice/image) so no composer can reach a blocked peer — callers already surface the returned error
+  if (isThreadBlocked(id)) return "Message non envoyé — ce membre est bloqué.";
   // ponytail: no fake replies or greetings — only real senders write "them" rows (server realtime); demo liveliness if empty inboxes ever need staging
   saveMessage(id, {
     id: `${Date.now()}`,
@@ -623,6 +731,7 @@ export function sendChat(id: string, text: string) {
     text,
     at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), ts: Date.now(),
   });
+  return null;
 }
 
 // ponytail: localStorage stays the read cache (sync render path) with server as source of truth —
@@ -656,7 +765,7 @@ async function pushMessage(peerId: string, msg: ChatMessage) {
   ).then((r: { error: unknown }) => { if (r.error) throw r.error; }).catch((e: unknown) => console.warn("[swivv] recipient chat copy failed", e));
 }
 
-/** Upload a voice blob, returns its public URL. */
+/** Upload a voice blob, returns its stored URL (private bucket — render via signedMediaUrl). */
 export async function uploadVoice(peerId: string, msgId: string, blob: Blob): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
   const uid = data.session?.user.id;
@@ -719,6 +828,8 @@ async function pullAndPush(uid: string) {
   if (rows) {
     const chats = read<Record<string, ChatMessage[]>>(CHATS_KEY, {});
     for (const r of rows as ChatRow[]) {
+      // ponytail: blocked peers' messages never enter this inbox (their sends fail server-side once the guard migration lands; until then they're dropped here)
+      if (r.sender === "them" && isThreadBlocked(r.peer_id)) continue;
       const list = chats[r.peer_id] ?? [];
       if (!list.some((m) => m.id === r.msg_id)) list.push(rowToMessage(r));
       chats[r.peer_id] = list;
@@ -737,6 +848,7 @@ async function pullAndPush(uid: string) {
 
 /** Record-then-send voice note. Returns an error message, or null on success. */
 export async function sendVoice(peerId: string, blob: Blob, dur: number): Promise<string | null> {
+  if (isThreadBlocked(peerId)) return "Message non envoyé — ce membre est bloqué.";
   const msgId = `${Date.now()}-v`;
   const url = await uploadVoice(peerId, msgId, blob);
   if (!url) return "Envoi impossible. Réessaie.";
@@ -753,6 +865,7 @@ export async function sendVoice(peerId: string, blob: Blob, dur: number): Promis
 
 /** Send an image (mutual matches only — caller gates). Returns an error message, or null on success. */
 export async function sendImage(peerId: string, file: File): Promise<string | null> {
+  if (isThreadBlocked(peerId)) return "Message non envoyé — ce membre est bloqué.";
   // ponytail: same voice-note pipeline + bucket, images under images/ — dedicated bucket + client resize if 5 Mo ever blocks real photos
   if (file.size > 5_000_000) return "Image trop lourde (5 Mo max).";
   const msgId = `${Date.now()}-i`;
@@ -813,6 +926,56 @@ export function mediaUrl(url: string | undefined): string | undefined {
   }
 }
 
+const VOICE_BUCKET = "swivv-voice";
+// ponytail: signed tokens live in memory only (the localStorage chat cache keeps the unsigned stored URL) — a copied disk yields nothing playable past expiry
+const signedCache = new Map<string, { url: string; exp: number }>();
+
+/** Storage path inside swivv-voice, or null for non-storage URLs (seeds, data:, unsplash). */
+export function storagePathOf(stored: string | null | undefined): string | null {
+  if (!stored) return null;
+  const i = stored.indexOf(`/${VOICE_BUCKET}/`);
+  if (i < 0) return null;
+  return stored.slice(i + VOICE_BUCKET.length + 2).split("?")[0] || null;
+}
+
+/** Playable URL for a stored chat-media URL: 1h signed URL for storage objects, mediaUrl passthrough otherwise. Undefined when signing fails (caller falls back to the stored URL). */
+export async function signedMediaUrl(stored: string | null | undefined): Promise<string | undefined> {
+  if (!stored) return undefined;
+  const path = storagePathOf(stored);
+  if (!path) return mediaUrl(stored);
+  const hit = signedCache.get(path);
+  if (hit && hit.exp > Date.now() + 60_000) return hit.url;
+  try {
+    const { data, error } = await supabase.storage.from(VOICE_BUCKET).createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) return undefined;
+    // ponytail: same LAN rewrite as mediaUrl — the ?token= query survives the hostname swap
+    const url = mediaUrl(data.signedUrl) ?? data.signedUrl;
+    signedCache.set(path, { url, exp: Date.now() + 3600_000 });
+    return url;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Bulk-resolve media URLs to playable ones, keyed by stored URL. Unresolvable entries fall back to the stored URL itself. */
+export function useSignedMediaMap(urls: (string | null | undefined)[]): Record<string, string> {
+  const [map, setMap] = useState<Record<string, string>>({});
+  const sig = urls.join(";");
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const out: Record<string, string> = {};
+      for (const u of new Set(urls.filter(Boolean) as string[])) {
+        out[u] = (await signedMediaUrl(u)) ?? u;
+      }
+      if (live) setMap(out);
+    })();
+    return () => { live = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
+  return map;
+}
+
 /** Manual resync for screens that need fresh data on mount. True when the server round-trip worked. */
 // ponytail: explicit pull on top of boot sync — one failed boot left an empty inbox with zero signal; drop if boot proves reliable
 export async function syncChatsNow(): Promise<boolean> {
@@ -828,37 +991,74 @@ export async function syncChatsNow(): Promise<boolean> {
   }
 }
 
+/** Merge server blocks into the local list (union only — unblock deletes both sides, so a reappearing id means the delete failed and the block is still real). */
+// ponytail: one id list both ways — multi-device block/unblock converges here instead of stranding stale local state
+async function syncBlocked(uid: string): Promise<void> {
+  const { data } = await (supabase as any).from("swivv_blocks").select("blocked_id").eq("blocker_id", uid);
+  const srv = ((data ?? []) as { blocked_id: string }[]).map((r) => `u:${r.blocked_id}`);
+  write(BLOCKED_KEY, [...new Set([...getBlocked(), ...srv])]);
+  // ponytail: blocked-by is server truth, replaced wholesale (rows exist only while the block holds) — needs the blocked_read policy migration
+  try {
+    const by = await (supabase as any).from("swivv_blocks").select("blocker_id").eq("blocked_id", uid);
+    write(BLOCKEDBY_KEY, [...new Set(((by.data ?? []) as { blocker_id: string }[]).map((r) => `u:${r.blocker_id}`))]);
+  } catch {}
+}
+
 /** Global chat sync: initial pull/push on login + live inserts. Mount once (see __root). */
 export function startChatSync(): () => void {
   let channel: { unsubscribe: () => void } | null = null;
+  let syncedUid = "";
+  let generation = 0;
+  const stop = () => {
+    generation++;
+    const ch = channel;
+    channel = null;
+    syncedUid = "";
+    ch?.unsubscribe();
+  };
   const boot = async (uid: string) => {
+    // ponytail: onAuthStateChange + getSession + StrictMode's double mount all call boot — one live sync per uid
+    if (syncedUid === uid) return;
+    syncedUid = uid;
+    const gen = ++generation;
     channel?.unsubscribe();
+    channel = null;
     // ponytail: warn like pushMessage — a swallowed pull leaves an empty inbox with zero signal
     await pullAndPush(uid).catch((e: unknown) => console.warn("[swivv] chat pull failed", e));
     await pullLikes(uid).catch((e: unknown) => console.warn("[swivv] likes pull failed", e));
+    await syncBlocked(uid).catch((e: unknown) => console.warn("[swivv] blocks pull failed", e));
     await pruneOldChats(uid).catch(() => {});
-    channel = supabase
-      .channel(`swivv-chats:${uid}`)
+    // cancelled (unmounted / different uid) while pulling
+    if (gen !== generation) return;
+    const topic = `swivv-chats:${uid}`;
+    // ponytail: channel() returns an existing channel for the same topic — a leftover subscribed one rejects .on() ("after subscribe()"); drop it first
+    for (const c of supabase.getChannels()) if (c.topic === `realtime:${topic}`) await supabase.removeChannel(c);
+    if (gen !== generation) return;
+    const ch = supabase
+      .channel(topic)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "swivv_chats", filter: `user_id=eq.${uid}` },
         (payload) => {
           const r = payload.new as ChatRow;
+          if (r.sender === "them" && isThreadBlocked(r.peer_id)) return;
           saveMessage(r.peer_id, rowToMessage(r));
         },
       )
-      .subscribe() as unknown as { unsubscribe: () => void };
+      .subscribe();
+    // ponytail: removeChannel, not unsubscribe — detached channels stay on the socket and pile up across auth changes/SPA navigation
+    channel = { unsubscribe: () => void supabase.removeChannel(ch) };
   };
   const { data } = supabase.auth.onAuthStateChange((_e, s) => {
     if (s?.user) void boot(s.user.id);
-    else channel?.unsubscribe();
+    else stop();
   });
   supabase.auth.getSession().then(({ data: d }) => {
     if (d.session?.user) void boot(d.session.user.id);
   });
   return () => {
     data.subscription.unsubscribe();
-    channel?.unsubscribe();
+    stop();
   };
 }
 

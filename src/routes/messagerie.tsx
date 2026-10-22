@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Download, Flag, ImagePlus, MessageCircle, Mic, Square, TriangleAlert, UserX, X } from "lucide-react";
+import { Download, Flag, ImagePlus, MessageCircle, Mic, Smile, Square, TriangleAlert, UserX, X, Ban } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getProfile } from "@/lib/swivv-data";
-import { fmtFull, getAppLang, getChat, getChattedIds, getFeedback, getPeer, isMatch, logModReport, markAllRead, mediaUrl, rememberPeer, sendChat, sendFeedback, sendImage, sendVoice, subscribe, syncChatsNow, useDeletedIds, useTotalCount, useUnreadCount, type ChatFeedback } from "@/lib/swivv-store";
+import { fmtFull, getAppLang, getChat, getChattedIds, getFeedback, getPeer, isBlockedById, isBlockedId, isMatch, toggleBlock, logModReport, markAllRead, mediaUrl, rememberPeer, sendChat, sendFeedback, sendImage, sendVoice, subscribe, syncChatsNow, useDeletedIds, useSignedMediaMap, useTotalCount, useUnreadCount, type ChatFeedback } from "@/lib/swivv-store";
 import { supabase } from "@/integrations/supabase/client";
 import { findOffensive, REPORT_REASONS } from "@/lib/swivv-moderation";
 import { SwivvAuthButtons, openAuthModal, useSwivvUser } from "@/lib/swivv-auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
-import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvHint } from "@/components/swivv-hint";
+import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvVoicePlayer } from "@/components/swivv-voice-player";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
@@ -20,6 +20,50 @@ export const Route = createFileRoute("/messagerie")({
   head: () => ({ meta: [{ title: "Messages — SWIVV" }] }),
   component: MessagesPage,
 });
+
+// ponytail: 40 hand-picked emoji, no picker dependency — emoji-mart only if search/categories/skin tones are ever required
+const EMOJIS = [
+  "😀",
+  "😂",
+  "😊",
+  "😍",
+  "🥰",
+  "😘",
+  "😎",
+  "🤔",
+  "😉",
+  "🙃",
+  "😅",
+  "😢",
+  "😭",
+  "😡",
+  "🤗",
+  "😴",
+  "🤤",
+  "😇",
+  "🥳",
+  "🤩",
+  "😜",
+  "😏",
+  "😬",
+  "🙄",
+  "😮",
+  "😱",
+  "🤯",
+  "🥺",
+  "😔",
+  "😌",
+  "👍",
+  "👎",
+  "👏",
+  "🙏",
+  "💪",
+  "🔥",
+  "❤️",
+  "💔",
+  "✨",
+  "🎉",
+];
 
 // ponytail: stopword scorer for the 6 app langs (no quota burn, instant) — franc/API detect if accuracy ever matters
 const STOPWORDS: Record<string, Set<string>> = Object.fromEntries(
@@ -90,8 +134,17 @@ function MessagesPage() {
   const [tr, setTr] = useState<Record<string, { text: string; showTr: boolean; same?: boolean }>>({});
   const [trBusy, setTrBusy] = useState<Set<string>>(new Set());
   const voice = useVoiceRecorder();
+  // ponytail: inbox lives in localStorage — SSR can't see it, so hydrate empty first, then fill; avoids a structural hydration mismatch (server list 0, client list N)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // ponytail: inbox = profiles with ≥1 sent/received message only — seeds resolve directly, real peers via the directory, unknown ids get a placeholder
-  const list = getChattedIds().map((id) => {
+  // ponytail: blocked threads stay listed (history is never deleted) — banner + no composer below, icons mark the direction
+  // ponytail: a fresh match has no message yet, so it isn't in getChattedIds — the requested peer is prepended so "Envoyer un message" opens their empty thread instead of list[0]; persisted "match with no message" rows if the inbox ever needs to remember them
+  const list = !mounted ? [] : (() => {
+    const ids = getChattedIds();
+    if (activeId && !ids.includes(activeId)) ids.unshift(activeId);
+    return ids;
+  })().map((id) => {
     const s = getProfile(id);
     if (s) return { id: s.id, name: s.name, photo: s.photo, age: `${s.age}`, sub: s.online ? "En ligne" : s.lastActive, gender: s.gender, seed: true as const };
     const c = getPeer(id);
@@ -104,6 +157,11 @@ function MessagesPage() {
   // ponytail: deleted peers keep their trace, flagged with UserX — same hook feeds member/browse if they ever need it
   const deleted = useDeletedIds(list.map((p) => p.id));
   const chat = active ? getChat(active.id) : [];
+  // ponytail: private bucket — thread media resolves to 1h signed URLs; lightbox + download reuse the same map via lightbox.src
+  const signed = useSignedMediaMap(chat.flatMap((m) => [m.audio, m.image]));
+  // ponytail: blocked thread = history stays, composer goes — blocker gets the unblock button, blocked side only the notice
+  const iBlocked = active ? isBlockedId(active.id) : false;
+  const threadBlocked = active ? (iBlocked || isBlockedById(active.id)) : false;
   const [sendingVoice, setSendingVoice] = useState(false);
   const [voiceErr, setVoiceErr] = useState<string | null>(null);
   const [imgErr, setImgErr] = useState<string | null>(null);
@@ -116,38 +174,61 @@ function MessagesPage() {
   const [reportReason, setReportReason] = useState("");
   const [fb, setFb] = useState<Record<string, ChatFeedback[]>>({});
   const previewUrl = useMemo(() => (pendingFile ? URL.createObjectURL(pendingFile) : null), [pendingFile]);
+  const lightboxSrc = lightbox ? (signed[lightbox.src] ?? mediaUrl(lightbox.src) ?? lightbox.src) : "";
 
   // ponytail: feedback keyed by opaque msg_id (no user-mapped threads yet) — client filters to this thread; server-scoped subscription when threads grow
   useEffect(() => {
     if (!active) return;
     const ids = getChat(active.id).filter((m) => m.image).map((m) => m.id);
     let live = true;
+    let ch: ReturnType<typeof supabase.channel> | null = null;
     getFeedback(ids).then((rows) => {
       if (!live) return;
       const byMsg: Record<string, ChatFeedback[]> = {};
       for (const r of rows) (byMsg[r.msg_id] ??= []).push(r);
       setFb(byMsg);
     });
-    const ch = supabase
-      .channel("swivv-feedback")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "swivv_chat_feedback" }, (payload) => {
-        const r = payload.new as ChatFeedback;
-        if (!ids.includes(r.msg_id)) return;
-        setFb((prev) => ({ ...prev, [r.msg_id]: [...(prev[r.msg_id] ?? []), r] }));
-        const who = r.reactor || active.name;
-        if (r.reactor === user?.name) return;
-        if (r.kind === "reaction") toast(`${who} a réagi ${r.detail} à ta photo.`);
-        else if (r.kind === "report") toast(`${who} a signalé ta photo (${r.detail}).`);
-        else toast(`${who} a téléchargé ta photo.`);
-      })
-      .subscribe();
+    // ponytail: fixed topic + async removeChannel = .on() on a still-subscribed leftover; drop it before re-creating
+    void (async () => {
+      for (const c of supabase.getChannels()) if (c.topic === "realtime:swivv-feedback") await supabase.removeChannel(c);
+      if (!live) return;
+      ch = supabase
+        .channel("swivv-feedback")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "swivv_chat_feedback" }, (payload) => {
+          const r = payload.new as ChatFeedback;
+          if (!ids.includes(r.msg_id)) return;
+          setFb((prev) => ({ ...prev, [r.msg_id]: [...(prev[r.msg_id] ?? []), r] }));
+          const who = r.reactor || active.name;
+          if (r.reactor === user?.name) return;
+          if (r.kind === "reaction") toast(`${who} a réagi ${r.detail} à ta photo.`);
+          else if (r.kind === "report") toast(`${who} a signalé ta photo (${r.detail}).`);
+          else toast(`${who} a téléchargé ta photo.`);
+        })
+        .subscribe();
+    })();
     return () => {
       live = false;
-      void supabase.removeChannel(ch);
+      if (ch) void supabase.removeChannel(ch);
     };
     // ponytail: chat.length resubscribes on new messages so fresh image ids join the filter — stable channel if traffic ever grows
   }, [active?.id, chat.length]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const emojiRef = useRef<HTMLDetailsElement>(null);
+
+  // ponytail: emoji lands at the caret, not appended — resets the caret after React re-renders; grapheme-accurate insertion is cosmetically irrelevant for ZWJ sequences
+  const addEmoji = (e: string) => {
+    const el = inputRef.current;
+    const at = el?.selectionStart ?? draft.length;
+    const end = el?.selectionEnd ?? at;
+    if (draft.length - (end - at) + e.length > 500) return;
+    setDraft(draft.slice(0, at) + e + draft.slice(end));
+    if (emojiRef.current) emojiRef.current.open = false;
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(at + e.length, at + e.length);
+    });
+  };
 
   // Opening the inbox clears the heart badge; logged-out visitors get the prompt — never while the session is still restoring.
   useEffect(() => {
@@ -195,17 +276,14 @@ function MessagesPage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <Link to="/browse" search={{ q: "", type: "", location: "" }} className="text-sm text-[#555]">
-          ← Profils
-          </Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
       <main className="mx-auto grid max-w-6xl gap-4 px-4 py-6 md:grid-cols-[300px_1fr]">
         <div className="rounded-xl bg-white p-2">
-          {/* ponytail: live totals (unread clears on open via markAllRead) — shared inbox header, desktop + mobile render the same h1 */}
-          <h1 className="whitespace-nowrap p-2 font-medium">Conversations ({total} · {unread} non lu{unread > 1 ? "s" : ""})</h1>
+          {/* ponytail: live totals (unread clears on open via markAllRead) — shared inbox header, desktop + mobile render the same h1; counts are localStorage, so 0 until mounted or SSR/client disagree */}
+          <h1 className="whitespace-nowrap p-2 font-medium">Conversations ({mounted ? total : 0} · {mounted ? unread : 0} non lu{mounted && unread > 1 ? "s" : ""})</h1>
           <p className="px-2 pb-1 text-xs text-[#999]">Les messages de plus de 3 mois sont supprimés automatiquement, lus ou non.</p>
           {list.map((p) => (
             <button
@@ -231,6 +309,20 @@ function MessagesPage() {
                     <SwivvHint align="left" text="Ce compte a été supprimé — l'historique est conservé.">
                       <span className="inline-flex items-center gap-1 text-[#999]" aria-label={`${p.name} : compte supprimé`}>
                         <UserX className="h-3.5 w-3.5" />
+                      </span>
+                    </SwivvHint>
+                  )}
+                  {isBlockedId(p.id) && (
+                    <SwivvHint align="left" text="Tu as bloqué ce membre — la conversation est en pause.">
+                      <span className="inline-flex items-center gap-1 text-[#e91e63]" aria-label={`${p.name} : bloqué par toi`}>
+                        <Ban className="h-3.5 w-3.5" />
+                      </span>
+                    </SwivvHint>
+                  )}
+                  {!isBlockedId(p.id) && isBlockedById(p.id) && (
+                    <SwivvHint align="left" text="Ce membre a bloqué la communication.">
+                      <span className="inline-flex items-center gap-1 text-amber-600" aria-label={`${p.name} : communication bloquée`}>
+                        <TriangleAlert className="h-3.5 w-3.5" />
                       </span>
                     </SwivvHint>
                   )}
@@ -270,7 +362,7 @@ function MessagesPage() {
                       <>
                         {m.from === "me" ? (
                           <span className="relative inline-block rounded-md bg-[#e91e63] p-px">
-                            <img src={mediaUrl(m.image)} alt="Image envoyée par toi" className="h-40 w-auto rounded-sm" loading="lazy" />
+                            <img src={m.image ? (signed[m.image] ?? mediaUrl(m.image)) : undefined} alt="Image envoyée par toi" className="h-40 w-auto rounded-sm" loading="lazy" />
                             {(() => {
                               const reacts = (fb[m.id] ?? []).filter((f) => f.kind === "reaction");
                               const last = reacts[reacts.length - 1];
@@ -288,7 +380,7 @@ function MessagesPage() {
                             className="inline-block rounded-md bg-[#e91e63] p-px"
                             aria-label="Agrandir la photo"
                           >
-                            <img src={mediaUrl(m.image)} alt={`Image envoyée par ${active.name}`} className="h-40 w-auto rounded-sm" loading="lazy" />
+                            <img src={m.image ? (signed[m.image] ?? mediaUrl(m.image)) : undefined} alt={`Image envoyée par ${active.name}`} className="h-40 w-auto rounded-sm" loading="lazy" />
                           </button>
                         )}
                         <p className="mt-1 text-[11px] text-[#999]">{fmtFull(m.ts, m.at)}</p>
@@ -296,7 +388,7 @@ function MessagesPage() {
                     ) : m.audio ? (
                       <>
                         <span className="flex items-center gap-1">
-                          <SwivvVoicePlayer src={mediaUrl(m.audio)} dark={m.from === "me"} />
+                          <SwivvVoicePlayer src={m.audio ? (signed[m.audio] ?? mediaUrl(m.audio)) : undefined} dark={m.from === "me"} />
                           {/* ponytail: report on received vocals only — reporting your own makes no sense; same rule if text messages ever gain flags */}
                           {m.from !== "me" && (
                           <SwivvHint text="Signaler ce vocal">
@@ -353,75 +445,124 @@ function MessagesPage() {
                   </div>
                 ))}
               </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!draft.trim()) return;
-                  const bad = findOffensive(draft);
-                  if (bad.length) {
-                    setOffensive(bad);
-                    return;
-                  }
-                  // ponytail: 10+ digits ≈ a phone number — branded confirm, native confirm if Dialog ever unavailable
-                  if (draft.replace(/\D/g, "").length >= 10) {
-                    setPhoneWarn(draft.trim());
-                    return;
-                  }
-                  sendChat(active.id, draft.trim());
-                  setDraft("");
-                  force((x) => x + 1);
-                  window.setTimeout(() => force((x) => x + 1), 1500);
-                }}
-                className="flex gap-2 border-t border-border pt-3"
-              >
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder={`Écris à ${active.name}…`}
-                  aria-label="Écris ton message"
-                  maxLength={500}
-                  className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
-                />
-                {isMatch(active.id) && (
-                  voice.recording ? (
-                    <span className="flex items-center gap-1">
-                      <span className="text-sm font-medium tabular-nums text-red-600">{voice.seconds}s</span>
-                      <button type="button" onClick={async () => { const blob = await voice.stop(); if (!blob) return; setSendingVoice(true); const err = await sendVoice(active.id, blob, voice.seconds); setSendingVoice(false); setVoiceErr(err); force((x) => x + 1); }} aria-label="Envoyer le vocal" className="rounded-lg bg-red-600 px-3 py-2 text-white">
-                        <Square className="h-5 w-5" />
-                      </button>
-                      <button type="button" onClick={voice.cancel} aria-label="Annuler le vocal" className="rounded-lg border border-border px-2 py-2 text-[#777]">
-                        <X className="h-5 w-5" />
-                      </button>
-                    </span>
-                  ) : (
-                    <>
-                      <button type="button" disabled={sendingVoice} onClick={async () => setVoiceErr(await voice.start())} aria-label="Enregistrer un vocal" className="rounded-lg border border-border px-3 py-2 text-[#e91e63] disabled:opacity-40">
-                        <Mic className="h-5 w-5" />
-                      </button>
-                      <button type="button" disabled={sendingImg} onClick={() => fileRef.current?.click()} aria-label="Envoyer une image" title="Envoyer une image" className="rounded-lg border border-border px-3 py-2 text-[#e91e63] disabled:opacity-40">
-                        <ImagePlus className="h-5 w-5" />
-                      </button>
-                      <input
-                        ref={fileRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        aria-label="Choisir une image"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          e.target.value = "";
-                          if (!f) return;
-                          setImgErr(null);
-                          setPendingFile(f);
-                        }}
-                      />
-                    </>
-                  )
-                )}
-                <button type="submit" disabled={!draft.trim()} className="rounded-lg bg-[#e91e63] px-5 py-2 font-medium text-white disabled:opacity-40">
-                  Envoyer
-                </button>
-              </form>
+              {threadBlocked ? (
+                <div className="mt-4 rounded-lg bg-[#f2f2f2] p-3 text-center">
+                  <p className="text-sm font-medium text-[#555]">Communication avec {active.name} bloquée.</p>
+                  {iBlocked && (
+                    <button type="button" onClick={() => { toggleBlock(active.id); force((x) => x + 1); }} className="mt-1 text-sm font-medium text-[#e91e63] hover:underline">
+                      Débloquer
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!draft.trim()) return;
+                    const bad = findOffensive(draft);
+                    if (bad.length) {
+                      setOffensive(bad);
+                      return;
+                    }
+                    // ponytail: 10+ digits ≈ a phone number — branded confirm, native confirm if Dialog ever unavailable
+                    if (draft.replace(/\D/g, "").length >= 10) {
+                      setPhoneWarn(draft.trim());
+                      return;
+                    }
+                    const chatErr = sendChat(active.id, draft.trim());
+                    if (chatErr) { toast.error(chatErr); return; }
+                    setDraft("");
+                    force((x) => x + 1);
+                    window.setTimeout(() => force((x) => x + 1), 1500);
+                  }}
+                  className="flex gap-2 border-t border-border pt-3"
+                >
+                  <input
+                    ref={inputRef}
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onFocus={() => emojiRef.current && (emojiRef.current.open = false)}
+                    placeholder={`Écris à ${active.name}…`}
+                    aria-label="Écris ton message"
+                    maxLength={500}
+                    className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                  />
+                  {/* ponytail: native <details> = free open/close + keyboard, no popover lib; desktop only — mobile users have the OS keyboard emoji tray */}
+                  <details
+                    ref={emojiRef}
+                    onKeyDown={(e) => e.key === "Escape" && (e.currentTarget.open = false)}
+                    className="relative hidden sm:block"
+                  >
+                    <summary
+                      aria-label="Insérer un émoji"
+                      className="flex h-full cursor-pointer list-none items-center rounded-lg border border-border px-3 py-2 text-[#e91e63] hover:bg-[#f7f7f7] [&::-webkit-details-marker]:hidden"
+                    >
+                      <SwivvHint text="Émojis" narrow above>
+                        <Smile className="h-5 w-5" />
+                      </SwivvHint>
+                    </summary>
+                    <div
+                      role="group"
+                      aria-label="Émojis"
+                      className="absolute bottom-full left-0 z-20 mb-2 grid w-72 grid-cols-8 gap-0.5 rounded-2xl border border-border bg-white p-2 shadow-xl"
+                    >
+                      {EMOJIS.map((e) => (
+                        <button
+                          key={e}
+                          type="button"
+                          onClick={() => addEmoji(e)}
+                          className="rounded-lg p-1 text-xl leading-none transition-colors hover:bg-[#f7f7f7]"
+                        >
+                          {e}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                  {isMatch(active.id) && (
+                    voice.recording ? (
+                      <span className="flex items-center gap-1">
+                        <span className="text-sm font-medium tabular-nums text-red-600">{voice.seconds}s</span>
+                        <button type="button" onClick={async () => { const blob = await voice.stop(); if (!blob) return; setSendingVoice(true); const err = await sendVoice(active.id, blob, voice.seconds); setSendingVoice(false); setVoiceErr(err); force((x) => x + 1); }} aria-label="Envoyer le vocal" className="rounded-lg bg-red-600 px-3 py-2 text-white">
+                          <Square className="h-5 w-5" />
+                        </button>
+                        <button type="button" onClick={voice.cancel} aria-label="Annuler le vocal" className="rounded-lg border border-border px-2 py-2 text-[#777]">
+                          <X className="h-5 w-5" />
+                        </button>
+                      </span>
+                    ) : (
+                      <>
+                        <SwivvHint text="Enregistrer un vocal" narrow above>
+                          <button type="button" disabled={sendingVoice} onClick={async () => setVoiceErr(await voice.start())} aria-label="Enregistrer un vocal" className="rounded-lg border border-border px-3 py-2 text-[#e91e63] disabled:opacity-40">
+                            <Mic className="h-5 w-5" />
+                          </button>
+                        </SwivvHint>
+                        <SwivvHint text="Envoyer une image" narrow above>
+                          <button type="button" disabled={sendingImg} onClick={() => fileRef.current?.click()} aria-label="Envoyer une image" className="rounded-lg border border-border px-3 py-2 text-[#e91e63] disabled:opacity-40">
+                            <ImagePlus className="h-5 w-5" />
+                          </button>
+                        </SwivvHint>
+                        <input
+                          ref={fileRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          aria-label="Choisir une image"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            e.target.value = "";
+                            if (!f) return;
+                            setImgErr(null);
+                            setPendingFile(f);
+                          }}
+                        />
+                      </>
+                    )
+                  )}
+                  <button type="submit" disabled={!draft.trim()} className="rounded-lg bg-[#e91e63] px-5 py-2 font-medium text-white disabled:opacity-40">
+                    Envoyer
+                  </button>
+                </form>
+              )}
                 {voiceErr && <p className="pt-1 text-xs text-red-600">{voiceErr}</p>}
                 {imgErr && <p className="pt-1 text-xs text-red-600">{imgErr}</p>}
                 {sendingVoice && <p className="pt-1 text-xs text-[#777]">Envoi du vocal…</p>}
@@ -537,7 +678,7 @@ function MessagesPage() {
                   <DialogContent className="max-w-lg">
                     {lightbox && (
                       <>
-                        <img src={mediaUrl(lightbox.src)} alt="Photo partagée en grand" className="max-h-[60vh] w-full rounded-lg object-contain bg-black" />
+                        <img src={lightboxSrc} alt="Photo partagée en grand" className="max-h-[60vh] w-full rounded-lg object-contain bg-black" />
                         <div className="mt-3 flex items-start justify-between gap-2">
                           <div className="flex flex-wrap gap-1" role="group" aria-label="Réagir à la photo">
                             {[["👍", "Like"], ["👎", "Dislike"], ["❤️", "Love"], ["😢", "Sad"], ["😡", "Angry"], ["😂", "Laugh"]].map(([e, label]) => {
@@ -594,7 +735,7 @@ function MessagesPage() {
                               // ponytail: blob download with new-tab fallback (cross-origin ignores the download attr) — service-worker cache if offline saves ever matter
                               onClick={async () => {
                                 try {
-                                  const r = await fetch(lightbox.src);
+                                  const r = await fetch(lightboxSrc);
                                   const b = await r.blob();
                                   const a = document.createElement("a");
                                   a.href = URL.createObjectURL(b);
@@ -602,7 +743,7 @@ function MessagesPage() {
                                   a.click();
                                   window.setTimeout(() => URL.revokeObjectURL(a.href), 5000);
                                 } catch {
-                                  window.open(lightbox.src, "_blank");
+                                  window.open(lightboxSrc, "_blank");
                                 }
                                 void sendFeedback({ msg_id: lightbox.msgId, kind: "download", detail: "", reactor: user?.name });
                               }}
@@ -630,7 +771,7 @@ function MessagesPage() {
                     <div className="grid gap-2">
                       <button
                         type="button"
-                        onClick={() => { if (!phoneWarn) return; const bad = findOffensive(phoneWarn); setPhoneWarn(null); if (bad.length) { setOffensive(bad); return; } sendChat(active.id, phoneWarn); setDraft(""); force((x) => x + 1); }}
+                        onClick={() => { if (!phoneWarn) return; const bad = findOffensive(phoneWarn); setPhoneWarn(null); if (bad.length) { setOffensive(bad); return; } const chatErr = sendChat(active.id, phoneWarn); if (chatErr) { toast.error(chatErr); return; } setDraft(""); force((x) => x + 1); }}
                         className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
                       >
                         Envoyer quand même

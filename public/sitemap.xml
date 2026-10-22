@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ponytail: static list — add the new <url> when a blog post is published in src/lib/blog-data.ts -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://swivvmatch.com/</loc><priority>1.0</priority></url>
+  <url><loc>https://swivvmatch.com/comment-ca-marche</loc><priority>0.8</priority></url>
+  <url><loc>https://swivvmatch.com/inscription</loc><priority>0.8</priority></url>
+  <url><loc>https://swivvmatch.com/faq</loc><priority>0.7</priority></url>
+  <url><loc>https://swivvmatch.com/blog</loc><priority>0.7</priority></url>
+  <url><loc>https://swivvmatch.com/guide-photos</loc><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/help</loc><priority>0.5</priority></url>
+  <url><loc>https://swivvmatch.com/contact-us</loc><priority>0.5</priority></url>
+
+  <url><loc>https://swivvmatch.com/blog/arnaques-amoureuses-signaux-alerte</loc><lastmod>2026-10-12</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/reussir-premier-rendez-vous-conseils</loc><lastmod>2026-10-11</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/comprendre-le-matching</loc><lastmod>2026-09-12</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/premier-message-exemples-qui-marchent</loc><lastmod>2026-09-10</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/mariage-bien-utiliser-swivv</loc><lastmod>2026-09-05</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/idees-premier-rendez-vous</loc><lastmod>2026-08-28</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/photos-profil-erreurs-matchs</loc><lastmod>2026-08-20</lastmod><priority>0.6</priority></url>
+  <url><loc>https://swivvmatch.com/blog/relation-serieuse-signes-profil-fiable</loc><lastmod>2026-08-12</lastmod><priority>0.6</priority></url>
+
+  <url><loc>https://swivvmatch.com/privacy-centre</loc><priority>0.3</priority></url>
+  <url><loc>https://swivvmatch.com/terms-and-conditions</loc><priority>0.3</priority></url>
+  <url><loc>https://swivvmatch.com/cgv</loc><priority>0.3</priority></url>
+  <url><loc>https://swivvmatch.com/cookies</loc><priority>0.3</priority></url>
+</urlset>

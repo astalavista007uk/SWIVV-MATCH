@@ -4,6 +4,7 @@ export const LIKE_WINDOW = 24 * 3600e3; // one like-email per liker per day
 export const VIEW_CD = 24 * 3600e3; // one view alert per viewer per day
 export const CHAT_CD = 10 * 60e3; // one in-app ping per conversation per 10min
 export const REACT_CD = 24 * 3600e3; // one photo-reaction ping per reactor per day (batching, not per-photo spam)
+export const MATCH_WIN = 365 * 86400e3; // matches notify once ever — dedupe window just needs to outlive the catch-up lookback
 
 /** Generic window check: true when no prior event or the window has elapsed. */
 export function windowElapsed(lastAt: number | null | undefined, now: number, windowMs: number): boolean {
@@ -52,4 +53,21 @@ export function emailKey(kind: "message" | "like" | "match" | "digest" | "securi
 /** Badge text with the existing 9+ cap. */
 export function badgeText(n: number): string {
   return n > 9 ? "9+" : String(Math.max(0, n));
+}
+
+/** Member-id equality immune to u:-prefix mismatches (server rows are bare, UI ids ride prefixed). */
+export function sameMember(a: string, b: string): boolean {
+  const bare = (s: string) => s.replace(/^u:/, "");
+  return bare(a) === bare(b);
+}
+
+/** Latest row per key (catch-up groups events per actor, notifies once each). */
+export function latestBy<T>(rows: T[], key: (r: T) => string, at: (r: T) => number): T[] {
+  const m = new Map<string, T>();
+  for (const r of rows) {
+    const k = key(r);
+    const prev = m.get(k);
+    if (!prev || at(r) > at(prev)) m.set(k, r);
+  }
+  return [...m.values()];
 }

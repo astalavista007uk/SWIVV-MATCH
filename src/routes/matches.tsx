@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Coffee, Globe, Heart, Sparkles, User, Users } from "lucide-react";
 import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
 import { realDistance, useMyCity } from "@/lib/location-distance";
-import { getBlocked, getLikes, hasSavedMatchCriteria, hasVisitedMatchCriteria, markMatchCriteriaSaved, markMatchCriteriaVisited, MATCH_CRITERIA_KEY as KEY, pullMatchCriteria, pushMatchCriteria, toggleLike } from "@/lib/swivv-store";
+import { getLikes, isThreadBlocked, markMatchCriteriaSaved, markMatchCriteriaVisited, MATCH_CRITERIA_KEY as KEY, pullMatchCriteria, pushMatchCriteria, subscribe, toggleLike } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
+import { displayPct, EMPTY, HARD, load, MatchTooltip, natTest, adjTest, inc, norm, RELOCATE_MAP, score, topMatches } from "@/lib/match-score";
 import { SwivvAuthButtons, openAuthModal, requireSwivvAuth, usePublicProfiles } from "@/lib/swivv-auth";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
@@ -52,14 +53,6 @@ export const Route = createFileRoute("/matches")({
   component: MatchesPage,
 });
 
-const norm = (v: string | undefined) => (v ?? "").toLowerCase().trim();
-// ponytail: two-way contains because neither side uses strict enums — exact option ids if signup ever constrains them
-const inc = (get: (p: SwivvProfile) => string | undefined) => (p: SwivvProfile, v: string) => {
-  const a = norm(get(p));
-  const b = norm(v);
-  return !!a && a !== "—" && !!b && (a.includes(b) || b.includes(a));
-};
-const stem = (s: string) => norm(s).replace(/e$/, "");
 // ponytail: NATS is feminine-only upstream — rule-based masculine with exceptions; CLDR-sourced masculine list if it drifts
 const NAT_MASC_KEEP = new Set(["Belge", "Biélorusse", "Bosniaque", "Guatémaltèque", "Monégasque", "Tchèque", "Britannique", "Russe", "Slovaque", "Suisse"]);
 const NAT_MASC_FIX: Record<string, string> = { Grecque: "Grec", Turque: "Turc" };
@@ -67,27 +60,6 @@ const toMasculineNat = (w: string) => NAT_MASC_FIX[w] ?? (NAT_MASC_KEEP.has(w) ?
 // ponytail: HAIR/EYES are masculine-only upstream — rule-based feminine with exceptions; GF pairs if signup ever genders them
 const ADJ_FEM_FIX: Record<string, string> = { Blancs: "Blanches", Roux: "Rousses" };
 const toFeminineAdj = (w: string) => ADJ_FEM_FIX[w] ?? (w.endsWith("s") ? `${w.slice(0, -1)}es` : w);
-const ADJ_STEM_FIX: Record<string, string> = { blanches: "blanc", rousses: "roux" };
-const stemAdj = (s: string) => {
-  const n = norm(s);
-  if (ADJ_STEM_FIX[n]) return ADJ_STEM_FIX[n];
-  return n.length > 4 ? n.replace(/es$/, "").replace(/s$/, "") : n;
-};
-const adjTest = (get: (p: SwivvProfile) => string | undefined) => (p: SwivvProfile, v: string) => {
-  const a = stemAdj(get(p) ?? "");
-  const b = stemAdj(v);
-  return !!a && !!b && (a.includes(b) || b.includes(a));
-};
-const natTest = (p: SwivvProfile, v: string) => {
-  const b = stem(v);
-  if (!b) return false;
-  return norm(p.nationality)
-    .split(/[^a-zàâäéèêëîïôöùûüç]+/i)
-    .some((part) => {
-      const a = stem(part);
-      return !!a && (a.includes(b) || b.includes(a));
-    });
-};
 
 type Crit = {
   key: string;
@@ -103,10 +75,6 @@ type Crit = {
   max?: number;
   test: (p: SwivvProfile, v: string) => boolean;
 };
-
-// ponytail: canonical cm/kg in form, imperial converts on the fly like signup —
-// a shared <UnitInterval> if a third measure appears
-const RELOCATE_MAP: Record<string, string> = { Oui: "yes", Non: "no", "Peut-être": "maybe" };
 
 const CRITERIA: Crit[] = [
   { key: "gender", label: "Je recherche", group: "L'essentiel", kind: "select", options: ["Femme", "Homme"], test: (p, v) => p.gender === (v === "Femme" ? "woman" : "man") },
@@ -149,9 +117,6 @@ const CRITERIA: Crit[] = [
   { key: "practice", label: "Pratique religieuse", group: "Origines & valeurs", kind: "select", options: PRACTICE, gendered: true, test: inc((p) => p.religiousValues) },
 ];
 
-const HARD = new Set(["gender", "ageMin", "ageMax", "maxDistance"]);
-const EMPTY: Record<string, string> = { gender: "Femme", ageMin: "18", ageMax: "99" };
-
 // ponytail: fixed group order + icons — derive from CRITERIA if groups ever become dynamic
 const GROUP_META: Record<string, typeof User> = {
   "L'essentiel": User,
@@ -172,120 +137,6 @@ for (const c of CRITERIA) {
 }
 // Taille/poids render as one full-width pair slot.
 const PAIR_SKIP = new Set(["heightMax", "weightMin", "weightMax"]);
-
-export function load(): Record<string, string> {
-  // ponytail: sought gender preloaded from the same cache as browse (+ signup fallback so Recherche Avancée is right on first mount) — profile fetch if both ever miss
-  let sought = "";
-  try {
-    const c = localStorage.getItem("swivv-seeking");
-    sought = c === "woman" ? "Femme" : c === "man" ? "Homme" : "";
-    if (!sought) {
-      const g = localStorage.getItem("swivv-signup-gender");
-      sought = g === "woman" ? "Homme" : g === "man" ? "Femme" : "";
-    }
-  } catch {}
-  try {
-    return { ...EMPTY, ...(sought ? { gender: sought } : {}), ...(JSON.parse(localStorage.getItem(KEY) ?? "{}") as Record<string, string>) };
-  } catch {
-    return { ...EMPTY, ...(sought ? { gender: sought } : {}) };
-  }
-}
-
-export function score(p: SwivvProfile, c: Record<string, string>, getDist?: (p: SwivvProfile) => number): { pct: number; hard: boolean } {
-  // ponytail: real geo distance when provided (matches page), static seed distance otherwise — migrate callers if seed distances ever go stale
-  const dist = getDist ? getDist(p) : p.distanceKm;
-  for (const k of HARD) {
-    const v = (c[k] ?? "").trim();
-    if (!v) continue;
-    if (k === "maxDistance") {
-      if (dist > Number(v)) return { pct: 0, hard: false };
-      continue;
-    }
-    if (!CRITERIA.find((x) => x.key === k)!.test(p, v)) return { pct: 0, hard: false };
-  }
-  // ponytail: importance weights mirror the "Comprendre le matching" blog post — retune here and there together
-  const WEIGHTS: Record<string, number> = { country: 11, city: 10, maritalStatus: 8, lookingFor: 7, religion: 6, heightMin: 5, heightMax: 5, weightMax: 4, haveChildren: 3, wantMoreChildren: 2, relocate: 1 };
-  const wOf = (k: string) => WEIGHTS[k] ?? 1;
-  let pts = 0;
-  let total = 0;
-  // ponytail: distance scores closeness (1 at 0 km → 0 at the max) instead of pass/fail — binary threshold if a gradient ever misleads
-  const maxD = Number((c.maxDistance ?? "").trim());
-  if (Number.isFinite(maxD) && maxD > 0) {
-    total += 9;
-    pts += 9 * Math.max(0, 1 - dist / maxD);
-  }
-  for (const crit of CRITERIA) {
-    if (HARD.has(crit.key)) continue;
-    if (crit.key === "interests") {
-      const want = (c.interests ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
-      if (!want.length) continue;
-      total += want.length;
-      pts += want.filter((w) => p.interests.some((i) => i.toLowerCase().includes(w))).length;
-      continue;
-    }
-    const v = (c[crit.key] ?? "").trim();
-    if (!v) continue;
-    total += wOf(crit.key);
-    if (crit.test(p, v)) pts += wOf(crit.key);
-  }
-  return { pct: total === 0 ? 100 : Math.round((100 * pts) / total), hard: true };
-}
-
-// ponytail: criteria score is the single source of truth — homepage carousels mirror it via displayPct;
-// static compatibility only shows when no soft criteria are set
-export function displayPct(p: SwivvProfile, c: Record<string, string>): number {
-  const soft = Object.entries(c).some(([k, v]) => !HARD.has(k) && (v ?? "").trim() !== "");
-  return soft ? score(p, c).pct : p.compatibility;
-}
-
-// ponytail: CSS-only black tooltip shared with the member page — popover API if positioning ever needs flipping
-// ponytail: unsaved-criteria hint links to /matches (pointer events on only then) — back to text-only if the link ever misfires on touch
-// ponytail: fem boolean (not full gender union) — pass profile if the tooltip ever needs more than agreement
-export function MatchTooltip({ badge, items, fem }: { badge: ReactNode; items: string[]; fem?: boolean }) {
-  // ponytail: hint only for never-visited + never-saved newcomers — one visit or save flips to the ordered match list
-  const hint = !hasVisitedMatchCriteria() && !hasSavedMatchCriteria();
-  return (
-    <span className="group/pct relative inline-block">
-      {badge}
-      <span className={`${hint ? "" : "pointer-events-none"} absolute left-0 top-full z-10 mt-1 hidden w-48 rounded-lg bg-black p-2.5 text-left text-[11px] font-normal leading-snug text-white shadow-lg group-hover/pct:block`}>
-        {!hint ? (
-          items.map((m) => (
-            <span key={m} className="block">✓ {m}</span>
-          ))
-        ) : (
-          // ponytail: explicit text-white (link cascade) + before: bridge over the mt-1 hover gap so the click lands — popover API if touch ever needs it
-          <Link to="/matches" className="block py-1 text-white underline underline-offset-2 before:absolute before:-top-1 before:left-0 before:h-1 before:w-full before:content-['']">
-            Cliquez sur Mes Matches pour définir votre Swivv parfait{fem ? "e" : ""} !
-          </Link>
-        )}
-      </span>
-    </span>
-  );
-}
-
-// ponytail: fixed importance order per spec (not CRITERIA order) — derive from CRITERIA if the list ever grows dynamic; unset/unmatched/unfilled lines drop and the list compresses; values raw as stored (relocate ids mapped, the rest French labels)
-// ponytail: km passed by results grids and the member page alike — the Distance line drops itself when unset, too far, or non-finite
-export function topMatches(p: SwivvProfile, c: Record<string, string>, n = 12, km?: number): string[] {
-  const test = (k: string) => CRITERIA.find((x) => x.key === k)!.test(p, (c[k] ?? "").trim());
-  const set = (k: string) => (c[k] ?? "").trim() !== "";
-  const has = (v: unknown) => v != null && String(v).trim() !== "" && v !== "—";
-  const out: string[] = [];
-  const line = (ok: boolean, s: string) => { if (ok && out.length < n) out.push(s); };
-  line(set("country") && test("country") && has(p.country), `Country: ${p.country}`);
-  line(set("city") && test("city") && has(p.city), `City/Town: ${p.city}`);
-  line(set("maxDistance") && km != null && Number.isFinite(km) && (km as number) <= Number(c.maxDistance), `Distance: ${Math.round(km as number)} km`);
-  line(p.age >= Number(c.ageMin || 18) && p.age <= Number(c.ageMax || 99), `Age: ${p.age}`);
-  line(set("haveChildren") && test("haveChildren") && has(p.haveChildren), `Children: ${p.haveChildren}`);
-  line(set("wantMoreChildren") && test("wantMoreChildren") && has(p.wantMoreChildren), `Wants Children: ${p.wantMoreChildren}`);
-  line(set("income") && test("income") && has(p.annualIncome), `Salary: ${p.annualIncome}`);
-  line(set("living") && test("living") && has(p.livingSituation), `Logement: ${p.livingSituation}`);
-  const rel = { yes: "Yes", no: "No", maybe: "Maybe" }[(p.willingToRelocate ?? "") as "yes" | "no" | "maybe"];
-  line(set("relocate") && test("relocate") && !!rel, `Willing to move: ${rel}`);
-  line(set("firstLanguage") && test("firstLanguage") && has(p.firstLanguage), `First language: ${p.firstLanguage}`);
-  line(set("education") && test("education") && has(p.education), `Level of Study: ${p.education}`);
-  line(set("religion") && test("religion") && has(p.religion), `Religion: ${p.religion}`);
-  return out;
-}
 
 // ponytail: edit = criteria editor (Mes Matches, saves), search = results viewer (Recherche Avancée, live filters) — split files if the layouts ever diverge
 export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: string; mode?: "edit" | "search" }) {
@@ -331,6 +182,8 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
   };
   const [savedFlash, setSavedFlash] = useState(false);
   const [, force] = useState(0);
+  // ponytail: block/unblock refilters instantly — same store subscribe as browse/swipe
+  useEffect(() => subscribe(() => force((x) => x + 1)), []);
   const resultsRef = useRef<HTMLElement>(null);
   // ponytail: server criteria win when strictly newer — local edits push on save
   useEffect(() => {
@@ -341,7 +194,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
     }).catch(() => {});
   }, [user]);
   const sought = form.gender === "Homme" ? "man" : "woman";
-  const members = usePublicProfiles();
+  const { profiles: members, hasMore, loadMore } = usePublicProfiles();
   // ponytail: above the logged-out early return (Rules of Hooks) — it self-fills when the profile loads
   const viewer = useMyCity();
   const cities = [...new Set([...FRANCE_CITIES, ...SWIVV_PROFILES.map((p) => p.city)])].sort((a, b) =>
@@ -486,13 +339,13 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
   const rdist = (p: SwivvProfile) => realDistance(viewer.city, viewer.country, p);
   const results = crit
     ? (() => {
-        const blocked = new Set(getBlocked());
+        // ponytail: normalized block check (same u:-mismatch class as browse) — seeds + members share this pool
         // ponytail: no soft criteria = static compatibility leads (matches the badges) — blend into score() if ranking ever needs one pass
         const hasSoft = Object.entries(crit).some(([k, v]) => !HARD.has(k) && (v ?? "").trim() !== "");
         // ponytail: highest criteria score first, then nearest, then age closeness — weights if ranking ever needs tuning
         const mid = ((Number(crit.ageMin) || 18) + (Number(crit.ageMax) || 99)) / 2;
         return [...SWIVV_PROFILES, ...members].map((p) => ({ p, km: rdist(p), ...score(p, crit, rdist) }))
-          .filter((r) => r.hard && !blocked.has(r.p.id))
+          .filter((r) => r.hard && !isThreadBlocked(r.p.id))
           .sort((a, b) => (hasSoft ? b.pct - a.pct : b.p.compatibility - a.p.compatibility) || a.km - b.km || Math.abs(a.p.age - mid) - Math.abs(b.p.age - mid) || b.p.compatibility - a.p.compatibility);
       })()
     : null;
@@ -634,6 +487,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                             </span>
                           }
                           items={topMatches(p, form, 12, km)}
+                          criteria={form}
                           fem={p.gender === "woman"}
                         />
                       </span>
@@ -645,6 +499,15 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                   </article>
                 ))}
               </div>
+            )}
+            {hasMore && (
+              <button
+                type="button"
+                onClick={loadMore}
+                className="mx-auto mt-6 block rounded-md border border-border bg-white px-6 py-2.5 text-sm font-medium text-[#555]"
+              >
+                Voir plus de profils
+              </button>
             )}
           </section>
         )}

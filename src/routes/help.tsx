@@ -4,9 +4,15 @@ import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
+import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/help")({
-  head: () => ({ meta: [{ title: "Centre d'aide — SWIVV" }] }),
+  head: () =>
+    pageHead(
+      "Centre d'aide — SWIVV MATCH",
+      "Centre d'aide SWIVV MATCH : questions fréquentes, guide photos, fonctionnement du matching et contact.",
+      "/help",
+    ),
   component: HelpPage,
 });
 
@@ -29,10 +35,10 @@ function HelpPage() {
       </header>
       <SwivvCategoryNav />
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="text-2xl font-medium text-[#333]">Centre d&apos;aide</h1>
         <SwivvSettingsTabs />
-        <div className="mt-6 space-y-2">
+        <div className="mt-6 grid gap-2 sm:grid-cols-2">
           {LINKS.map((l) => (
             <Link key={l.to} to={l.to} className="block rounded-lg bg-white p-4 shadow-sm hover:text-[#e91e63]">
               <span className="block text-[15px] font-medium text-[#333]">{l.title}</span>

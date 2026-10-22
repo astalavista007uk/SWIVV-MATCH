@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Bell, ChartColumn, LifeBuoy, LogIn, LogOut, Menu, Receipt, Settings } from "lucide-react";
+import { Bell, ChartColumn, LifeBuoy, LogIn, LogOut, Menu, Receipt, Settings, Sparkles } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { SwivvProfile } from "@/lib/swivv-data";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,19 +12,9 @@ import { NotifBadge, SwivvTopIcons } from "@/components/swivv-top-icons";
 
 export type SwivvUser = { name: string; email: string; nationalities: string[] };
 
-// ponytail: single % definition (flow header + mon-profil) — 44 fields mirroring PRE_Q+POST_Q; 0 counts as filled
-export const REQUIRED_PROFILE_FIELDS: (keyof SwivvProfile)[] = ["name", "birthdate", "gender", "seeking", "city", "country", "lookingFor", "maritalStatus", "tagline", "bio", "heightCm", "weightKg", "hairColor", "eyeColor", "bodyStyle", "ethnicity", "selfAppearance", "bestFeature", "occupation", "education", "drink", "smoke", "drugs", "eatingHabits", "employmentStatus", "annualIncome", "livingSituation", "willingToRelocate", "hasPets", "wantsMorePets", "haveChildren", "wantMoreChildren", "brothersCount", "sistersCount", "birthRank", "parentsMaritalStatus", "nationality", "firstLanguage", "bornOrConverted", "religion", "religiousValues", "familyValues", "interests", "photos"];
+// ponytail: completion lives in a React-free module so the Progress page logic + tests don't pull the auth UI — re-exported here for the many existing imports
+export { REQUIRED_PROFILE_FIELDS, profileCompleteness } from "@/lib/swivv-profile-fields";
 
-export function profileCompleteness(p: SwivvProfile | null | undefined): number {
-  if (!p) return 0;
-  const filled = REQUIRED_PROFILE_FIELDS.filter((k) => {
-    const v = p[k];
-    if (Array.isArray(v)) return v.length > 0;
-    if (typeof v === "number") return Number.isFinite(v);
-    return !!String(v ?? "").trim();
-  }).length;
-  return Math.round((filled / REQUIRED_PROFILE_FIELDS.length) * 100);
-}
 
 // ponytail: in-flight save registry so a landing page can await a leave-save instead of first-painting stale data — drop if saves ever go through a queue
 let pendingSave: Promise<unknown> | null = null;
@@ -106,7 +96,8 @@ export async function signUpSwivv(
 }
 
 // ponytail: photo-agnostic own-row fetch for the mon-profil landing preview — completion gating stays in getMyProfile so the signup-flow/edit split never sees partials
-export async function getMyRawProfile(): Promise<SwivvProfile | null> {
+// ponytail: undefined = read failed (offline), never "no row" — a caller that treats this as rowless pushes a stale signup stash over a complete server profile on reconnect
+export async function getMyRawProfile(): Promise<SwivvProfile | null | undefined> {
   const { data } = await supabase.auth.getSession();
   const uid = data.session?.user.id;
   if (!uid) return null;
@@ -119,7 +110,7 @@ export async function getMyRawProfile(): Promise<SwivvProfile | null> {
     const p = res.data?.data as SwivvProfile | null;
     return p && p.name ? p : null;
   } catch {
-    return null;
+    return undefined;
   }
 }
 /** Null when logged out, else whether the account e-mail is confirmed. */
@@ -140,6 +131,57 @@ export async function signInSwivv(email: string, password: string): Promise<stri
     return "E-mail non confirmé — nouveau lien envoyé, clique dessus puis reconnecte-toi.";
   }
   return "E-mail ou mot de passe incorrect. Réessaie.";
+}
+
+// ponytail: list cards only need ~320px — full dataURL photos in the feed pushed even a 4-row query past PostgREST's 8s statement timeout.
+function thumbDataUrl(url: string, maxDim = 320, q = 0.7): Promise<string | null> {
+  if (typeof document === "undefined" || !url.startsWith("data:image")) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.width * scale));
+        c.height = Math.max(1, Math.round(img.height * scale));
+        c.getContext("2d")?.drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL("image/jpeg", q));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+const AVATAR_BUCKET = "avatars";
+// ponytail: session cache of dataURL→storage URL — the signup flow saves the same photos on several steps; per-tab only, content-addressed path makes a re-upload harmless if it misses
+const uploadedAvatars = new Map<string, string>();
+// ponytail: photos live in the public avatars bucket — base64 inside `data` detoasted the whole 2.9MB JSONB on every read and timed out feeds; private bucket + signed URLs if profile photos must stop being publicly fetchable
+async function uploadAvatar(src: string, uid: string): Promise<string | null> {
+  if (!src.startsWith("data:image")) return src;
+  const hit = uploadedAvatars.get(src);
+  if (hit) return hit;
+  try {
+    const mime = src.slice(5, src.indexOf(";")) || "image/jpeg";
+    const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+    const blob = await (await fetch(src)).blob();
+    // ponytail: content-addressed path dedupes re-saves; random suffix if SubtleCrypto is unavailable (http LAN)
+    let hash = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    try {
+      const digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+      hash = Array.from(new Uint8Array(digest)).slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+    } catch {}
+    const path = `${uid}/${hash}.${ext}`;
+    const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, blob, { contentType: mime, upsert: true, cacheControl: "31536000" });
+    if (error) return null;
+    const url = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path).data.publicUrl;
+    uploadedAvatars.set(src, url);
+    return url;
+  } catch {
+    return null;
+  }
 }
 
 // --- own dating profile (created via /inscription, stored per auth user) ---
@@ -168,24 +210,49 @@ export async function saveMyProfile(p: SwivvProfile): Promise<string | null> {
     return `Ton profil contient une expression inappropriée (${bad.map((w) => `« ${w} »`).join(", ")}). Reformule-la pour continuer.`;
   }
   // ponytail: merge-overwrite — empties blank out server data only on a genuine edit (a present name proves the form was prefilled, so "" means intentionally un-answered); a nameless/failed prefill keeps the old guard so a step-save can never wipe a whole profile again — explicit per-field tombstones if clearing ever needs auditing
-  const { data: prev } = await (supabase as any)
-    .from("swivv_profiles")
-    .select("data")
-    .eq("user_id", uid)
-    .maybeSingle();
-  const prevData = (prev?.data ?? {}) as Record<string, unknown>;
+  // ponytail: no read, no write — an unreadable prev row (offline mid-save) once let a stale stash upsert over a complete profile and wipe its photos; every caller inherits this, no per-call audit needed
+  let prevData: Record<string, unknown> = {};
+  try {
+    const { data: prev, error: prevErr } = await (supabase as any)
+      .from("swivv_profiles")
+      .select("data")
+      .eq("user_id", uid)
+      .maybeSingle();
+    if (prevErr) return "Lecture impossible — profil non enregistré. Réessaie quand internet revient.";
+    prevData = (prev?.data ?? {}) as Record<string, unknown>;
+  } catch {
+    return "Lecture impossible — profil non enregistré. Réessaie quand internet revient.";
+  }
   const incoming = p as unknown as Record<string, unknown>;
   // ponytail: presence/computed keys are never client-set (leave-save would reset them every visit) — prev wins
   const { online: _on, isNew: _nw, compatibility: _cp, ...writable } = incoming;
   void _on;
   void _nw;
   void _cp;
+  // ponytail: exact DOB is never displayed (age is) — keep it out of the row every member can read; one choke point covers signup/edit/draft restores
+  delete prevData.birthdate;
   const allowClear = !!String(incoming.name ?? "").trim();
+  // ponytail: an empty album never overwrites a full one in a merge (gallery UI already requires ≥1 photo to save, so [] here means a stale/failed prefill, not an edit) — admin moderation clears photos via direct SQL, not this path
+  const prevHasPhotos = Array.isArray(prevData.photos) && (prevData.photos as unknown[]).length > 0;
   const clean = Object.fromEntries(
-    Object.entries(writable).filter(([k, v]) => (allowClear || v !== "") && v !== null && v !== undefined && (k !== "verified" || v === true)),
+    Object.entries(writable).filter(([k, v]) => (allowClear || v !== "") && v !== null && v !== undefined && (k !== "verified" || v === true) && !(k === "photos" && Array.isArray(v) && v.length === 0 && prevHasPhotos)),
   );
+  delete clean.birthdate;
   // ponytail: stale signup stashes saved full-ISO joinedAt/lastActive (rendered raw as "2026-10-03T…") — coerce at the single write choke point; drop if stashes are ever versioned
   const iso = (s: unknown) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}T/.test(s);
+  // ponytail: upload dataURL photos at the single write choke point — a failed upload keeps the dataURL (no data loss). The thumb is the 320px list copy; a reordered URL primary keeps the previous thumb until a new upload replaces it.
+  const rawPhotos = Array.isArray(incoming.photos) ? incoming.photos.filter((x): x is string => typeof x === "string" && !!x) : [];
+  const photoSrc = typeof incoming.photo === "string" && incoming.photo ? incoming.photo : (rawPhotos[0] ?? "");
+  let uploadedPhotos: string[] = [];
+  let uploadedPhoto = "";
+  if (rawPhotos.some((s) => s.startsWith("data:image")) || photoSrc.startsWith("data:image")) {
+    if (rawPhotos.length) {
+      uploadedPhotos = await Promise.all(rawPhotos.slice(0, 5).map(async (s) => (await uploadAvatar(s, uid)) ?? s));
+    }
+    if (photoSrc) uploadedPhoto = (await uploadAvatar(photoSrc, uid)) ?? photoSrc;
+  }
+  const thumbSrc = photoSrc.startsWith("data:image") ? await thumbDataUrl(photoSrc) : null;
+  const thumb = thumbSrc ? ((await uploadAvatar(thumbSrc, uid)) ?? thumbSrc) : null;
   const { error } = await (supabase as any)
     .from("swivv_profiles")
     .upsert({
@@ -193,6 +260,9 @@ export async function saveMyProfile(p: SwivvProfile): Promise<string | null> {
       data: {
         ...prevData,
         ...clean,
+        ...(uploadedPhotos.length ? { photos: uploadedPhotos } : {}),
+        ...(uploadedPhoto ? { photo: uploadedPhoto } : {}),
+        ...(thumb ? { thumb } : {}),
         ...(iso(incoming.lastActive) ? { lastActive: "En ligne" } : {}),
         ...(typeof prevData.joinedAt === "string" && prevData.joinedAt
           ? { joinedAt: prevData.joinedAt }
@@ -205,7 +275,7 @@ export async function saveMyProfile(p: SwivvProfile): Promise<string | null> {
   if (error) return "Enregistrement impossible. Réessaie.";
   // ponytail: same-tab broadcast (storage events don't fire in the writing tab) so the header avatar updates without refresh — no store until a second consumer appears
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent<string | null>("swivv-avatar", { detail: mediaUrl(p.photo ?? p.photos?.[0]) ?? null }));
+    window.dispatchEvent(new CustomEvent<string | null>("swivv-avatar", { detail: mediaUrl(uploadedPhoto || p.photo || p.photos?.[0]) ?? null }));
   }
   return null;
 }
@@ -246,34 +316,164 @@ export async function getMyProfile(): Promise<SwivvProfile | null> {
   return p && p.name && Array.isArray(p.photos) && p.photos.length > 0 ? p : null;
 }
 
-// ponytail: one shared discovery feed (browse + matches) — paged server query if members ever outgrow a single select
-export function usePublicProfiles(): SwivvProfile[] {
+// ponytail: one row, one round trip for seeking+city (each cold query can cost 10s+ on the free tier — two singles doubled the blank grid); falls back to the full fetch if the projection ever fails; full getMyProfile still owns the profile itself
+export async function getMyBasics(): Promise<{ seeking: "woman" | "man" | null; city: string; country: string }> {
+  const none = { seeking: null as "woman" | "man" | null, city: "", country: "" };
+  const { data } = await supabase.auth.getSession();
+  const uid = data.session?.user.id;
+  if (!uid) return none;
+  try {
+    const res = await (supabase as any)
+      .from("swivv_profiles")
+      .select("data->>seeking,data->>gender,data->>city,data->>country")
+      .eq("user_id", uid)
+      .maybeSingle();
+    if (!res.error && res.data) {
+      const sk = res.data.seeking as string | undefined;
+      const seeking: "man" | "woman" | null = sk === "woman" || sk === "man" ? sk
+        : res.data.gender === "woman" ? "man" : res.data.gender === "man" ? "woman" : null;
+      const out: { seeking: "man" | "woman" | null; city: string; country: string } = { seeking, city: String(res.data.city ?? ""), country: String(res.data.country ?? "") };
+      if (seeking) {
+        try {
+          localStorage.setItem("swivv-seeking", seeking);
+          localStorage.setItem(`swivv-seeking:${uid}`, seeking);
+        } catch {}
+      }
+      return out;
+    }
+  } catch {}
+  const p = await getMyProfile();
+  return {
+    seeking: p?.seeking ?? (p?.gender === "woman" ? "man" : p?.gender === "man" ? "woman" : null),
+    city: p?.city ?? "",
+    country: p?.country ?? "",
+  };
+}
+
+// ponytail: page-windowed feed (60/page, newest first) — filters/search apply to the loaded window; server-side search if the pool ever needs full filtering
+const FEED_PAGE = 60;
+// ponytail: lean feed — scalar json fields + the 320px `thumb` only. Member photos are ~0.3-2.5MB dataURLs, so shipping one full photo per row timed out even with 4 members; the full array is fetched per-profile when a profile opens. Add a field here when a card starts reading one.
+const FEED_FIELDS = [
+  "user_id",
+  "updated_at",
+  "name:data->name",
+  "age:data->age",
+  "gender:data->gender",
+  "city:data->city",
+  "country:data->country",
+  "lookingFor:data->lookingFor",
+  "maritalStatus:data->maritalStatus",
+  "religion:data->religion",
+  "nationality:data->nationality",
+  "occupation:data->occupation",
+  "heightCm:data->heightCm",
+  "weightKg:data->weightKg",
+  "education:data->education",
+  "annualIncome:data->annualIncome",
+  "livingSituation:data->livingSituation",
+  "willingToRelocate:data->willingToRelocate",
+  "haveChildren:data->haveChildren",
+  "wantMoreChildren:data->wantMoreChildren",
+  "firstLanguage:data->firstLanguage",
+  "religiousValues:data->religiousValues",
+  "hairColor:data->hairColor",
+  "eyeColor:data->eyeColor",
+  "bodyStyle:data->bodyStyle",
+  "ethnicity:data->ethnicity",
+  "selfAppearance:data->selfAppearance",
+  "drink:data->drink",
+  "smoke:data->smoke",
+  "drugs:data->drugs",
+  "eatingHabits:data->eatingHabits",
+  "employmentStatus:data->employmentStatus",
+  "wantsMorePets:data->wantsMorePets",
+  "hasPets:data->hasPets",
+  "familyValues:data->familyValues",
+  "bornOrConverted:data->bornOrConverted",
+  "tagline:data->tagline",
+  "bio:data->bio",
+  "online:data->online",
+  "verified:data->verified",
+  "isNew:data->isNew",
+  "compatibility:data->compatibility",
+  "distanceKm:data->distanceKm",
+  "joinedAt:data->joinedAt",
+  "lastActive:data->lastActive",
+  "interests:data->interests",
+  "languages:data->languages",
+  "otherLanguages:data->otherLanguages",
+  "thumb:data->thumb",
+].join(",");
+// withPhotos: only the "Photos récentes" grid needs every photo (it shows one card per photo) — the other six categories and the matches list stay lean
+export function usePublicProfiles(withPhotos = false): { profiles: SwivvProfile[]; hasMore: boolean; loaded: boolean; loadMore: () => void } {
   const { user } = useAuth();
   const [extra, setExtra] = useState<SwivvProfile[]>([]);
+  const [limit, setLimit] = useState(FEED_PAGE);
+  const [hasMore, setHasMore] = useState(false);
+  // ponytail: first-window settle flag so grids paint once in final order instead of seeds-first then reshuffling — stays true on loadMore (append, not first paint)
+  const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     if (!user) {
       setExtra([]);
+      setHasMore(false);
+      setLoaded(true);
       return;
     }
     let live = true;
-    (supabase as any)
-      .from("swivv_profiles")
-      .select("user_id,data,updated_at")
-      .then(({ data }: { data: { user_id: string; data: SwivvProfile; updated_at?: string }[] | null }) => {
-        if (!live) return;
-        setExtra(
-          (data ?? [])
-            .filter((r) => r.user_id !== user.id && r.data?.name && Array.isArray(r.data.photos) && r.data.photos.length > 0)
-            // ponytail: joinedAt backfilled from the row — pre-signup-form rows lack it and crashed every recent-sort; drop once caches turn over
-            .map((r) => ({ ...r.data, id: `u:${r.user_id}`, joinedAt: r.data.joinedAt ?? (r.updated_at ?? "").slice(0, 10) })),
-        );
-      })
-      .catch(() => {});
+    // ponytail: one retry on a PostgREST 500 (statement timeout on huge photos) — it used to blank every member because data=null was treated as an empty feed; keep painted rows on the second failure
+    const fetchRows = async (retry: boolean): Promise<void> => {
+      const { data, error } = await (supabase as any)
+        .from("swivv_profiles")
+        .select(withPhotos ? "user_id,data,updated_at" : FEED_FIELDS)
+        .order("updated_at", { ascending: false })
+        .range(0, limit - 1);
+      if (!live) return;
+      if (error) {
+        if (retry) {
+          await new Promise((r) => setTimeout(r, 800));
+          if (live) return fetchRows(false);
+        }
+        setLoaded(true);
+        return;
+      }
+      const rows = (data ?? []) as any[];
+      setExtra(
+        rows
+          .filter((r) => {
+            if (r.user_id === user.id) return false;
+            const d = withPhotos ? r.data : r;
+            return !!d?.name && !!photoOf(d);
+          })
+          // ponytail: joinedAt backfilled from the row — pre-signup-form rows lack it and crashed every recent-sort; drop once caches turn over
+          .map<SwivvProfile>((r) => {
+            if (withPhotos) return { ...r.data, id: `u:${r.user_id}`, joinedAt: r.data?.joinedAt ?? (r.updated_at ?? "").slice(0, 10) };
+            const photo = photoOf(r);
+            // ponytail: interests/languages defaulted — an absent array json field came back null and crashed score()/filter joins
+            return {
+              ...r,
+              photo,
+              photos: photo ? [photo] : [],
+              interests: Array.isArray(r.interests) ? r.interests : [],
+              languages: Array.isArray(r.languages) ? r.languages : [],
+              id: `u:${r.user_id}`,
+              joinedAt: r.joinedAt ?? (r.updated_at ?? "").slice(0, 10),
+            };
+          }),
+      );
+      setHasMore(rows.length >= limit);
+      setLoaded(true);
+    };
+    fetchRows(true).catch(() => { if (live) setLoaded(true); });
     return () => {
       live = false;
     };
-  }, [user]);
-  return extra;
+  }, [user, limit, withPhotos]);
+  return { profiles: extra, hasMore, loaded, loadMore: () => setLimit((l) => l + FEED_PAGE) };
+}
+
+// primary photo from either the lean projection (photo/firstPhoto) or the full data blob
+function photoOf(d: { photo?: string | null; firstPhoto?: string | null; photos?: string[]; thumb?: string | null } | null | undefined): string | null {
+  return d?.photo ?? d?.firstPhoto ?? (Array.isArray(d?.photos) ? d.photos[0] : null) ?? d?.thumb ?? null;
 }
 
 export async function signOutSwivv() {
@@ -475,7 +675,7 @@ export function AuthModal() {
         ) : (
           <div className="mt-4 space-y-3">
             <p className="text-sm leading-relaxed text-[#555]">
-              Créez votre compte Swivv et commencez une nouvelle histoire. Avec Swivv, moins de swipe, plus de vraies rencontres.
+              Crée ton compte Swivv et commence une nouvelle histoire. Avec Swivv, moins de swipe, plus de vraies rencontres.
             </p>
             <Link
               to="/inscription"
@@ -623,8 +823,9 @@ export function SwivvAuthButtons() {
           />
           <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-white p-1.5 shadow-lg">
             <Link to="/parametres" className={itemCls}><Settings className={itemIcon} />Réglages du profil</Link>
-            <Link to="/statistiques" className={itemCls}><ChartColumn className={itemIcon} />Mes statistiques</Link>
-            <Link to="/facturation" className={itemCls}><Receipt className={itemIcon} />Facturation</Link>
+            <Link to="/statistiques" search={{ tab: "overview" }} className={itemCls}><ChartColumn className={itemIcon} />Mes statistiques</Link>
+            <Link to="/progress" search={{ tab: "progress" }} className={itemCls}><Sparkles className={itemIcon} />SWIVV PROGRESS</Link>
+            <Link to="/facturation" className={itemCls}><Receipt className={itemIcon} />Relevés d'accès</Link>
             <Link to="/notifications" className={itemCls}><Bell className={itemIcon} />Notifications</Link>
             <Link to="/help" className={itemCls}><LifeBuoy className={itemIcon} />Centre d&apos;aide</Link>
             <button

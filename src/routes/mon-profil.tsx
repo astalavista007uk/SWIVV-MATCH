@@ -9,16 +9,46 @@ import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvProfileView } from "@/components/swivv-profile-view";
+import { REACTIONS, fetchReactionCounts, type ReactionId } from "@/lib/swivv-reactions";
 
 export const Route = createFileRoute("/mon-profil")({
   head: () => ({ meta: [{ title: "Mon profil — SWIVV" }] }),
   component: MyProfilePage,
 });
 
+// ponytail: read-only received-reactions strip (own photos can't be self-reacted) — reacted-only, count on top, centered row; counts refresh with the profile below
+function ReactionStrip({ counts }: { counts: Partial<Record<ReactionId, number>> | undefined }) {
+  const shown = REACTIONS.filter((r) => (counts?.[r.id] ?? 0) > 0);
+  if (!shown.length) return null;
+  return (
+    <div className="flex items-end justify-center gap-1.5">
+      {shown.map((r) => (
+        <span key={r.id} title={`${r.label} × ${counts?.[r.id]}`} className="flex min-w-[38px] flex-col items-center rounded-full bg-black/55 px-2 py-1 text-white backdrop-blur-sm">
+          <span className="text-[11px] font-semibold leading-tight">{counts?.[r.id]}</span>
+          <span aria-hidden="true" className="text-lg leading-none">{r.emoji}</span>
+          <span className="sr-only">{r.label}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function MyProfilePage() {
   const user = useSwivvUser();
   const { user: authUser, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<SwivvProfile | null | undefined>(undefined);
+  const [offline, setOffline] = useState(false);
+  const [reactCounts, setReactCounts] = useState<Record<string, Partial<Record<ReactionId, number>>>>({});
+  useEffect(() => {
+    if (!profile) return;
+    let live = true;
+    fetchReactionCounts(profile.photos ?? []).then((m) => {
+      if (live) setReactCounts(m);
+    });
+    return () => {
+      live = false;
+    };
+  }, [profile]);
 
   // ponytail: selfie-condemned photos purge on profile visit (fingerprint match only) — manual album edits stay in Mon profil/inscription
   // ponytail: one-time slim of legacy full-size dataURLs on visit (same photos, ~10x lighter — future uploads shrink at eachImageUrl); drop once rows turn over
@@ -88,7 +118,8 @@ function MyProfilePage() {
           // ponytail: stash consumed but row partial (no photo yet) — preview the raw row so the landing is the user's own profile, not a dead end
           getMyRawProfile().then((r) => {
             if (!live) return;
-            setProfile(r);
+            if (r === undefined) setOffline(true);
+            else setProfile(r);
           });
           return;
         }
@@ -104,6 +135,11 @@ function MyProfilePage() {
               if (!live) return;
               setProfile(p2 ?? r);
             });
+            return;
+          }
+          // ponytail: unreadable row (offline) is not a rowless account — pushing the signup stash here once wiped a complete photo-bearing profile on reconnect
+          if (r === undefined) {
+            setOffline(true);
             return;
           }
           // ponytail: stash survives a failed push and stays visible — deleting it on error vaporized the profile and asked forever
@@ -136,16 +172,27 @@ function MyProfilePage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <Link to="/browse" search={{ q: "", type: "", location: "" }} className="text-sm text-[#555]">
-          ← Profils
-          </Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {profile === undefined ? (
+        {offline ? (
+          <div className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center shadow-sm">
+            <p className="font-medium text-[#333]">Connexion perdue</p>
+            <p className="mt-1 text-sm text-[#777]">
+              Impossible de charger ton profil sans connexion. Tes données sont en sécurité — réessaie quand internet revient.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+            >
+              Réessayer
+            </button>
+          </div>
+        ) : profile === undefined ? (
           <p className="py-16 text-center text-[#777]">Chargement…</p>
         ) : !profile ? (
           // ponytail: no dead-end card — profile-less signups go straight to the form that creates the row; a transient null lands on a prefilled edit form, never a wall
@@ -177,7 +224,7 @@ function MyProfilePage() {
               if (pct >= 100) {
                 return (
                   <p className="min-w-52 flex-1 rounded-2xl bg-emerald-500/10 p-4 text-center text-sm font-medium text-emerald-900">
-                    Bravo ! Votre profil SWIVV est 100 % complet 🎉
+                    Bravo ! Ton profil SWIVV est 100 % complet 🎉
                   </p>
                 );
               }
@@ -223,6 +270,7 @@ function MyProfilePage() {
             </div>
             <SwivvProfileView
               profile={profile}
+              reactToolbar={(src: string) => <ReactionStrip counts={reactCounts[src]} />}
               badge={
                 <p className="mt-2 inline-block rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63]">
                   Mon profil · {profile.lookingFor}

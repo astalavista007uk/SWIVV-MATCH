@@ -13,8 +13,6 @@ type FooterLink =
   | { label: string; to: "/faq" }
   | { label: string; to: "/contact-us"; search: { subject: string } }
   | { label: string; to: "/terms-and-conditions" }
-  | { label: string; to: "/legal/terms" }
-  | { label: string; to: "/legal/privacy" }
   | { label: string; to: "/privacy-centre" }
   | { label: string; to: "/comment-ca-marche" }
   | { label: string; to: "/guide-photos" }
@@ -60,9 +58,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "Confidentialité & Légal",
     links: [
       { label: "Conditions d'utilisation", to: "/terms-and-conditions" },
-      { label: "CGU détaillées", to: "/legal/terms" },
       { label: "Conditions Générales de Vente (CGV)", to: "/cgv" },
-      { label: "Politique de confidentialité", to: "/legal/privacy" },
       { label: "Centre de confidentialité", to: "/privacy-centre" },
       { label: "Cookies", to: "/cookies" },
     ],
@@ -71,13 +67,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     title: "SWIVV",
     links: [
       { label: "Accueil", to: "/" },
-      { label: "Comment ça marche", to: "/help" },
       { label: "Blog rencontres", to: "/blog" },
-      {
-        label: "Témoignages",
-        to: "/blog/$slug",
-        params: { slug: "temoignages-maries-grace-swivv" },
-      },
     ],
   },
 ];
@@ -87,8 +77,7 @@ export function SwivvFooter() {
     <footer className="border-t border-border bg-[#f7f7f7]">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_1fr]">
         <div>
-          {/* ponytail: multiply drops the JPG's white box into the footer bg — real transparent PNG if the footer ever goes dark */}
-          <SwivvLogo className="h-24 mix-blend-multiply" />
+          <SwivvLogo className="h-24" />
           <p className="mt-2 text-sm text-[#777]">Your Match. Your Story.</p>
           <p className="mt-4 text-xs text-[#999]">© 2026 SWIVV. Tous droits réservés.</p>
         </div>

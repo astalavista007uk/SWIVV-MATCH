@@ -1,17 +1,22 @@
 /**
  * Transactional + lifecycle email templates for SWIVV MATCH (dating).
  *
- * Same architecture as the PET BASE email-templates module: one shared
- * branded wrapper + one builder per email returning { subject, html }.
+ * Single template system: one shared branded wrapper + one builder
+ * per email returning { subject, html }.
  * Send via sendEmail() from "@/lib/email" (Resend) from a server function.
  */
 
 // ponytail: placeholder domain until the prod URL is confirmed — swap in one place
-const SITE = "https://swivvdating.com";
+const SITE = "https://swivvmatch.com";
 // ponytail: single moderation inbox (reports, verifications, complaints) — Resend/server fan-out when SMTP keys exist, mailto until then
 export const MODERATION_EMAIL = "akram.benchikh@yahoo.com";
 // ponytail: relative logo in dev so /emails preview loads it same-origin — absolute prod URL in sent mail; real CDN if clients ever block it
-const LOGO_URL = import.meta.env.DEV ? "/swivv-match-logo.jpg" : `${SITE}/swivv-match-logo.jpg`;
+// ponytail: EMAIL_LOGO_URL wins when set (public https logo for real inboxes — relative paths never resolve in email clients); Supabase public bucket if no CDN exists yet
+const ENV_LOGO = typeof process !== "undefined" ? process.env.EMAIL_LOGO_URL : "";
+const LOGO_URL = ENV_LOGO || (import.meta.env.DEV ? "/swivv-match-logo.jpg" : `${SITE}/swivv-match-logo.jpg`);
+// ponytail: footer needs the transparent PNG (email clients ignore mix-blend-mode, so the JPG's white box shows on grey) — same bucket, EMAIL_LOGO_FOOTER_URL, falls back to the header logo
+const ENV_FOOTER_LOGO = typeof process !== "undefined" ? process.env.EMAIL_LOGO_FOOTER_URL : "";
+const LOGO_FOOTER_URL = ENV_FOOTER_LOGO || LOGO_URL;
 const PRIMARY = "#e91e63";
 const ACCENT_RED = "#dc2626";
 const BG_OUTER = "#f7f8fb";
@@ -34,7 +39,7 @@ export function buildSwivvEmailHtml({
   title: string; bodyHtml: string; preheader?: string;
 }): string {
   const legalLinks = ["CGU", "Confidentialité", "Contact"];
-  const legalUrls = [`${SITE}/legal/terms`, `${SITE}/legal/privacy`, `${SITE}/contact-us`];
+  const legalUrls = [`${SITE}/terms-and-conditions`, `${SITE}/privacy-centre`, `${SITE}/contact-us`];
   return `<!DOCTYPE html>
 <html lang="fr"><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
@@ -70,14 +75,14 @@ ${bodyHtml}
 
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:592px;max-width:592px;margin-top:4px;">
 <tr><td style="text-align:center;padding:12px 0;">
-<img src="${LOGO_URL}" alt="SWIVV MATCH" width="120" style="display:inline-block;width:120px;max-width:100%;height:auto;border:0;font-size:14px;font-weight:900;color:#333333;vertical-align:middle;mix-blend-mode:multiply;" />
+<img src="${LOGO_FOOTER_URL}" alt="SWIVV MATCH" width="120" style="display:inline-block;width:120px;max-width:100%;height:auto;border:0;font-size:14px;font-weight:900;color:#333333;vertical-align:middle;" />
 <span style="display:inline-block;margin-left:10px;">
 ${legalLinks.map((l, i) => `<a href="${legalUrls[i]}" style="color:${TEXT_MUTED};text-decoration:none;font-size:11px;font-weight:600;margin:0 3px;">${l}</a>`).join("")}
 </span>
 </td></tr>
 <tr><td style="text-align:center;font-size:11px;color:${TEXT_MUTED};line-height:1.6;">
 10 Rue Thureau Dangin &middot; 75015 Paris &middot; France<br/>
-&copy; ${new Date().getFullYear()} SWIVV MATCH &middot; <a href="${SITE}" style="color:${TEXT_MUTED};text-decoration:none;">swivvdating.com</a><br/>
+&copy; ${new Date().getFullYear()} SWIVV MATCH &middot; <a href="${SITE}" style="color:${TEXT_MUTED};text-decoration:none;">swivvmatch.com</a><br/>
 Tu reçois cet e-mail car tu as un compte SWIVV. <a href="${SITE}/notifications" style="color:${TEXT_MUTED};">Gérer mes notifications</a>
 </td></tr>
 </table>
@@ -200,7 +205,7 @@ export function swivvNewMatch({ name, matchName }: { name: string; matchName: st
 }
 
 /** 6 — Message reçu. */
-export function swivvNewMessage({ name, senderName, preview }: { name: string; senderName: string; preview: string }): SwivvEmail {
+export function swivvNewMessage({ name, senderName, senderPhoto, preview }: { name: string; senderName: string; senderPhoto?: string; preview: string }): SwivvEmail {
   const clean = preview.length > 140 ? `${preview.slice(0, 140)}…` : preview;
   return {
     subject: `${senderName} t'a envoyé un message`,
@@ -209,7 +214,10 @@ export function swivvNewMessage({ name, senderName, preview }: { name: string; s
       preheader: `${senderName} : ${clean}`,
       bodyHtml:
         hi(name, "tu as un nouveau message.") +
-        p(`<strong>${escapeHtml(senderName)}</strong> t'a écrit :`) +
+        `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>
+${senderPhoto ? `<td style="padding-right:12px;vertical-align:middle;"><img src="${escapeHtml(senderPhoto)}" alt="${escapeHtml(senderName)}" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:50%;object-fit:cover;border:0;" /></td>` : ""}
+<td style="vertical-align:middle;font-size:15px;color:${TEXT_DARK};line-height:1.6;"><strong>${escapeHtml(senderName)}</strong> t'a écrit :</td>
+</tr></table>` +
         `<div style="background:#f2f8f8;border-radius:14px;padding:16px 20px;font-size:15px;font-style:italic;color:${TEXT_DARK};line-height:1.6;margin-bottom:12px;">« ${escapeHtml(clean)} »</div>` +
         btn("Lire et répondre", `${SITE}/messagerie`) +
         small("Astuce : répondre vite garde la conversation en vie."),
@@ -258,7 +266,7 @@ export function swivvTestimonialInvite({ name }: { name: string }): SwivvEmail {
       preheader: "Ton témoignage inspirera les prochains couples.",
       bodyHtml:
         hi(name, "une belle histoire à raconter ?") +
-        p("Si SWIVV t'a permis de rencontrer quelqu'un de spécial, partage ton témoignage et vos photos : après validation par notre équipe, il inspirera la communauté sur le blog.") +
+        p("Si SWIVV vous a permis de rencontrer quelqu'un de spécial, partagez votre témoignage et vos photos : après validation par notre équipe, il inspirera la communauté sur le blog.") +
         btn("Partager notre témoignage", `${SITE}/temoignage`),
     }),
   };
@@ -267,7 +275,7 @@ export function swivvTestimonialInvite({ name }: { name: string }): SwivvEmail {
 /** 10 — Conseils de sécurité avant une rencontre IRL. */
 export function swivvSafetyTips({ name }: { name: string }): SwivvEmail {
   const tips = [
-    "Rencontre-toi toujours dans un lieu public pour les premiers rendez-vous.",
+      "Retrouve-toi toujours dans un lieu public pour les premiers rendez-vous.",
     "Préviens un proche : où tu vas, avec qui, et quand tu rentres.",
     "Garde un moyen de transport indépendant pour partir quand tu veux.",
     "Ne communique jamais ton adresse, tes codes ou de l'argent.",
@@ -348,21 +356,83 @@ export function swivvAccountDeleted({ name }: { name: string }): SwivvEmail {
         p("Ton compte, ton profil et tes données associées ont été supprimés, conformément à ta demande. Si tu as trouvé l'amour (on l'espère !), toute l'équipe te souhaite beaucoup de bonheur.") +
         p("Et si tu changes d'avis, tu seras toujours le bienvenu pour créer un nouveau compte.") +
         btn("Revenir un jour", SITE) +
-        small("Une question sur tes données ? Écris-nous : contact@swivvdating.com."),
+        small("Une question sur tes données ? Écris-nous : contact@swivvmatch.com."),
     }),
   };
 }
 
 /** 16 — Matches du jour. */
-export function swivvDailyMatches({ name, count }: { name: string; count: number }): SwivvEmail {
+export type MatchPick = { name: string; age: number; city: string; pct: number; photo: string; gender: "man" | "woman" };
+
+// ponytail: clearly-labeled fake faces for previews/tests only — real sends pass actual match photos + profile links; per-profile deep links if the picks ever need their own CTA
+// ponytail: 400px Unsplash faces (same crop params as the blog) — randomuser's 128px files went blurry at card width; real match photos replace these on live sends
+// ponytail: square crops (w+h) so every card photo renders the same height — without h, mixed source ratios stagger the grid; fixed-height CSS if sources ever stop being square
+const FACE = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&crop=faces&w=400&h=400&q=80`;
+export const SAMPLE_MATCHES: MatchPick[] = [
+  { name: "Karim", age: 29, city: "Paris", pct: 92, photo: FACE("photo-1507003211169-0a1dd7228f2d"), gender: "man" },
+  { name: "Léa", age: 26, city: "Lyon", pct: 89, photo: FACE("photo-1494790108377-be9c29b29330"), gender: "woman" },
+  { name: "Mehdi", age: 31, city: "Marseille", pct: 87, photo: FACE("photo-1500648767791-00dcc994a43e"), gender: "man" },
+  { name: "Sofia", age: 28, city: "Bordeaux", pct: 85, photo: FACE("photo-1438761681033-6461ffad8d80"), gender: "woman" },
+  { name: "Yanis", age: 27, city: "Nantes", pct: 84, photo: FACE("photo-1472099645785-5658abf4ff4e"), gender: "man" },
+  { name: "Chloé", age: 30, city: "Toulouse", pct: 83, photo: FACE("photo-1544005313-94ddf0286df2"), gender: "woman" },
+  { name: "Rayan", age: 33, city: "Lille", pct: 82, photo: FACE("photo-1506794778202-cad84cf45f1d"), gender: "man" },
+  { name: "Emma", age: 25, city: "Nice", pct: 81, photo: FACE("photo-1534528741775-53994a69daeb"), gender: "woman" },
+  { name: "Bilal", age: 29, city: "Paris", pct: 80, photo: FACE("photo-1539571696357-5a69c17a67c6"), gender: "man" },
+  { name: "Jade", age: 27, city: "Rennes", pct: 79, photo: FACE("photo-1517841905240-472988babdf9"), gender: "woman" },
+  { name: "Adam", age: 32, city: "Strasbourg", pct: 78, photo: FACE("photo-1519345182560-3f2917c472ef"), gender: "man" },
+  { name: "Nora", age: 26, city: "Montpellier", pct: 77, photo: FACE("photo-1524504388940-b1c1722653e1"), gender: "woman" },
+  { name: "Sofiane", age: 30, city: "Paris", pct: 76, photo: FACE("photo-1492562080023-ab3db95bfbce"), gender: "man" },
+  { name: "Inès", age: 24, city: "Lille", pct: 75, photo: FACE("photo-1489424731084-a5d8b219a5bb"), gender: "woman" },
+  { name: "Théo", age: 28, city: "Bordeaux", pct: 74, photo: FACE("photo-1508341591423-4347099e1f19"), gender: "man" },
+  { name: "Manon", age: 29, city: "Nantes", pct: 73, photo: FACE("photo-1531746020798-e6953c6e8e04"), gender: "woman" },
+  { name: "Hugo", age: 31, city: "Lyon", pct: 72, photo: FACE("photo-1519085360753-af0119f7cbe7"), gender: "man" },
+  { name: "Camille", age: 27, city: "Toulouse", pct: 71, photo: FACE("photo-1529626455594-4ff0802cfb7e"), gender: "woman" },
+  { name: "Enzo", age: 26, city: "Marseille", pct: 70, photo: FACE("photo-1499996860823-5214fcc65f8f"), gender: "man" },
+  { name: "Sarah", age: 30, city: "Nice", pct: 69, photo: FACE("photo-1516724562728-afc824a36e84"), gender: "woman" },
+  { name: "Louis", age: 34, city: "Rennes", pct: 68, photo: FACE("photo-1521119989659-a83eee488004"), gender: "man" },
+  { name: "Yasmine", age: 25, city: "Strasbourg", pct: 67, photo: FACE("photo-1520813792240-56fc4a3765a7"), gender: "woman" },
+  { name: "Nabil", age: 29, city: "Montpellier", pct: 66, photo: FACE("photo-1463453091185-61582044d556"), gender: "man" },
+  { name: "Laura", age: 28, city: "Paris", pct: 65, photo: FACE("photo-1487412720507-e7ab37603c6f"), gender: "woman" },
+];
+
+/**
+ * Gender-matched picks: a woman seeking men gets men, a man seeking women gets
+ * women (same "woman"|"man" vocabulary as profile seeking). Unknown seeking
+ * falls back to mixed — the live sender filters real matches the same way.
+ */
+export function picksFor(seeking: "man" | "woman" | undefined, n: number): MatchPick[] {
+  const pool = seeking ? SAMPLE_MATCHES.filter((m) => m.gender === seeking) : SAMPLE_MATCHES;
+  return pool.slice(0, n);
+}
+
+/** Profile-card grid (email-safe nested tables, photo + name/age + city + % pill). */
+function matchGrid(matches: MatchPick[], cols: 2 | 3): string {
+  const pct = (n: number) =>
+    `<span style="display:inline-block;background:${PRIMARY};color:#fff;font-size:12px;font-weight:800;border-radius:50px;padding:3px 10px;">${n} %</span>`;
+  const card = (m: MatchPick) =>
+    `<td valign="top" style="padding:6px;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#f7f8fb;border-radius:14px;"><tr><td style="padding:0;">` +
+    `<a href="${SITE}/matches"><img src="${m.photo}" alt="${escapeHtml(m.name)}" width="220" style="display:block;width:100%;max-width:220px;height:auto;border:0;border-radius:14px 14px 0 0;" /></a>` +
+    `<div style="padding:10px 12px 12px;text-align:center;">` +
+    `<div style="font-size:14px;font-weight:800;color:${TEXT_DARK};">${escapeHtml(m.name)}, ${m.age}</div>` +
+    `<div style="font-size:12px;color:${TEXT_MUTED};margin:2px 0 8px;">${escapeHtml(m.city)}</div>${pct(m.pct)}` +
+    `</div></td></tr></table></td>`;
+  const rows: string[] = [];
+  for (let i = 0; i < matches.length; i += cols) {
+    const cells = matches.slice(i, i + cols).map(card).join("");
+    rows.push(`<tr>${cells}</tr>`);
+  }
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:8px -6px 4px;"><tbody>${rows.join("")}</tbody></table>`;
+}
+
+export function swivvDailyMatches({ name, matches }: { name: string; matches: MatchPick[] }): SwivvEmail {
   return {
     subject: "💕 Your SWIVV matches for today",
     html: buildSwivvEmailHtml({
       title: "Tes matches du jour",
-      preheader: `${count} nouveaux profils compatibles t'attendent.`,
+      preheader: `${matches.length} nouveaux profils compatibles t'attendent.`,
       bodyHtml:
         hi(name, "voici ta sélection du jour.") +
-        stat(count, "nouveaux matches") +
+        matchGrid(matches, 2) +
         p("On a sélectionné pour toi les profils les plus compatibles, en fonction de tes critères. Ne les fais pas attendre !") +
         btn("Voir mes matches", `${SITE}/matches`),
     }),
@@ -370,15 +440,15 @@ export function swivvDailyMatches({ name, count }: { name: string; count: number
 }
 
 /** 17 — Matches de la semaine. */
-export function swivvWeeklyMatches({ name, count }: { name: string; count: number }): SwivvEmail {
+export function swivvWeeklyMatches({ name, matches }: { name: string; matches: MatchPick[] }): SwivvEmail {
   return {
     subject: "💕Your SWIVV matches this week",
     html: buildSwivvEmailHtml({
       title: "Tes matches de la semaine",
-      preheader: `${count} profils compatibles cette semaine.`,
+      preheader: `${matches.length} profils compatibles cette semaine.`,
       bodyHtml:
         hi(name, "ton récap de la semaine.") +
-        stat(count, "matches cette semaine") +
+        matchGrid(matches, 3) +
         p("Voici les profils qui te correspondent le mieux parmi les nouveaux inscrits. Un like aujourd'hui, une rencontre demain !") +
         btn("Voir mes matches", `${SITE}/matches`),
     }),
@@ -503,7 +573,7 @@ export function swivvProfileReported({ name }: { name: string }): SwivvEmail {
         hi(name, "on te tient informé.") +
         p("Nous avons reçu un signalement concernant ton profil. Notre équipe de modération va l'examiner et te contactera si une action est nécessaire.") +
         p("En attendant, vérifie que ton profil respecte nos règles : photos récentes de toi, description respectueuse, aucune coordonnée publique.") +
-        btn("Voir mes règles", `${SITE}/legal/terms`),
+        btn("Voir mes règles", `${SITE}/terms-and-conditions`),
     }),
   };
 }
@@ -519,7 +589,7 @@ export function swivvContentRemoved({ name }: { name: string }): SwivvEmail {
         hi(name, "petit rappel des règles.") +
         p("Notre équipe a retiré un contenu de ton profil car il ne respectait pas nos conditions d'utilisation. Ton compte reste actif.") +
         p("En cas de récidive, ton compte pourra être suspendu. Prends un moment pour relire les règles.") +
-        btn("Relire les règles", `${SITE}/legal/terms`),
+        btn("Relire les règles", `${SITE}/terms-and-conditions`),
     }),
   };
 }
@@ -580,7 +650,7 @@ export function swivvTermsUpdated({ name }: { name: string }): SwivvEmail {
       bodyHtml:
         hi(name, "on fait le point.") +
         p("Nos conditions générales d'utilisation ont été mises à jour. En continuant à utiliser SWIVV après leur entrée en vigueur, tu les acceptes.") +
-        btn("Lire les nouvelles CGU", `${SITE}/legal/terms`),
+        btn("Lire les nouvelles CGU", `${SITE}/terms-and-conditions`),
     }),
   };
 }
@@ -595,7 +665,7 @@ export function swivvPrivacyUpdated({ name }: { name: string }): SwivvEmail {
       bodyHtml:
         hi(name, "transparence d'abord.") +
         p("Notre politique de confidentialité a été mise à jour : on y détaille quelles données on collecte, pourquoi, et comment tu peux les contrôler ou les supprimer.") +
-        btn("Lire la politique", `${SITE}/legal/privacy`),
+        btn("Lire la politique", `${SITE}/privacy-centre`),
     }),
   };
 }
@@ -617,6 +687,23 @@ export function swivvCookiesUpdated({ name }: { name: string }): SwivvEmail {
 
 /** 33 — App mobile disponible. */
 export function swivvAppAvailable({ name }: { name: string }): SwivvEmail {
+  // ponytail: QR hotlink via api.qrserver.com (zero dep, zero binary asset) — self-host a generated PNG if uptime/branding ever matters
+  // ponytail: store cards link SITE until native apps ship — swap hrefs for real App Store / Google Play URLs
+  // ponytail: official multicolor Play arrow PNG (inline SVG never loads in Gmail/Outlook) — grey monochrome exists nowhere trustworthy; re-tint if palette ever beats real artwork
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&color=ffffff&bgcolor=1b1b1e&data=${encodeURIComponent("https://www.swivvmatch.com")}`;
+  const apple = "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Apple_logo_grey.svg/250px-Apple_logo_grey.svg.png";
+  const play = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Google_Play_Arrow_logo.svg/250px-Google_Play_Arrow_logo.svg.png";
+  const card = (icon: string, alt: string, l1: string, l2: string) =>
+    `<td valign="top" width="33%" style="padding:0 5px;"><a href="${SITE}" style="text-decoration:none;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#1b1b1e;border-radius:22px;"><tr><td style="padding:26px 20px 24px;text-align:left;">` +
+    `<div style="height:108px;">${icon}</div>` +
+    `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:400;color:#cfcfd4;line-height:1.4;">${l1}<br/>${l2}</div>` +
+    `</td></tr></table></a></td>`;
+  const appIcons =
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:24px -5px 8px;"><tr>` +
+    card(`<img src="${apple}" alt="App Store" width="30" style="display:block;width:30px;height:auto;border:0;" />`, "App Store", "Open", "App Store") +
+    card(`<img src="${play}" alt="Google Play" width="40" style="display:block;width:40px;height:auto;border:0;" />`, "Google Play", "Open", "Google Play") +
+    card(`<img src="${qr}" alt="QR code vers www.swivvmatch.com" width="84" style="display:block;width:84px;height:84px;border:0;" />`, "QR", "Scan", "to download") +
+    `</tr></table>`;
   return {
     subject: "📱 SWIVV is now available on your phone!",
     html: buildSwivvEmailHtml({
@@ -624,8 +711,11 @@ export function swivvAppAvailable({ name }: { name: string }): SwivvEmail {
       preheader: "Tes matches partout avec toi.",
       bodyHtml:
         hi(name, "bonne nouvelle !") +
-        p("L'application mobile SWIVV est disponible sur iOS et Android : notifications de matches en temps réel, messages vocaux et appels vidéo où que tu sois.") +
-        btn("Télécharger l'app", `${SITE}`),
+        `<div style="font-size:30px;font-weight:900;color:#111111;line-height:1.15;margin:4px 0 10px;">Change ta vie<br/>avec SWIVV MATCH</div>` +
+        p("L'application SWIVV MATCH arrive sur ton téléphone : tes matches, messages et notifications partout avec toi.") +
+        appIcons +
+        // ponytail: trust icons are grey PNGs via wsrv mod=0.6 (phones ignore U+FE0E, SVG shows dots) - self-host if wsrv ever fails
+        `<div style="text-align:center;font-size:12px;color:#9a9aa0;margin:14px 0 4px;">★ Profils vérifiés &nbsp;·&nbsp; <img src="https://wsrv.nl/?url=thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/OOjs_UI_icon_bell-invert.svg/60px-OOjs_UI_icon_bell-invert.svg.png&w=48&mod=0.6&output=png" alt="" width="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px;" /> Alertes match en direct &nbsp;·&nbsp; <img src="https://wsrv.nl/?url=thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/OOjs_UI_icon_userAvatar-invert.svg/60px-OOjs_UI_icon_userAvatar-invert.svg.png&w=48&mod=0.6&output=png" alt="" width="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px;" /> Modération humaine</div>`,
     }),
   };
 }
@@ -751,16 +841,19 @@ export function swivvFeatureRequestThanks({ name }: { name: string }): SwivvEmai
   };
 }
 
-/** 42 — Message de contact reçu. */
-export function swivvContactReceived({ name }: { name: string }): SwivvEmail {
+/** 42 — Message de contact reçu (accusé de réception, avec rappel du message). */
+export function swivvContactReceived({ name, subject, message, fileNames }: { name: string; subject?: string; message?: string; fileNames?: string[] }): SwivvEmail {
   return {
-    subject: "We've received your message",
+    subject: "Message bien reçu — SWIVV MATCH",
     html: buildSwivvEmailHtml({
       title: "Message bien reçu",
-      preheader: "On te répond très vite.",
+      preheader: "On te répond sous 1 à 2 jours ouvrés.",
       bodyHtml:
         hi(name, "merci de nous écrire.") +
-        p("Ton message a bien été reçu par notre équipe support. On te répond en général sous 48 heures ouvrées.") +
+        p("Ton message a bien été reçu par notre équipe support. On te répond en général sous 1 à 2 jours ouvrés.") +
+        (subject ? p(`<strong>Objet :</strong> ${escapeHtml(subject)}`) : "") +
+        (message ? `<div style="background:${BG_OUTER};border-radius:14px;padding:20px;font-size:14px;color:${TEXT_DARK};line-height:1.7;white-space:pre-wrap;margin-bottom:24px;">${escapeHtml(message)}</div>` : "") +
+        (fileNames?.length ? p(`<strong>Pièces jointes (${fileNames.length}) :</strong><br/>${fileNames.map((f, i) => `${i + 1}- ${escapeHtml(f)}`).join("<br/>")}`) : "") +
         small("En cas d'urgence liée à ta sécurité, contacte directement les autorités compétentes."),
     }),
   };
@@ -810,52 +903,5 @@ export function swivvPromo({ name, headline, detail, cta, url }: { name: string;
     }),
   };
 }
-
-export const SWIVV_EMAILS = [
-  "swivvVerifyEmail",
-  "swivvWelcome",
-  "swivvProfileIncomplete",
-  "swivvNewLike",
-  "swivvNewMatch",
-  "swivvNewMessage",
-  "swivvActivityDigest",
-  "swivvNewNearby",
-  "swivvTestimonialInvite",
-  "swivvSafetyTips",
-  "swivvWeMissYou",
-  "swivvPasswordReset",
-  "swivvReportReceived",
-  "swivvAccountDeleted",
-  "swivvPromo",
-  "swivvDailyMatches",
-  "swivvWeeklyMatches",
-  "swivvAddPhoto",
-  "swivvPhotoApproved",
-  "swivvPhotoRejected",
-  "swivvProfileHidden",
-  "swivvProfileVisibleAgain",
-  "swivvReferral",
-  "swivvReferralSuccess",
-  "swivvProfileReported",
-  "swivvContentRemoved",
-  "swivvSuspendedTemp",
-  "swivvSuspendedPerm",
-  "swivvAccountRestored",
-  "swivvTermsUpdated",
-  "swivvPrivacyUpdated",
-  "swivvCookiesUpdated",
-  "swivvAppAvailable",
-  "swivvPushDisabled",
-  "swivvEnableNotifications",
-  "swivvNewDevice",
-  "swivvWelcomeSurvey",
-  "swivvFeedback",
-  "swivvProductSurvey",
-  "swivvFeatureFeedback",
-  "swivvFeatureRequestThanks",
-  "swivvContactReceived",
-  "swivvSupportReply",
-  "swivvReportResolved",
-] as const;
 
 // ponytail: templates only, no sending here — call sendEmail() from a server function with RESEND_API_KEY set, and gate each send on the user's notification prefs

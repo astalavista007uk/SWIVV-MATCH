@@ -8,9 +8,11 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
-import { startChatSync } from "@/lib/swivv-store";
-import { initNotifyListeners } from "@/lib/swivv-notify";
+import { startChatSync, pullMatchCriteria } from "@/lib/swivv-store";
+import { initNotifyListeners, maybeRemindIncomplete } from "@/lib/swivv-notify";
+import { catchUpNotifs } from "@/lib/notify.functions";
 import { signOutSwivv, isEmailConfirmed } from "@/lib/swivv-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -22,13 +24,16 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Page introuvable</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Cette page n'existe pas ou a été déplacée.
+        </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
-            Go home
+            Retour à l'accueil
           </Link>
         </div>
       </div>
@@ -41,13 +46,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SWIVV" },
-      { name: "description", content: "SWIVV — rencontres façon marketplace." },
+      { title: "SWIVV MATCH — Rencontres gratuites" },
+      {
+        name: "description",
+        content:
+          "SWIVV MATCH, site de rencontres gratuit et sans carte bancaire : profils, likes, matchs, messages, vocaux et photos.",
+      },
       { name: "theme-color", content: "#e91e63" },
+      { property: "og:site_name", content: "SWIVV MATCH" },
+      { property: "og:locale", content: "fr_FR" },
+      { property: "og:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
+      { property: "og:image:alt", content: "SWIVV MATCH" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://images.unsplash.com" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap",
@@ -139,6 +155,17 @@ function RootComponent() {
 
   useEffect(() => startChatSync(), []);
   useEffect(() => initNotifyListeners(), []);
+  // ponytail: one catch-up per tab session (dedupe makes reruns cheap, but once is enough — realtime covers the rest)
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("swivv-catchup")) return;
+      sessionStorage.setItem("swivv-catchup", "1");
+    } catch {}
+    void catchUpNotifs({ data: {} }).catch(() => {});
+    void maybeRemindIncomplete().catch(() => {});
+    // ponytail: one criteria pull per tab session — percentages/tooltips read localStorage, so every device converges on the newest save (notify repaints subscribers)
+    void pullMatchCriteria().catch(() => {});
+  }, []);
 
   // ponytail: "Rester connecté" unchecked = sign out on fresh browser starts (sessionStorage dies with the browser, localStorage doesn't)
   useEffect(() => {
@@ -161,6 +188,7 @@ function RootComponent() {
           <GatedOutlet />
         </main>
         <Toaster />
+        <Analytics />
       </AuthProvider>
     </QueryClientProvider>
   );

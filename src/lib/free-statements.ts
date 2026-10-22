@@ -94,7 +94,7 @@ export interface PdfArt {
 
 // ponytail: art is baked into the bundle (base64 JPEG, fetch-free) — browser fetch of the public
 // files fails in some environments (blockers/proxies) and the fallback shapes then draw instead
-// of the photos; baked bytes can't fail to load. Facturation chunk grows (~150 KB, route-lazy).
+// of the photos; baked bytes can't fail to load. Relevés chunk grows (~150 KB, route-lazy).
 function bakedArt(): PdfArt {
   const dec = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   const im = (t: { b64: string; w: number; h: number; filter: string }) => ({
@@ -119,7 +119,7 @@ export function buildFreeStatementPdf(s: FreeStatement, memberName: string, memb
   // ponytail: no banner — content starts at the top; the S mark keeps the top-right branding alone —
   // vector/photo band experiments removed after the phone viewer kept dropping that raster (S-mark +
   // wordmark draw fine everywhere, so they stay). Re-add a band only as layered art with a vector base.
-  // DE+FACTURÉ-À+DATE header block / pink rules / totals / footer wordmark tight above the line —
+  // DE+MEMBRE+DATE header block / pink rules / totals / footer wordmark tight above the line —
   // no payment/tax/company blocks (inventing those would be fraud-adjacent).
   const G = "0.9137 0.1176 0.3882"; // heart pink #e91e63 — matches the logo heart
   const L: string[] = [];
@@ -155,8 +155,8 @@ export function buildFreeStatementPdf(s: FreeStatement, memberName: string, memb
   // Title + ref left
   T(79, 745, 16, true, "0 0 0", "RELEVÉ MENSUEL D'ACCÈS GRATUIT");
   T(79, 726, 10, false, "0 0 0", s.ref);
-  // Three-column header: DE / FACTURÉ À / DATE D'ÉMISSION (+ periode couverte & compte créé)
-  T(79, 697, 9, false, "0.55 0.55 0.55", "DE"); T(219, 697, 9, false, "0.55 0.55 0.55", "FACTURÉ À"); T(379, 697, 9, false, "0.55 0.55 0.55", "DATE D'ÉMISSION");
+  // Three-column header: DE / MEMBRE / DATE D'ÉMISSION (+ periode couverte & compte créé)
+  T(79, 697, 9, false, "0.55 0.55 0.55", "DE"); T(219, 697, 9, false, "0.55 0.55 0.55", "MEMBRE"); T(379, 697, 9, false, "0.55 0.55 0.55", "DATE D'ÉMISSION");
   T(79, 681, 11, true, "0 0 0", "SWIVV MATCH"); T(219, 681, 11, true, "0 0 0", memberName); T(379, 681, 11, false, "0 0 0", formatFrDate(s.issueIso));
   T(379, 657, 9, false, "0.55 0.55 0.55", "PÉRIODE COUVERTE");
   T(219, 641, 10, false, "0 0 0", `Compte créé le ${formatFrDate(memberSinceIso.slice(0, 10))}`); T(379, 641, 11, false, "0 0 0", statementMonthLabel(s));
@@ -170,7 +170,7 @@ export function buildFreeStatementPdf(s: FreeStatement, memberName: string, memb
   rule(530);
   // Totals (nothing taxed on 0 €)
   TR(443, 513, 12, true, "0 0 0", "Total"); TR(497, 513, 12, true, G, "0,00 €");
-  TR(443, 487, 11, true, "0 0 0", "Total à payer"); TR(497, 487, 11, true, G, "0,00 €");
+  TR(443, 487, 11, true, "0 0 0", "Total"); TR(497, 487, 11, true, G, "0,00 €");
   // PAIEMENT + NOTES
   T(79, 460, 9, false, "0.55 0.55 0.55", "PAIEMENT");
   T(79, 445, 11, false, "0 0 0", "Aucun paiement n'est dû au titre de ce relevé.");

@@ -3,12 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchReactionCounts, getPhotoReaction, isMemberUuid, REACTIONS, reactionOf, togglePhotoReaction, type ReactionId } from "@/lib/swivv-reactions";
+import { getPhotoReaction, isMemberUuid, preloadMyReactionsForPhotos, REACTIONS, reactionOf, subscribeReactions, togglePhotoReaction, type ReactionId } from "@/lib/swivv-reactions";
 import { SWIVV_PROFILES } from "@/lib/swivv-data";
-import { displayPct, load } from "@/routes/matches";
-import { realDistance, useMyCity } from "@/lib/location-distance";
-import { getBlocked, getLikes, getMatches, getProfileViews, isLikedBack, isMatch, toggleLike, bumpProfileView } from "@/lib/swivv-store";
-import { SwivvAuthButtons, getMyProfile, requireSwivvAuth, usePublicProfiles } from "@/lib/swivv-auth";
+import { displayPct, load, MatchLoginPrompt } from "@/lib/match-score";
+import { useAuth } from "@/hooks/use-auth";
+import { realDistance } from "@/lib/location-distance";
+import { getLikes, getMatches, getProfileViews, isLikedBack, isMatch, isThreadBlocked, subscribe, toggleLike, bumpProfileView } from "@/lib/swivv-store";
+import { SwivvAuthButtons, getMyBasics, requireSwivvAuth, usePublicProfiles } from "@/lib/swivv-auth";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
@@ -48,19 +49,22 @@ function splitSearch(raw: string): { category: string; text: string } {
 
 function SwivvBrowse() {
   const search = Route.useSearch();
+  const { user, loading: authLoading } = useAuth();
   const [query, setQuery] = useState(() => splitSearch(search.q ?? "").text);
   const [category, setCategory] = useState(() => splitSearch(search.q ?? "").category);
-  const [gender, setGender] = useState<"all" | "woman" | "man">(() => {
-    // ponytail: cached seeking first (no flash on back/forward remounts) — signup-gender fallback, profile fetch refreshes the cache
+  // ponytail: per-user cache read after mount (not in the initializer) — reading localStorage during the first render makes SSR and client disagree; the seeking fetch below still confirms
+  const [gender, setGender] = useState<"all" | "woman" | "man">("all");
+  useEffect(() => {
     try {
-      const cached = localStorage.getItem("swivv-seeking");
-      if (cached === "woman" || cached === "man") return cached;
+      const uid = localStorage.getItem("swivv-uid");
+      const mine = uid ? localStorage.getItem(`swivv-seeking:${uid}`) : null;
+      const cached = mine === "woman" || mine === "man" ? mine : localStorage.getItem("swivv-seeking");
+      if (cached === "woman" || cached === "man") { setGender(cached); return; }
       const g = localStorage.getItem("swivv-signup-gender");
-      return g === "woman" ? "man" : g === "man" ? "woman" : "all";
-    } catch {
-      return "all";
-    }
-  });
+      if (g === "woman") setGender("man");
+      else if (g === "man") setGender("woman");
+    } catch { /* ignore */ }
+  }, []);
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [maxDist, setMaxDist] = useState("");
   const [lookingFor, setLookingFor] = useState("all");
@@ -71,8 +75,8 @@ function SwivvBrowse() {
   );
   const [, force] = useState(0);
   const [myUid, setMyUid] = useState<string | null>(null);
-  // ponytail: reactor+type only, never the photo column (750KB data URLs) — latest reaction per reactor, 200 cap; admin/stats read the full rows when they need photos
-  const [reactRecv, setReactRecv] = useState<Record<string, { emoji: string; label: string }>>({});
+  // ponytail: reactor+type only, never the photo column (750KB data URLs) — distinct reactions per reactor stacked, 200 cap; admin/stats read the full rows when they need photos
+  const [reactRecv, setReactRecv] = useState<Record<string, { emojis: string[]; labels: string[] }>>({});
   useEffect(() => {
     if (!myUid) {
       setReactRecv({});
@@ -84,13 +88,15 @@ function SwivvBrowse() {
       .order("updated_at", { ascending: false }).limit(200)
       .then(({ data }: any) => {
         if (!live) return;
-        const m: Record<string, { emoji: string; label: string }> = {};
+        const m: Record<string, { emojis: string[]; labels: string[] }> = {};
         for (const r of (data ?? [])) {
           const id = `u:${r.reactor_id}`;
-          if (!m[id]) {
-            const def = reactionOf(String(r.reaction));
-            m[id] = { emoji: def?.emoji ?? "❤️", label: def?.label ?? "Réaction" };
-          }
+          const def = reactionOf(String(r.reaction));
+          const emoji = def?.emoji ?? "❤️";
+          const label = def?.label ?? "Réaction";
+          const cur = (m[id] ??= { emojis: [], labels: [] });
+          if (!cur.emojis.includes(emoji)) cur.emojis.push(emoji);
+          if (!cur.labels.includes(label)) cur.labels.push(label);
         }
         setReactRecv(m);
       })
@@ -111,12 +117,16 @@ function SwivvBrowse() {
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, []);
-  const viewer = useMyCity();
-  const members = usePublicProfiles();
+  // ponytail: refresh on store changes (block/unblock hides here instantly, no remount needed) — same subscribe as the message dialog
+  useEffect(() => subscribe(() => force((x) => x + 1)), []);
+  const [myGeo, setMyGeo] = useState({ city: "", country: "" });
+  const { profiles: members, hasMore, loaded: poolLoaded, loadMore } = usePublicProfiles(
+    category.toLowerCase() === "photos récentes",
+  );
   // ponytail: seeds + real members in one pool — dedupe by id if a seed ever ships a u: id
   const pool = useMemo(() => [...SWIVV_PROFILES, ...members], [members]);
   const dist = (p: { city: string; country: string; distanceKm: number }) =>
-    realDistance(viewer.city, viewer.country, p);
+    realDistance(myGeo.city, myGeo.country, p);
   // ponytail: joinedAt proxies photo-added date — per-photo timestamps if uploads ever track them
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
@@ -130,18 +140,39 @@ function SwivvBrowse() {
   }, [search.q]);
 
   // Default gender filter to who the viewer seeks (saved preference, else opposite).
+  // ponytail: per-user seeking cache, read from the local session in ms — seeds paint at once in the right gender/sort, server members stream into place when the pool lands (holding the whole grid for a 10s+ cold query was the bigger wait)
+  const [seekReady, setSeekReady] = useState(false);
   useEffect(() => {
-    getMyProfile().then((p) => {
-      const s = p?.seeking ?? (p?.gender === "woman" ? "man" : p?.gender === "man" ? "woman" : null);
-      if (s) {
-        try {
-          localStorage.setItem("swivv-seeking", s);
-        } catch {}
-        setGender((g) => (g === "all" ? s : g));
+    let live = true;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const uid = data.session?.user.id ?? null;
+        if (!live) return;
+        if (uid) {
+          try {
+            const c = localStorage.getItem(`swivv-seeking:${uid}`);
+            // ponytail: per-user hit lifts the gate at once (this uid's own last-known value, network fetch confirms below) — first visit on a new device still waits for the fetch
+            if (c === "woman" || c === "man") {
+              setGender(c);
+              setSeekReady(true);
+            }
+          } catch {}
+        }
+        const b = await getMyBasics();
+        if (!live) return;
+        if (b.seeking) setGender(b.seeking);
+        setMyGeo({ city: b.city, country: b.country });
+      } finally {
+        if (live) setSeekReady(true);
       }
-    });
+    })().catch(() => {});
+    return () => {
+      live = false;
+    };
   }, []);
 
+  const gridReady = seekReady;
   const cat = category.toLowerCase();
   // ponytail: category views force their sort so the dropdown always shows the real order
   const effectiveSort = cat === "photos récentes" || cat === "nouveaux profils" ? "recent" : cat === "profils populaires" ? "popular" : cat === "près de moi" ? "distance" : sort;
@@ -149,7 +180,8 @@ function SwivvBrowse() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = pool.filter((p) => {
-      if (getBlocked().includes(p.id)) return false;
+      // ponytail: either direction hides (I blocked them or they blocked me) — threads keep their own banner instead
+      if (isThreadBlocked(p.id)) return false;
       // ponytail: likes/matches/recus views reuse the text category pipeline — dedicated pages if they need their own layout
       if (search.type === "likes" && !getLikes().includes(p.id)) return false;
       if (search.type === "matches" && !isMatch(p.id)) return false;
@@ -184,44 +216,36 @@ function SwivvBrowse() {
     // ponytail: ?? guard — one dateless profile used to kill the whole page; backfilled upstream, this just sorts them last
     if (effectiveSort === "recent") sorted.sort((a, b) => (b.joinedAt ?? "").localeCompare(a.joinedAt ?? ""));
     return sorted;
-  }, [query, category, gender, onlineOnly, lookingFor, minAge, maxAge, sort, search.type, viewer, maxDist, pool, reactRecv]);
+  }, [query, category, gender, onlineOnly, lookingFor, minAge, maxAge, sort, search.type, myGeo, maxDist, pool, reactRecv]);
 
   const intents = ["all", "Mariage", "Relation sérieuse", "Relation amoureuse", "Belle histoire"];
 
-  // ponytail: one batched counts call per grid (no N+1); refreshed after each successful tap — realtime channel if taps ever need live totals
-  const recentUrls = useMemo(
-    () => (cat === "photos récentes" ? [...new Set(results.flatMap((p) => p.photos))].slice(0, 300) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cat, results],
-  );
-  const [reactCounts, setReactCounts] = useState<Record<string, Partial<Record<ReactionId, number>>>>({});
+  // ponytail: one honest subline per category (titles stay short for the nav) — popularity is most-visited-first and "photos récentes" follows newest members, server-side analytics if rankings ever need to go global
+  const CAT_HINT: Record<string, string> = {
+    "près de moi": "Du plus proche au plus loin — règle la distance max ci-dessus.",
+    "en ligne": "Connectés en ce moment.",
+    "profils populaires": "Les plus visités d'abord.",
+    "nouveaux profils": "Les derniers inscrits d'abord.",
+    "photos récentes": "Les photos des derniers inscrits.",
+  };
+
+  // ponytail: highlights re-render on any reaction tap (same-tab profile↔recent sync) + seed from the server for fresh browsers; the shared photo-URL cache is the sync itself, no per-photo refetch
+  useEffect(() => subscribeReactions(() => force((x) => x + 1)), []);
   useEffect(() => {
-    let live = true;
-    if (!recentUrls.length) {
-      setReactCounts({});
-      return;
-    }
-    fetchReactionCounts(recentUrls).then((m) => {
-      if (live) setReactCounts(m);
-    });
-    return () => {
-      live = false;
-    };
+    if (cat === "photos récentes") void preloadMyReactionsForPhotos(results.flatMap((p) => p.photos));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recentUrls.join("|")]);
+  }, [cat, results]);
   const reactTo = async (key: string, owner: string, photo: string, kind: ReactionId) => {
     if (pendingReact.current.has(photo)) return;
     pendingReact.current.add(photo);
     force((x) => x + 1);
     try {
-      const r = await togglePhotoReaction(isMemberUuid(owner) ? owner : null, photo, kind);
+      const r = await togglePhotoReaction(isMemberUuid(owner) ? owner : null, photo, kind, owner);
       if (!r.ok) {
-        if (r.error === "own") toast.error("Vous ne pouvez pas réagir à vos propres photos.");
-        else toast.error("Réaction non enregistrée. Réessayez.");
+        if (r.error === "own") toast.error("Tu ne peux pas réagir à tes propres photos.");
+        else toast.error("Réaction non enregistrée. Réessaie.");
       } else {
         setOpenReact(null);
-        const m = await fetchReactionCounts(recentUrls);
-        setReactCounts(m);
       }
     } finally {
       pendingReact.current.delete(photo);
@@ -335,8 +359,13 @@ function SwivvBrowse() {
           <h1 className="text-xl font-medium text-[#333]">
             {cat === "photos récentes"
               ? `Photos récentes (${results.reduce((n, p) => n + p.photos.length, 0)} photos · ${results.length} profil${results.length > 1 ? "s" : ""})`
-              : `${results.length} profil${results.length > 1 ? "s" : ""}`}
+              : search.type === "likes"
+                ? `${results.length} profil${results.length > 1 ? "s" : ""} que j'ai liké`
+                : search.type === "recus"
+                  ? `${results.length} profil${results.length > 1 ? "s" : ""} qui m'ont liké`
+                  : `${results.length} profil${results.length > 1 ? "s" : ""}`}
             {category && cat !== "photos récentes" ? ` · ${category}` : ""}
+            {CAT_HINT[cat] && <span className="text-sm font-normal text-[#777]"> — {CAT_HINT[cat]}</span>}
           </h1>
           {category && (
             <button
@@ -349,19 +378,23 @@ function SwivvBrowse() {
             </button>
           )}
         </div>
-        {cat === "photos récentes" ? (
+        {gridReady && !poolLoaded && (
+          <p className="mt-4 text-sm text-[#777]">Chargement des derniers profils…</p>
+        )}
+        {!gridReady ? (
+          <p className="mt-6 text-sm text-[#777]">Chargement…</p>
+        ) : cat === "photos récentes" ? (
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {results.flatMap((p) => p.photos.map((src, i) => ({ p, src, i }))).map(({ p, src, i }) => (
             <article key={`${p.id}-${i}`} className="overflow-hidden rounded-lg bg-white">
               <div className="group relative">
-                <Link to="/member/$id" params={{ id: p.id }} onClick={() => bumpProfileView(p.id)}>
+                <Link to="/member/$id" params={{ id: p.id }} onClick={() => { if (!(myUid && p.id === `u:${myUid}`)) bumpProfileView(p.id); }}>
                   <img src={src} alt={`Photo ${i + 1} de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                 </Link>
                 {!(myUid && p.id === `u:${myUid}`) && (
                   <PhotoReact
                     photo={src}
                     open={openReact === `${p.id}-${i}`}
-                    counts={reactCounts[src]}
                     pending={pendingReact.current.has(src)}
                     onToggle={() => setOpenReact(openReact === `${p.id}-${i}` ? null : `${p.id}-${i}`)}
                     onPick={(kind) => reactTo(`${p.id}-${i}`, p.id, src, kind)}
@@ -388,34 +421,51 @@ function SwivvBrowse() {
                   <img src={p.photo} alt={`Photo de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                 </Link>
                 <PhotoCountBadge n={p.photos.length} className={search.type === "recus" && getMatches().includes(p.id) ? "left-[49px]" : ""} />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      requireSwivvAuth("like", () => {
-                        toggleLike(p.id);
-                        force((x) => x + 1);
-                      })
-                    }
-                    aria-label={`Liker ${p.name}`}
-                    aria-pressed={liked}
-                    className="absolute right-2 top-2 rounded-full bg-white/90 p-2 shadow-sm"
-                  >
-                    <Heart className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-[#555]"}`} />
-                  </button>
+                  <span className="group/hint absolute right-2 top-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        requireSwivvAuth("like", () => {
+                          toggleLike(p.id);
+                          force((x) => x + 1);
+                        })
+                      }
+                      aria-label={liked ? `Déliker ${p.name}` : `Liker ${p.name}`}
+                      aria-pressed={liked}
+                      className="rounded-full bg-white/90 p-2 shadow-sm"
+                    >
+                      <Heart className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-[#555]"}`} />
+                    </button>
+                    {/* ponytail: same black/white bubble as the reaction hint below — native title dropped to avoid double popups */}
+                    <span className="pointer-events-none absolute right-0 top-full z-10 mt-1 hidden whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover/hint:block" aria-hidden="true">
+                      {liked ? `Déliker ${p.name}` : `Liker ${p.name}`}
+                    </span>
+                  </span>
                   {p.online && (
                     <span className="absolute left-2 top-2 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-medium text-white">
                       En ligne
                     </span>
                   )}
                   {(search.type === "matches" || search.type === "recus") && getMatches().includes(p.id) && (
-                    <span className="absolute bottom-2 left-2 flex gap-1 rounded-full bg-white/90 p-1.5 shadow-sm">
+                    <span className="group/hint absolute bottom-2 left-2 flex gap-1 rounded-full bg-white/90 p-1.5 shadow-sm">
                       <Heart aria-label="Like réciproque" className="h-4 w-4 fill-red-500 text-red-500" />
+                      <span className="pointer-events-none absolute bottom-full left-0 z-10 mb-1 hidden whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover/hint:block" aria-hidden="true">
+                        {p.name} t&apos;as Liké
+                      </span>
                     </span>
                   )}
                   {search.type === "recus" && reactRecv[p.id] && (
-                    <span title={`A réagi à vos photos : ${reactRecv[p.id].label}`} className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2 py-1 text-sm shadow-sm">
-                      <span aria-hidden="true">{reactRecv[p.id].emoji}</span>
-                      <span className="sr-only">A réagi : {reactRecv[p.id].label}</span>
+                    // ponytail: same black/white bubble as SwivvHint/MatchTooltip but bottom-full (badge sits at the card's clipped bottom edge) — short name-only hint, per-emoji names if the popup ever needs detail
+                    <span className="group/hint absolute bottom-2 right-2 flex flex-col items-end gap-1">
+                      {reactRecv[p.id].emojis.map((e) => (
+                        <span key={e} aria-hidden="true" className="rounded-full bg-white/90 px-1.5 py-0.5 text-xs leading-none shadow-sm">
+                          {e}
+                        </span>
+                      ))}
+                        <span className="sr-only">{p.name} a réagi sur tes photos</span>
+                      <span className="pointer-events-none absolute bottom-full right-0 z-10 mb-1 hidden whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover/hint:block">
+                        {p.name} a réagi sur tes photos
+                      </span>
                     </span>
                   )}
                 </div>
@@ -430,33 +480,45 @@ function SwivvBrowse() {
                   <p className="text-xs text-[#999]">
                     Membre depuis le {fmtDate(p.joinedAt)}
                   </p>
-                  <p className="mt-1 text-xs font-medium text-[#e91e63]">
-                    {displayPct(p, load())}% · {p.lookingFor}
-                  </p>
+                  {authLoading || user ? (
+                    <p className="mt-1 text-xs font-medium text-[#e91e63]">
+                      {displayPct(p, load())}% · {p.lookingFor}
+                    </p>
+                  ) : (
+                    <MatchLoginPrompt name={p.name} className="mt-1" />
+                  )}
                 </Link>
               </article>
             );
           })}
         </div>
         )}
-        {results.length === 0 && <p className="mt-6 text-sm text-[#777]">Aucun profil avec ces filtres. Élargis ta recherche.</p>}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={loadMore}
+            className="mx-auto mt-6 block rounded-md border border-border bg-white px-6 py-2.5 text-sm font-medium text-[#555]"
+          >
+            Voir plus de profils
+          </button>
+        )}
+        {gridReady && poolLoaded && results.length === 0 && <p className="mt-6 text-sm text-[#777]">Aucun profil avec ces filtres. Élargis ta recherche.</p>}
       </main>
       <SwivvFooter />
     </div>
   );
 }
 
-// ponytail: hover reveals on desktop (CSS group-hover), tap pins on touch (open state) — one markup for both; counts live in the toolbar so cards stay clean; Esc + outside-tap close
-function PhotoReact({ photo, open, counts, pending, onToggle, onPick }: {
+// ponytail: hover reveals on desktop (CSS group-hover), tap pins on touch (open state) — one markup for both; no counts anywhere (a new pick overwrites the old, highlight is the only state); Esc + outside-tap close
+export function PhotoReact({ photo, open, pending, onToggle, onPick }: {
   photo: string;
   open: boolean;
-  counts: Partial<Record<ReactionId, number>> | undefined;
   pending: boolean;
   onToggle: () => void;
   onPick: (kind: ReactionId) => void;
 }) {
   const mine = getPhotoReaction(photo);
-  const total = Object.values(counts ?? {}).reduce((a, b) => a + (b ?? 0), 0);
+  const mineDef = mine ? reactionOf(mine) : undefined;
   return (
     <div
       data-reactscope
@@ -483,7 +545,6 @@ function PhotoReact({ photo, open, counts, pending, onToggle, onPick }: {
             className={`rounded-full px-1.5 py-1 text-xl leading-none transition motion-safe:active:scale-125 ${mine === r.id ? "bg-white/90 ring-2 ring-[#e91e63]" : "hover:bg-white/20"} disabled:opacity-50`}
           >
             <span aria-hidden="true">{r.emoji}</span>
-            {(counts?.[r.id] ?? 0) > 0 && <span className="ml-0.5 align-middle text-[11px] font-semibold text-white">{counts?.[r.id]}</span>}
           </button>
         ))}
       </div>
@@ -491,11 +552,10 @@ function PhotoReact({ photo, open, counts, pending, onToggle, onPick }: {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        aria-label={total > 0 ? `Réagir à cette photo (${total} réaction${total > 1 ? "s" : ""})` : "Réagir à cette photo"}
+        aria-label={mineDef ? `Ta réaction : ${mineDef.label} — changer` : "Réagir à cette photo"}
         className="flex min-h-[36px] min-w-[36px] items-center justify-center gap-1 rounded-full bg-black/55 px-2 text-white backdrop-blur-sm"
       >
-        <span aria-hidden="true" className="text-lg leading-none">{(mine && reactionOf(mine)?.emoji) || "😊"}</span>
-        {total > 0 && <span className="text-[11px] font-semibold">{total}</span>}
+        <span aria-hidden="true" className="text-lg leading-none">{mineDef?.emoji || "😊"}</span>
       </button>
     </div>
   );

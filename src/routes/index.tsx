@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Heart,
   Mic,
@@ -10,27 +10,48 @@ import {
   MessageCircle,
   ShieldCheck,
   Sparkles,
-  Star,
 } from "lucide-react";
-import { getLikes, toggleLike } from "@/lib/swivv-store";
+import { getLikes, getSettings, setSetting, subscribe, toggleLike, isNativeApp } from "@/lib/swivv-store";
 import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
-import { displayPct, load } from "@/routes/matches";
+import { displayPct, load, MatchLoginPrompt } from "@/lib/match-score";
 import { realDistance, useMyCity } from "@/lib/location-distance";
 import { useAuth } from "@/hooks/use-auth";
-import { SwivvAuthButtons, getMyProfile, openAuthModal, requireSwivvAuth } from "@/lib/swivv-auth";
+import { SwivvAuthButtons, getMyBasics, openAuthModal, requireSwivvAuth } from "@/lib/swivv-auth";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { PhotoCountBadge } from "@/components/photo-count-badge";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
+import { ldJson, pageHead, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: "SWIVV — Rencontres" },
-      {
-        name: "description",
-        content: "SWIVV, le site de rencontres façon marketplace : découvre des profils, like, matche, discute.",
-      },
+    ...pageHead(
+      "SWIVV MATCH — Site de rencontres gratuit, sans carte bancaire",
+      "Rencontres gratuites et sans carte bancaire : crée ton profil en 2 minutes, découvre des profils compatibles, like, matche et discute. Relation sérieuse, mariage ou belle histoire.",
+      "/",
+    ),
+    scripts: [
+      ldJson({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": `${SITE_URL}/#organization`,
+            name: "SWIVV MATCH",
+            url: SITE_URL,
+            logo: `${SITE_URL}/swivv-match-logo-transparent.png`,
+            email: "contact@swivvmatch.com",
+          },
+          {
+            "@type": "WebSite",
+            "@id": `${SITE_URL}/#website`,
+            name: "SWIVV MATCH",
+            url: SITE_URL,
+            inLanguage: "fr-FR",
+            publisher: { "@id": `${SITE_URL}/#organization` },
+          },
+        ],
+      }),
     ],
   }),
   component: SwivvHome,
@@ -52,10 +73,16 @@ function SwivvHeader() {
   );
 }
 
-function ProfileCard({ p, liked, onLike }: { p: SwivvProfile; liked: boolean; onLike: () => void }) {
+function ProfileCard({ p, liked, onLike, eager }: { p: SwivvProfile; liked: boolean; onLike: () => void; eager?: boolean }) {
   const viewer = useMyCity();
+  const { user, loading: authLoading } = useAuth();
+  // ponytail: criteria come from localStorage — SSR and the hydration pass both use the static fallback, then the saved criteria apply
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // ponytail: criteria score mirrors My Matches when set — static compatibility otherwise
-  const pct = displayPct(p, load());
+  const pct = displayPct(p, mounted ? load() : {});
+  // ponytail: likes live in localStorage — the server has none, so keep the button neutral through hydration
+  const isLiked = mounted && liked;
   return (
     <article className="group w-40 shrink-0 snap-start overflow-hidden rounded-lg bg-white sm:w-48">
       <div className="relative">
@@ -63,7 +90,8 @@ function ProfileCard({ p, liked, onLike }: { p: SwivvProfile; liked: boolean; on
           <img
             src={p.photo}
             alt={`Photo de ${p.name}`}
-            loading="lazy"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : undefined}
             className="aspect-[4/5] w-full object-cover"
           />
         </Link>
@@ -71,12 +99,12 @@ function ProfileCard({ p, liked, onLike }: { p: SwivvProfile; liked: boolean; on
         <button
           type="button"
           onClick={onLike}
-            aria-label={liked ? `Retirer le like de ${p.name}` : `Liker ${p.name}`}
-          aria-pressed={liked}
+            aria-label={isLiked ? `Retirer le like de ${p.name}` : `Liker ${p.name}`}
+          aria-pressed={isLiked}
           className="absolute right-2 top-2 rounded-full bg-white/90 p-2 shadow-sm"
         >
           <Heart
-            className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-[#555]"}`}
+            className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : "text-[#555]"}`}
           />
         </button>
         {p.online && (
@@ -102,9 +130,13 @@ function ProfileCard({ p, liked, onLike }: { p: SwivvProfile; liked: boolean; on
           })}
         </p>
         <p className="mt-0.5 line-clamp-1 text-[13px] text-[#555]">{p.tagline}</p>
-        <p className="mt-0.5 text-[11px] font-medium text-[#e91e63]">
-          {pct}% compatible · {p.lookingFor}
-        </p>
+        {authLoading || user ? (
+          <p className="mt-0.5 text-[11px] font-medium text-[#e91e63]">
+            {pct}% compatible · {p.lookingFor}
+          </p>
+        ) : (
+          <MatchLoginPrompt name={p.name} className="mt-0.5" />
+        )}
       </Link>
     </article>
   );
@@ -116,12 +148,14 @@ function Rail({
   likedIds,
   onLike,
   viewAll,
+  eager,
 }: {
   title: string;
   profiles: SwivvProfile[];
   likedIds: Set<string>;
   onLike: (id: string) => void;
   viewAll?: boolean;
+  eager?: boolean;
 }) {
   if (profiles.length === 0) return null;
   return (
@@ -139,9 +173,122 @@ function Rail({
         )}
       </div>
       <div className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:thin]">
-        {profiles.map((p) => (
-          <ProfileCard key={p.id} p={p} liked={likedIds.has(p.id)} onLike={() => onLike(p.id)} />
+        {/* ponytail: only the first 3 cards preload — the whole rail marked eager pushed 10+ high-priority image requests and hurt LCP */}
+        {profiles.map((p, i) => (
+          <ProfileCard key={p.id} p={p} liked={likedIds.has(p.id)} onLike={() => onLike(p.id)} eager={eager && i < 3} />
         ))}
+      </div>
+    </section>
+  );
+}
+
+// ponytail: both store listings 404 today — flip APPS_PUBLISHED and swap the real IDs once the apps ship
+const APPS_PUBLISHED = false;
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.swivvmatch";
+const APP_STORE_URL = "https://apps.apple.com/app/swivv-match/id0000000000";
+
+function StoreButton({
+  href,
+  sub,
+  label,
+  children,
+}: {
+  href: string;
+  sub: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${sub} ${label}`}
+      className="flex flex-1 items-center justify-center gap-3 rounded-xl bg-black px-4 py-2.5 text-white transition hover:brightness-125 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e91e63]"
+    >
+      <span className="shrink-0" aria-hidden="true">
+        {children}
+      </span>
+      <span className="flex flex-col leading-tight">
+        <span className="text-[10px] uppercase tracking-wide text-white/70">{sub}</span>
+        <span className="text-base font-medium">{label}</span>
+      </span>
+    </a>
+  );
+}
+
+function AppDownloadSection({ onDismiss }: { onDismiss?: () => void } = {}) {
+  // ponytail: UA sniff for the image link (iOS vs Android) — a real detector is overkill; desktop falls back to Play
+  const [storeHref, setStoreHref] = useState(PLAY_STORE_URL);
+  useEffect(() => {
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) setStoreHref(APP_STORE_URL);
+  }, []);
+  return (
+    <section aria-label="Télécharger l'application" className="w-full bg-[#F7F7F8] py-10">
+      <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 md:grid-cols-2">
+        <a
+          href={storeHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Télécharger l'application SWIVV MATCH"
+          className="mx-auto block w-full max-w-md rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e91e63]"
+        >
+          <img
+            src="/swivv-match-download.png"
+            alt="Aperçu de l'application SWIVV MATCH sur mobile"
+            loading="lazy"
+            className="w-full rounded-xl transition hover:brightness-105"
+          />
+        </a>
+        <div>
+          <h2 className="text-2xl font-medium text-[#333]">SWIVV MATCH dans ta poche</h2>
+          <p className="mt-2 text-sm text-[#777]">
+            Emporte tes matchs partout et commence à Swivver en quelques secondes.
+          </p>
+          <button
+            type="button"
+            onClick={() => openAuthModal("account", "signup")}
+            className="mt-5 w-full rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white shadow-sm transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e91e63]"
+          >
+            Commence à Swivver
+          </button>
+          <div className="mt-6 flex w-full flex-wrap gap-3">
+            <StoreButton href={PLAY_STORE_URL} sub="Disponible sur" label="Google Play">
+              <svg viewBox="0 0 466 511.98" className="h-7 w-7">
+                <path
+                  fill="#EA4335"
+                  d="M199.9 237.8 1.4 470.17c7.22 24.57 30.16 41.81 55.8 41.81 11.16 0 20.93-2.79 29.3-8.37l244.16-139.46L199.9 237.8z"
+                />
+                <path
+                  fill="#FBBC04"
+                  d="m433.91 205.1-104.65-60-111.61 110.22 113.01 108.83 104.64-58.6c18.14-9.77 30.7-29.3 30.7-50.23-1.4-20.93-13.95-40.46-32.09-50.22z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M199.42 273.45 329.27 145.1 87.9 8.37C79.53 2.79 68.36 0 57.2 0 30.7 0 6.98 18.14 1.4 41.86l198.02 231.59z"
+                />
+                <path
+                  fill="#4285F4"
+                  d="M1.39 41.86C0 46.04 0 51.63 0 57.2v397.64c0 5.57 0 9.76 1.4 15.34l216.27-214.86L1.39 41.86z"
+                />
+              </svg>
+            </StoreButton>
+            <StoreButton href={APP_STORE_URL} sub="Télécharger sur" label="App Store">
+              <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
+                <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+              </svg>
+            </StoreButton>
+          </div>
+          {onDismiss && (
+            <button
+              type="button"
+              onClick={onDismiss}
+              className="mt-4 text-sm font-medium text-[#777] underline transition hover:text-[#333]"
+            >
+              Déjà téléchargé ? Ne plus afficher
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );
@@ -149,8 +296,10 @@ function Rail({
 
 function SwivvHome() {
   const [, force] = useState(0);
+  // ponytail: repaint when the boot criteria pull adopts a newer server copy — percentages read localStorage
+  useEffect(() => subscribe(() => force((x) => x + 1)), []);
   const { user: authUser, loading: authLoading } = useAuth();
-  const [me, setMe] = useState<SwivvProfile | null | undefined>(undefined);
+  const [me, setMe] = useState<{ city: string; country: string } | null>(null);
   const [seeking, setSeeking] = useState<"woman" | "man" | "all" | null>(null);
 
   useEffect(() => {
@@ -160,15 +309,11 @@ function SwivvHome() {
       return;
     }
     let live = true;
-    getMyProfile().then((p) => {
+    // ponytail: one basics fetch (seeking+city, no photo megabytes) — the full profile never lands here; city only feeds distance sort
+    getMyBasics().then((b) => {
       if (!live) return;
-      setMe(p);
-      const s = p?.seeking ?? (p?.gender === "woman" ? "man" : p?.gender === "man" ? "woman" : null);
-      if (s) {
-        try {
-          localStorage.setItem("swivv-seeking", s);
-        } catch {}
-      }
+      if (b.seeking) setSeeking(b.seeking);
+      setMe({ city: b.city, country: b.country });
     });
     return () => {
       live = false;
@@ -196,17 +341,20 @@ function SwivvHome() {
       return null;
     }
   })();
-  const ownGender = me?.gender ?? (storedGender === "woman" || storedGender === "man" ? storedGender : null);
+  const ownGender = storedGender === "woman" || storedGender === "man" ? storedGender : null;
   // ponytail: cached seeking first (no wrong-gender flash on back/forward remounts) — profile fetch refreshes the cache
   const cachedSeeking = (() => {
     try {
+      const uid = localStorage.getItem("swivv-uid");
+      const mine = uid ? localStorage.getItem(`swivv-seeking:${uid}`) : null;
+      if (mine === "woman" || mine === "man") return mine;
       const c = localStorage.getItem("swivv-seeking");
       return c === "woman" || c === "man" ? c : null;
     } catch {
       return null;
     }
   })();
-  const effSeeking = seeking ?? cachedSeeking ?? me?.seeking ?? (ownGender ? (ownGender === "woman" ? "man" : "woman") : "all");
+  const effSeeking = seeking ?? cachedSeeking ?? (ownGender ? (ownGender === "woman" ? "man" : "woman") : "all");
   const base = effSeeking === "all" ? filtered : filtered.filter((p) => p.gender === effSeeking);
   const dist = (p: SwivvProfile) => realDistance(me?.city, me?.country, p);
   const loggedRows = [
@@ -229,10 +377,11 @@ function SwivvHome() {
         <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 py-10 md:grid-cols-[380px_1fr] md:py-16">
           <div className="rounded-2xl bg-white p-8 shadow-sm">
             <h1 className="text-[32px] font-medium leading-tight text-[#333]">
-              Prêt à faire de belles rencontres ?
+              Fais de belles rencontres, gratuitement
             </h1>
             <p className="mt-2 text-sm text-[#777]">
-              Your Match. Your Story.
+              SWIVV MATCH, le site de rencontres gratuit et sans carte bancaire. Your Match. Your
+              Story.
             </p>
             <button
               type="button"
@@ -249,12 +398,13 @@ function SwivvHome() {
             </Link>
           </div>
           <div className="hidden gap-4 md:flex" aria-hidden="true">
-            {SWIVV_PROFILES.slice(0, 5).map((p) => (
+            {SWIVV_PROFILES.slice(0, 5).map((p, i) => (
               <img
                 key={p.id}
                 src={p.photo}
                 alt=""
-                loading="lazy"
+                loading={i === 0 ? "eager" : "lazy"}
+                fetchPriority={i === 0 ? "high" : undefined}
                 className="h-44 w-32 rounded-xl object-cover shadow-sm"
               />
             ))}
@@ -285,7 +435,7 @@ function SwivvHome() {
           Rejoins SWIVV en 2 minutes
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-sm text-[#777]">
-          Inscription gratuite, sans carte bancaire.
+          Compte gratuit en 2 minutes, sans carte bancaire — complète ton profil à ton rythme.
         </p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
@@ -305,7 +455,7 @@ function SwivvHome() {
               icon: <MessageCircle className="h-6 w-6 text-[#e91e63]" />,
               step: "Étape 3",
               title: "Like, matche, discute",
-              text: "Like les profils, obtiens un match et démarre la conversation. Premier message offert.",
+              text: "Écris librement à qui te plaît : messages sans match, vocaux et photos entre matchs.",
             },
           ].map((s) => (
             <div key={s.title} className="rounded-2xl border border-[#e91e63]/10 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-md">
@@ -407,62 +557,12 @@ function SwivvHome() {
         </div>
       </section>
 
-      {/* Success stories */}
-      {/* ponytail: pure Tailwind glow, no image assets — photo avatars if real testimonials ever land */}
-      <section aria-label="Ils se sont rencontrés sur SWIVV" className="bg-gradient-to-b from-[#f2f2f2] to-white">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-        <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-[#e91e63]">
-          Histoires vraies
-        </p>
-        <h2 className="mt-1 text-center text-2xl font-medium text-[#333]">
-          Ils se sont rencontrés sur SWIVV
-        </h2>
-        <div className="mt-8 grid gap-5 sm:grid-cols-3">
-          {[
-            {
-              quote: "On a matché à 92%. Trois mois plus tard, on emménageait ensemble à Paris.",
-              names: "Emma & Karim",
-            },
-            {
-              quote: "Son vocal m'a fait craquer avant même notre premier café. Un an plus tard, on s'est mariés.",
-              names: "Aïcha & Mehdi",
-            },
-            {
-              quote: "J'ai liké sa photo de surf un dimanche. On ne s'est plus quittés depuis.",
-              names: "Léa & Maxime",
-            },
-          ].map((t, i) => (
-            <figure
-              key={t.names}
-              className={`relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-transform hover:-translate-y-1 ${i === 1 ? "ring-2 ring-[#e91e63]/60 sm:scale-[1.03]" : ""}`}
-            >
-              <span aria-hidden="true" className="pointer-events-none absolute -top-3 right-3 select-none text-[88px] font-black leading-none text-[#e91e63]/10">
-                &rdquo;
-              </span>
-              <div className="flex items-center gap-3">
-                <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#e91e63] to-[#ff7ab8] text-sm font-bold text-white">
-                  {t.names.charAt(0)}
-                </span>
-                <div>
-                  <div className="flex gap-0.5" aria-label="5 étoiles sur 5">
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <Star key={s} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <figcaption className="mt-0.5 text-sm font-medium text-[#e91e63]">{t.names}</figcaption>
-                </div>
-              </div>
-              <blockquote className="mt-3 text-sm italic leading-relaxed text-[#555]">« {t.quote} »</blockquote>
-            </figure>
-          ))}
-        </div>
-        </div>
-      </section>
       <section aria-label="Appel à l'inscription" className="mx-auto max-w-6xl px-4 pb-10">
         <div className="rounded-2xl bg-[#e91e63] p-8 text-center text-white">
           <h2 className="text-2xl font-medium">À ton tour d'écrire ton histoire</h2>
           <p className="mt-2 text-sm text-white/80">
-            Rejoins des milliers de célibataires. Inscription gratuite, désinscription en 1 clic.
+            Rejoins SWIVV MATCH et écris ta propre histoire. Inscription gratuite, désinscription
+            en 1 clic.
           </p>
           <button
             type="button"
@@ -479,8 +579,8 @@ function SwivvHome() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         {!authUser ? (
           <>
-            {loggedOutRows.map((row) => (
-              <Rail key={row.title} title={row.title} profiles={row.profiles} likedIds={likedIds} onLike={like} />
+            {loggedOutRows.map((row, i) => (
+              <Rail key={row.title} title={row.title} profiles={row.profiles} likedIds={likedIds} onLike={like} eager={i === 0} />
             ))}
           </>
         ) : (
@@ -501,8 +601,8 @@ function SwivvHome() {
                 ))}
               </div>
             </div>
-            {loggedRows.map((row) => (
-              <Rail key={row.title} title={row.title} profiles={row.profiles} likedIds={likedIds} onLike={like} viewAll />
+            {loggedRows.map((row, i) => (
+              <Rail key={row.title} title={row.title} profiles={row.profiles} likedIds={likedIds} onLike={like} viewAll eager={i === 0} />
             ))}
             {loggedRows.every((row) => row.profiles.length === 0) && (
               <p className="mt-2 text-sm text-[#777]">
@@ -513,16 +613,27 @@ function SwivvHome() {
         )}
       </main>
       {!authUser && (
-        // ponytail: 4th signup CTA duplicating the pink panel above — extract shared <SwivvCta> if copy/behavior ever diverge
-        <section aria-label="Inscription gratuite" className="mx-auto max-w-6xl px-4 pb-10">
-          <button
-            type="button"
-            onClick={() => openAuthModal("account", "signup")}
-            className="block w-full rounded-2xl bg-[#e91e63] px-8 py-5 text-center text-lg font-medium text-white shadow-sm transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e91e63]"
-          >
-            SWIVV MATCH est 100% gratuit. Inscrivez-vous aujourd&apos;hui en 2 minutes et trouvez votre Swivv
-          </button>
-        </section>
+        <>
+          {/* ponytail: 4th signup CTA duplicating the pink panel above — extract shared <SwivvCta> if copy/behavior ever diverge */}
+          <section aria-label="Inscription gratuite" className="mx-auto max-w-6xl px-4 pb-10">
+            <button
+              type="button"
+              onClick={() => openAuthModal("account", "signup")}
+              className="block w-full rounded-2xl bg-[#e91e63] px-8 py-5 text-center text-lg font-medium text-white shadow-sm transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e91e63]"
+            >
+              SWIVV MATCH est 100% gratuit. Crée ton compte en 2 minutes et complète ton profil à ton rythme
+            </button>
+          </section>
+          {APPS_PUBLISHED && <AppDownloadSection />}
+        </>
+      )}
+      {APPS_PUBLISHED && authUser && !getSettings().appPromoDismissed && !isNativeApp() && (
+        <AppDownloadSection
+          onDismiss={() => {
+            setSetting("appPromoDismissed", true);
+            force((x) => x + 1);
+          }}
+        />
       )}
       <SwivvFooter />
     </div>

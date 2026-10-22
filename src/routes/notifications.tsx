@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Bell, Eye, Heart, Info, LifeBuoy, Megaphone, MessageCircle, ShieldCheck, Smile, Sparkles, TriangleAlert, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SwivvSettingsTabs } from "@/components/swivv-settings-tabs";
 import { deleteNotif, listNotifs, markNotifsRead, type SwivvNotif } from "@/lib/swivv-notifs";
@@ -27,7 +28,22 @@ const FILTERS = [
 ] as const;
 const LIKE_SET = new Set(["like", "match"]);
 const PROFILE_SET = new Set(["view", "reaction"]);
-const ACCOUNT_SET = new Set(["account", "security"]);
+const ACCOUNT_SET = new Set(["account", "security", "announcement", "support", "warning"]);
+
+// ponytail: one icon per type (lucide, already installed) — unknown future types fall back to Bell, no per-type component needed
+const ICONS: Record<string, LucideIcon> = {
+  message: MessageCircle,
+  like: Heart,
+  match: Sparkles,
+  view: Eye,
+  reaction: Smile,
+  account: ShieldCheck,
+  security: ShieldCheck,
+  announcement: Megaphone,
+  support: LifeBuoy,
+  warning: TriangleAlert,
+  info: Info,
+};
 
 function matchFilter(n: SwivvNotif, f: string): boolean {
   if (f === "all") return true;
@@ -56,12 +72,14 @@ function Toggle({ label, desc, checked, onChange }: { label: string; desc: strin
 }
 
 function NotificationsPage() {
+  const navigate = useNavigate();
   const [settings, setS] = useState<SwivvSettings>(getSettings);
   const [marketing, setMarketing] = useState(false);
   const [digest, setDigest] = useState("daily");
   const [notifs, setNotifs] = useState<SwivvNotif[] | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [shown, setShown] = useState(PAGE);
+  const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -72,23 +90,31 @@ function NotificationsPage() {
       setMarketing(p.marketing);
       setDigest(p.digest);
     });
-    listNotifs(100, 0).then((rows) => {
-      if (live) setNotifs(rows);
-    });
+    listNotifs(100, 0).then(
+      (rows) => { if (live) { setNotifs(rows); setFailed(false); } },
+      () => { if (live) setFailed(true); },
+    );
     // ponytail: live list (INSERT + read-state changes elsewhere) — opening the page no longer marks anything read
-    let ch: { unsubscribe: () => void } | null = null;
-    void supabase.auth.getUser().then(({ data }) => {
-      if (!data.user || !live) return;
-      const uid = data.user.id;
-      const reload = () => void listNotifs(100, 0).then((rows) => live && setNotifs(rows));
-      ch = supabase.channel(`swivv-centre:${uid}`)
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    void supabase.auth.getSession().then(async ({ data }) => {
+      const uid = data.session?.user.id;
+      if (!uid || !live) return;
+      const reload = () => void listNotifs(100, 0).then(
+        (rows) => { if (live) { setNotifs(rows); setFailed(false); } },
+        () => { if (live) setFailed(true); },
+      );
+      const topic = `swivv-centre:${uid}`;
+      // ponytail: channel() reuses the same topic — drop a StrictMode/HMR leftover or .on() throws "after subscribe()"
+      for (const c of supabase.getChannels()) if (c.topic === `realtime:${topic}`) await supabase.removeChannel(c);
+      if (!live) return;
+      ch = supabase.channel(topic)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "swivv_notifications", filter: `user_id=eq.${uid}` }, reload)
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "swivv_notifications", filter: `user_id=eq.${uid}` }, reload)
-        .subscribe() as unknown as { unsubscribe: () => void };
+        .subscribe();
     });
     return () => {
       live = false;
-      ch?.unsubscribe();
+      if (ch) void supabase.removeChannel(ch);
     };
   }, []);
 
@@ -104,8 +130,9 @@ function NotificationsPage() {
   }
 
   async function markOne(id: string) {
-    await markNotifsRead([id]);
+    // optimistic so "Voir" flips the card white before the route change unmounts this page
     setNotifs((ns) => (ns ?? []).map((n) => (n.id === id ? { ...n, read: true } : n)));
+    await markNotifsRead([id]);
   }
   async function markAll() {
     const ids = (notifs ?? []).filter((n) => !n.read).map((n) => n.id);
@@ -121,19 +148,19 @@ function NotificationsPage() {
     {
       title: "Notifications e-mail",
       items: [
-        { k: "emailMessages", label: "Nouveaux messages", desc: "Recevez un e-mail lorsque vous recevez un nouveau message." },
-        { k: "emailLiked", label: "On vous a liké", desc: "Recevez un e-mail lorsqu'un membre aime votre profil." },
-        { k: "emailMatches", label: "Nouveaux matchs", desc: "Recevez un e-mail lorsqu'un nouveau match est créé." },
-        { k: "emailInteractions", label: "Interactions sur votre profil", desc: "Recevez un résumé de l'activité sur votre profil et de vos conversations." },
+        { k: "emailMessages", label: "Nouveaux messages", desc: "Reçois un e-mail lorsque tu reçois un nouveau message." },
+        { k: "emailLiked", label: "On t'a liké", desc: "Reçois un e-mail lorsqu'un membre aime ton profil." },
+        { k: "emailMatches", label: "Nouveaux matchs", desc: "Reçois un e-mail lorsqu'un nouveau match est créé." },
+        { k: "emailInteractions", label: "Interactions sur ton profil", desc: "Reçois un résumé de l'activité sur ton profil et de tes conversations." },
       ],
     },
     {
       title: "Notifications en temps réel",
       items: [
-        { k: "rtMessages", label: "Nouveaux messages", desc: "Recevez une alerte dès qu'un nouveau message arrive." },
-        { k: "rtLiked", label: "On vous a liké", desc: "Soyez averti lorsqu'un membre aime votre profil." },
-        { k: "rtViewed", label: "Quelqu'un a consulté votre profil", desc: "Soyez averti lorsqu'un membre consulte votre profil." },
-        { k: "rtReactions", label: "Réactions à vos photos", desc: "Soyez averti lorsqu'un membre réagit à l'une de vos photos." },
+        { k: "rtMessages", label: "Nouveaux messages", desc: "Reçois une alerte dès qu'un nouveau message arrive." },
+        { k: "rtLiked", label: "On t'a liké", desc: "Sois averti lorsqu'un membre aime ton profil." },
+        { k: "rtViewed", label: "Quelqu'un a consulté ton profil", desc: "Sois averti lorsqu'un membre consulte ton profil." },
+        { k: "rtReactions", label: "Réactions à tes photos", desc: "Sois averti lorsqu'un membre réagit à l'une de tes photos." },
       ],
     },
   ];
@@ -151,7 +178,7 @@ function NotificationsPage() {
       </header>
       <SwivvCategoryNav />
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-medium text-[#333]">Notifications{unreadCount > 0 && <span className="ml-2 text-base text-[#e91e63]">{unreadCount}</span>}</h1>
           {unreadCount > 0 && (
@@ -170,24 +197,45 @@ function NotificationsPage() {
           ))}
         </div>
         <div className="mt-4 space-y-2" aria-live="polite">
-          {notifs === null ? (
+          {failed && notifs === null ? (
+            <p className="text-sm text-[#555]">Impossible de charger tes notifications. <button type="button" onClick={() => { setFailed(false); setNotifs(null); listNotifs(100, 0).then(setNotifs, () => setFailed(true)); }} className="font-medium text-[#e91e63] hover:underline">Réessayer</button></p>
+          ) : notifs === null ? (
             <p className="text-sm text-[#777]">Chargement…</p>
           ) : visible.length === 0 ? (
-            <p className="text-sm text-[#777]">Vous êtes à jour ! Aucune nouvelle notification pour le moment.</p>
+            <p className="text-sm text-[#777]">Tu es à jour ! Aucune nouvelle notification pour le moment.</p>
           ) : (
-            visible.slice(0, shown).map((n) => (
-              <article key={n.id} className={`rounded-lg p-3 shadow-sm ${n.read ? "bg-white" : "bg-[#e91e63]/5 ring-1 ring-[#e91e63]/30"}`}>
-                <p className="text-[15px] font-medium text-[#333]">{n.title}</p>
-                {n.message && <p className="mt-0.5 text-sm text-[#555]">{n.message}</p>}
-                <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#999]">
-                  <span>{new Date(n.created_at).toLocaleString("fr-FR")}</span>
-                  {n.link && validLink(n.link) && <a href={n.link} className="font-medium text-[#e91e63] hover:underline">Voir</a>}
-                  {!n.read && <button type="button" onClick={() => markOne(n.id)} className="font-medium text-[#555] hover:underline">Marquer comme lu</button>}
-                  <button type="button" onClick={() => dismiss(n.id)} aria-label="Supprimer cette notification" className="font-medium text-[#999] hover:underline">Supprimer</button>
-                </p>
+            visible.slice(0, shown).map((n) => {
+              const Icon = ICONS[n.type] ?? Bell;
+              return (
+              <article key={n.id} className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2 shadow-sm ${n.read ? "bg-white" : "bg-[#ececee]"}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.read ? "bg-[#f2f2f2] text-[#999]" : "bg-[#e91e63] text-white"}`}>
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm"><span className="font-medium text-[#333]">{n.title}</span>{n.message && <span className="text-[#555]"> — {n.message}</span>}</p>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#999]">
+                    <span>{new Date(n.created_at).toLocaleString("fr-FR")}</span>
+                    {/* ponytail: SPA navigation instead of a plain href - a full page load cancelled the mark-read write, so "Voir" came back as unread */}
+                    {n.link && validLink(n.link) && (
+                      <a
+                        href={n.link}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (!n.read) void markOne(n.id);
+                          void navigate({ href: n.link as string });
+                        }}
+                        className="font-medium text-[#e91e63] hover:underline"
+                      >
+                        Voir
+                      </a>
+                    )}
+                    {!n.read && <button type="button" onClick={() => markOne(n.id)} className="font-medium text-[#555] hover:underline">Marquer comme lu</button>}
+                    <button type="button" onClick={() => dismiss(n.id)} aria-label="Supprimer cette notification" className="font-medium text-[#999] hover:underline">Supprimer</button>
+                  </p>
+                </div>
               </article>
-            ))
-          )}
+              );
+            }))}
         </div>
         {visible.length > shown && (
           <button type="button" onClick={() => setShown((s) => s + PAGE)} className="mt-3 text-sm font-medium text-[#e91e63] hover:underline">
@@ -197,7 +245,7 @@ function NotificationsPage() {
         <div className="mt-4 space-y-2">
           <Toggle
             label="Badge de messages non lus"
-            desc="Afficher un badge sur l'icône Messages lorsque vous recevez des messages non lus."
+            desc="Afficher un badge sur l'icône Messages lorsque tu reçois des messages non lus."
             checked={settings.msgBadge}
             onChange={(v) => flip("msgBadge", v)}
           />
@@ -239,7 +287,7 @@ function NotificationsPage() {
           <div className="space-y-2">
             <Toggle
               label="E-mails marketing"
-              desc="Recevez occasionnellement nos nouveautés, conseils et offres SWIVV MATCH. Désinscription possible à tout moment ici."
+              desc="Reçois occasionnellement nos nouveautés, conseils et offres SWIVV MATCH. Désinscription possible à tout moment ici."
               checked={marketing}
               onChange={(v) => { setMarketing(v); void persist(settings, v, digest); }}
             />

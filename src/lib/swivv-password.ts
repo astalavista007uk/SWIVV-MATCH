@@ -8,7 +8,7 @@ const COMMON = [
 export const PW_LEVELS = [
   { label: "Very Weak", color: "#DC2626" },
   { label: "Weak", color: "#F97316" },
-  { label: "Good", color: "#EAB308" },
+  { label: "Good", color: "#22C55E" },
   { label: "Very Strong", color: "#16A34A" },
 ] as const;
 

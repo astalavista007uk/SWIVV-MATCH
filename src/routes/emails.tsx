@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
@@ -11,24 +12,24 @@ export const Route = createFileRoute("/emails")({
 });
 
 // ponytail: static sample data, expand a template to render it — real admin preview with live data if the team ever needs it
-const PREVIEWS: { label: string; subject: string; html: string }[] = [
-  { label: "Vérification d'e-mail", ...T.swivvVerifyEmail({ name: "Emma", verifyUrl: "https://swivvdating.com/verifier?token=exemple" }) },
+const PREVIEWS: { label: string; slug?: string; subject: string; html: string }[] = [
+  { label: "Vérification d'e-mail", ...T.swivvVerifyEmail({ name: "Emma", verifyUrl: "https://swivvmatch.com/verifier?token=exemple" }) },
   { label: "Bienvenue", ...T.swivvWelcome({ name: "Emma" }) },
   { label: "Profil incomplet", ...T.swivvProfileIncomplete({ name: "Emma", percent: 65 }) },
   { label: "Like reçu", ...T.swivvNewLike({ name: "Emma", likerName: "Karim" }) },
   { label: "Match", ...T.swivvNewMatch({ name: "Emma", matchName: "Karim" }) },
-  { label: "Message reçu", ...T.swivvNewMessage({ name: "Emma", senderName: "Karim", preview: "Salut Emma ! J'ai vu que tu aimes la randonnée, tu as un coin préféré ?" }) },
+  { label: "Message reçu", ...T.swivvNewMessage({ name: "Emma", senderName: "Karim", senderPhoto: T.picksFor("man", 1)[0]?.photo, preview: "Salut Emma ! J'ai vu que tu aimes la randonnée, tu as un coin préféré ?" }) },
   { label: "Récap d'activité", ...T.swivvActivityDigest({ name: "Emma", likes: 3, messages: 2 }) },
   { label: "Nouveaux profils", ...T.swivvNewNearby({ name: "Emma", city: "Paris", count: 5 }) },
   { label: "Invitation témoignage", ...T.swivvTestimonialInvite({ name: "Emma" }) },
   { label: "Conseils sécurité", ...T.swivvSafetyTips({ name: "Emma" }) },
   { label: "Réengagement", ...T.swivvWeMissYou({ name: "Emma", likes: 2 }) },
-  { label: "Mot de passe oublié", ...T.swivvPasswordReset({ name: "Emma", resetUrl: "https://swivvdating.com/reset?token=exemple" }) },
+  { label: "Mot de passe oublié", ...T.swivvPasswordReset({ name: "Emma", resetUrl: "https://swivvmatch.com/reset?token=exemple" }) },
   { label: "Signalement reçu", ...T.swivvReportReceived({ name: "Emma" }) },
   { label: "Compte supprimé", ...T.swivvAccountDeleted({ name: "Emma" }) },
   { label: "Promo", ...T.swivvPromo({ name: "Emma", headline: "Nouveau : les appels vidéo arrivent", detail: "Discute en vidéo avec tes matches, directement depuis SWIVV.", cta: "Découvrir", url: "/browse" }) },
-  { label: "Matches du jour", ...T.swivvDailyMatches({ name: "Emma", count: 4 }) },
-  { label: "Matches de la semaine", ...T.swivvWeeklyMatches({ name: "Emma", count: 12 }) },
+  { label: "Matches du jour", slug: "matches-du-jour", ...T.swivvDailyMatches({ name: "Emma", matches: T.picksFor("man", 4) }) },
+  { label: "Matches de la semaine", slug: "matches-de-la-semaine", ...T.swivvWeeklyMatches({ name: "Emma", matches: T.picksFor("man", 12) }) },
   { label: "Ajouter une photo", ...T.swivvAddPhoto({ name: "Emma" }) },
   { label: "Photo approuvée", ...T.swivvPhotoApproved({ name: "Emma" }) },
   { label: "Photo refusée", ...T.swivvPhotoRejected({ name: "Emma" }) },
@@ -59,6 +60,15 @@ const PREVIEWS: { label: string; subject: string; html: string }[] = [
 ];
 
 function EmailsPage() {
+  // ponytail: hash deep-link (e.g. /emails#matches-du-jour) opens + scrolls to one template — router search params if deep-linking ever needs filtering too
+  const [openSlug, setOpenSlug] = useState<string | null>(null);
+  useEffect(() => {
+    const h = window.location.hash.replace(/^#/, "");
+    if (h) {
+      setOpenSlug(h);
+      requestAnimationFrame(() => document.getElementById(h)?.scrollIntoView());
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-background">
@@ -73,8 +83,8 @@ function EmailsPage() {
         <h1 className="text-2xl font-medium text-[#333]">E-mails SWIVV ({PREVIEWS.length})</h1>
         <p className="mt-1 text-sm text-[#777]">Clique sur un modèle pour prévisualiser le rendu.</p>
         <div className="mt-6 space-y-3">
-          {PREVIEWS.map((t) => (
-            <details key={t.label} className="overflow-hidden rounded-2xl border border-border bg-white">
+          {PREVIEWS.map((t, i) => (
+            <details key={t.label} id={t.slug ?? `mail-${i}`} open={t.slug != null && openSlug === t.slug} onToggle={(e) => { if ((e.target as HTMLDetailsElement).open && t.slug) setOpenSlug(t.slug); }} className="overflow-hidden rounded-2xl border border-border bg-white scroll-mt-24">
               <summary className="cursor-pointer list-none px-5 py-4 [&::-webkit-details-marker]:hidden">
                 <span className="font-medium text-[#333]">{t.label}</span>
                 <span className="mt-0.5 block text-sm text-[#777]">Objet : {t.subject}</span>

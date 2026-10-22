@@ -11,6 +11,7 @@ import {
   trackSave,
 } from "@/lib/swivv-auth";
 import { type SwivvProfile } from "@/lib/swivv-data";
+import { trackEvent } from "@/lib/track";
 import { PW_LEVELS, pwScore } from "@/lib/swivv-password";
 import { MATCH_CRITERIA_KEY } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,9 +23,16 @@ import { LocationAutocomplete } from "@/components/location-autocomplete";
 import { CguAcceptDialog } from "@/components/cgu-accept-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import {   Brain, Dumbbell, Eye, Fingerprint, Footprints, Gem, Heart, Mail, Palette, PersonStanding, Ruler, Scissors, ShieldCheck, Shirt, Smile, Sparkles, UtensilsCrossed, Zap, type LucideIcon } from "lucide-react";
+import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/inscription")({
-  head: () => ({ meta: [{ title: "Créer mon profil — SWIVV" }] }),
+  head: () =>
+    pageHead(
+      "Créer mon profil gratuit — SWIVV MATCH",
+      "Crée ton profil gratuit sur SWIVV MATCH en 2 minutes, sans carte bancaire. Rencontres sérieuses, mariage ou belle histoire.",
+      "/inscription",
+    ),
   component: SignupPage,
 });
 
@@ -356,6 +364,28 @@ export const NATS = [
 export const FIRSTLANGS = ["Français", "Anglais", "Arabe", "Espagnol", "Italien", "Portugais", "Allemand", "Néerlandais", "Turc", "Kabyle", "Russe", "Polonais", "Roumain", "Ukrainien", "Grec", "Suédois", "Norvégien", "Danois", "Finnois", "Hongrois", "Tchèque", "Bulgare", "Croate", "Serbe", "Albanais", "Arménien", "Persan", "Hébreu", "Hindi", "Ourdou", "Bengali", "Mandarin", "Japonais", "Coréen", "Vietnamien", "Thaï", "Indonésien", "Wolof", "Bambara", "Lingala", "Swahili", "Somali", "Catalan", "Basque", "Breton", "Corse", "Créole"];
 // ponytail: short hobby ladder, free-text covers the rest — extend if matching filters by interest
 export const INTERESTS = ["Voyages", "Cuisine", "Restaurants", "Sport", "Football", "Fitness", "Musculation", "Randonnée", "Natation", "Course à pied", "Cyclisme", "Lecture", "Cinéma", "Musique", "Danse", "Photographie", "Jeux vidéo", "Mode", "Jardinage", "Bricolage", "Pêche", "Camping", "Plage", "Sorties", "Théâtre", "Art", "Bénévolat", "Animaux", "Moto"];
+// ponytail: one CSV string in bestFeature (same storage/display/moderation path as before) — per-atout rows if matching ever filters by atout
+export const ATOUT_MAX = 5;
+export type AtoutCat = { name: string; icon: LucideIcon; bg: string; items: string[] };
+export const ATOUTS: AtoutCat[] = [
+  { name: "Personnalité", icon: Smile, bg: "bg-pink-100 text-pink-600", items: ["Mon sens de l'humour", "Ma gentillesse", "Ma sincérité", "Mon honnêteté", "Ma loyauté", "Ma générosité", "Mon optimisme", "Ma joie de vivre", "Ma spontanéité", "Mon authenticité", "Ma douceur", "Ma patience", "Mon empathie", "Mon ouverture d'esprit", "Mon calme", "Mon esprit positif"] },
+  { name: "Qualités relationnelles", icon: Heart, bg: "bg-rose-100 text-rose-600", items: ["Mon romantisme", "Mon écoute", "Mon attention aux autres", "Ma tendresse", "Mon affection", "Ma fidélité", "Ma capacité à communiquer", "Mon respect des autres", "Ma bienveillance", "Ma capacité à rassurer", "Mon côté attentionné", "Ma capacité à faire des compromis", "Mon envie de construire une relation durable", "Ma capacité à exprimer mes sentiments"] },
+  { name: "Intelligence et talents", icon: Brain, bg: "bg-violet-100 text-violet-600", items: ["Mon intelligence", "Ma curiosité", "Ma créativité", "Mon esprit d'analyse", "Ma culture générale", "Mon sens de la répartie", "Mon imagination", "Ma capacité à résoudre les problèmes", "Mon talent pour apprendre rapidement", "Mon sens de l'organisation", "Mon esprit d'initiative", "Ma débrouillardise"] },
+  { name: "Style de vie et énergie", icon: Zap, bg: "bg-amber-100 text-amber-600", items: ["Mon dynamisme", "Mon énergie", "Mon goût pour l'aventure", "Mon esprit sportif", "Mon côté épicurien", "Mon goût pour les voyages", "Mon amour de la nature", "Mon goût pour la découverte", "Mon indépendance", "Mon ambition", "Ma détermination", "Ma discipline", "Mon côté sociable", "Mon côté casanier", "Mon goût pour les sorties", "Mon esprit festif"] },
+  { name: "Valeurs et caractère", icon: ShieldCheck, bg: "bg-emerald-100 text-emerald-600", items: ["Ma confiance en moi", "Mon courage", "Ma résilience", "Ma maturité", "Mon sens des responsabilités", "Ma fiabilité", "Mon humilité", "Mon sens de la justice", "Mon intégrité", "Ma persévérance", "Ma stabilité", "Mon esprit protecteur", "Mon sens de la famille", "Ma capacité à rebondir face aux difficultés"] },
+  { name: "Charme et séduction", icon: Sparkles, bg: "bg-fuchsia-100 text-fuchsia-600", items: ["Mon sourire", "Mon regard", "Mon charme naturel", "Mon élégance", "Mon style vestimentaire", "Ma voix", "Mon charisme", "Mon allure", "Mon côté mystérieux", "Mon humour séduisant", "Mon naturel", "Mon côté irrésistible"] },
+  { name: "Vie quotidienne et passions", icon: UtensilsCrossed, bg: "bg-orange-100 text-orange-600", items: ["Mes talents culinaires", "Mon talent pour faire rire", "Mon côté bricoleur", "Mon sens de l'accueil", "Mon talent artistique", "Mon amour des animaux", "Mon goût pour la musique", "Mon talent pour la danse", "Mon côté aventurier", "Mon talent pour organiser des surprises", "Mon esprit pratique", "Mon plaisir à prendre soin des autres"] },
+  { name: "Visage et sourire", icon: Eye, bg: "bg-sky-100 text-sky-600", items: ["Mon sourire", "Mes yeux", "Mon regard", "Mes beaux cils", "Mes sourcils", "Mes lèvres", "Mes fossettes", "Mes traits du visage", "Mon teint", "Mon charme naturel"] },
+  { name: "Cheveux et pilosité", icon: Scissors, bg: "bg-teal-100 text-teal-600", items: ["Mes cheveux", "Ma coiffure", "Mes cheveux bouclés", "Mes cheveux longs", "Mes cheveux courts", "Ma barbe", "Ma moustache", "Mon crâne rasé", "Ma chevelure poivre et sel"] },
+  { name: "Silhouette et allure", icon: PersonStanding, bg: "bg-indigo-100 text-indigo-600", items: ["Ma silhouette", "Ma taille", "Ma carrure", "Mes épaules", "Mes jambes", "Ma taille fine", "Mes courbes", "Ma musculature", "Mon allure sportive", "Ma posture", "Ma démarche", "Mon élégance naturelle"] },
+  { name: "Style et présentation", icon: Shirt, bg: "bg-cyan-100 text-cyan-600", items: ["Mon style vestimentaire", "Mon élégance", "Mon look décontracté", "Mon look chic", "Mon style original", "Mon sens de la mode", "Mon apparence soignée", "Mon parfum", "Mes tatouages", "Mes piercings", "Mes accessoires", "Mon charme naturel"] },
+  { name: "Traits distinctifs", icon: Fingerprint, bg: "bg-lime-100 text-lime-600", items: ["Ma voix", "Mon rire", "Mes mains", "Mon sourire communicatif", "Mes grains de beauté", "Mes taches de rousseur", "Mes cheveux gris ou argentés", "Mon regard expressif", "Mon côté séduisant", "Mon charisme physique"] },
+  { name: "Poitrine et décolleté", icon: Gem, bg: "bg-red-100 text-red-600", items: ["Ma poitrine", "Mes seins", "Mon décolleté", "Mon buste", "Mes pectoraux"] },
+  { name: "Jambes et cuisses", icon: Footprints, bg: "bg-blue-100 text-blue-600", items: ["Mes jambes", "Mes longues jambes", "Mes cuisses", "Mes mollets", "Mes genoux", "Mes jambes musclées", "Mes jambes galbées"] },
+  { name: "Fesses et hanches", icon: Palette, bg: "bg-purple-100 text-purple-600", items: ["Mes fesses", "Mon postérieur", "Mes hanches", "Mes courbes", "Ma silhouette galbée", "Mon bassin"] },
+  { name: "Ventre et taille", icon: Ruler, bg: "bg-yellow-100 text-yellow-600", items: ["Mon ventre plat", "Mes abdominaux", "Ma taille fine", "Mon ventre arrondi", "Ma taille marquée"] },
+  { name: "Bras et autres atouts", icon: Dumbbell, bg: "bg-stone-200 text-stone-600", items: ["Mes bras", "Mes biceps", "Mes épaules", "Mon dos", "Ma peau", "Ma silhouette athlétique", "Mes formes généreuses", "Ma musculature"] },
+];
 // ponytail: static French country list — regenerate from CLDR if it drifts
 export const PAYS = ["Afghanistan", "Afrique du Sud", "Albanie", "Algérie", "Allemagne", "Andorre", "Angola", "Antigua-et-Barbuda", "Arabie saoudite", "Argentine", "Arménie", "Australie", "Autriche", "Azerbaïdjan", "Bahamas", "Bahreïn", "Bangladesh", "Barbade", "Belgique", "Belize", "Bénin", "Bhoutan", "Biélorussie", "Birmanie", "Bolivie", "Bosnie-Herzégovine", "Botswana", "Brésil", "Brunei", "Bulgarie", "Burkina Faso", "Burundi", "Cambodge", "Cameroun", "Canada", "Cap-Vert", "Chili", "Chine", "Chypre", "Colombie", "Comores", "Congo", "Corée du Nord", "Corée du Sud", "Costa Rica", "Côte d'Ivoire", "Croatie", "Cuba", "Danemark", "Djibouti", "Dominique", "Égypte", "Émirats arabes unis", "Équateur", "Érythrée", "Espagne", "Eswatini", "Estonie", "États-Unis", "Éthiopie", "Fidji", "Finlande", "France", "Gabon", "Gambie", "Géorgie", "Ghana", "Grèce", "Grenade", "Guatemala", "Guinée", "Guinée équatoriale", "Guinée-Bissau", "Guyana", "Haïti", "Honduras", "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande", "Islande", "Israël", "Italie", "Jamaïque", "Japon", "Jordanie", "Kazakhstan", "Kenya", "Kirghizistan", "Kiribati", "Kosovo", "Koweït", "Laos", "Lesotho", "Lettonie", "Liban", "Liberia", "Libye", "Liechtenstein", "Lituanie", "Luxembourg", "Macédoine du Nord", "Madagascar", "Malaisie", "Malawi", "Maldives", "Mali", "Malte", "Maroc", "Maurice", "Mauritanie", "Mexique", "Micronésie", "Moldavie", "Monaco", "Mongolie", "Monténégro", "Mozambique", "Myanmar", "Namibie", "Nauru", "Népal", "Nicaragua", "Niger", "Nigeria", "Norvège", "Nouvelle-Zélande", "Oman", "Ouganda", "Ouzbékistan", "Pakistan", "Palaos", "Palestine", "Panama", "Papouasie-Nouvelle-Guinée", "Paraguay", "Pays-Bas", "Pérou", "Philippines", "Pologne", "Portugal", "Qatar", "République centrafricaine", "République démocratique du Congo", "République dominicaine", "République tchèque", "Roumanie", "Royaume-Uni", "Russie", "Rwanda", "Saint-Christophe-et-Niévès", "Sainte-Lucie", "Saint-Marin", "Saint-Vincent-et-les-Grenadines", "Salomon", "Salvador", "Samoa", "Sao Tomé-et-Principe", "Sénégal", "Serbie", "Seychelles", "Sierra Leone", "Singapour", "Slovaquie", "Slovénie", "Somalie", "Soudan", "Soudan du Sud", "Sri Lanka", "Suède", "Suisse", "Suriname", "Syrie", "Tadjikistan", "Taïwan", "Tanzanie", "Tchad", "Thaïlande", "Timor oriental", "Togo", "Tonga", "Trinité-et-Tobago", "Tunisie", "Turkménistan", "Turquie", "Tuvalu", "Ukraine", "Uruguay", "Vanuatu", "Vatican", "Venezuela", "Viêt Nam", "Yémen", "Zambie", "Zimbabwe"];
 // ponytail: flat list ported from swoov regions (single source for dating side) —
@@ -532,6 +562,7 @@ function SignupPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [showNat2, setShowNat2] = useState(false);
   const [f, setF] = useState<Record<string, string>>({
     name: "",
@@ -575,8 +606,6 @@ function SignupPage() {
     petsDetails: "",
     wantsMorePets: "",
     haveChildren: "",
-    childrenCount: "",
-    childrenAges: "",
     wantMoreChildren: "",
     brothers: "",
     sisters: "",
@@ -593,6 +622,7 @@ function SignupPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [customPhotos, setCustomPhotos] = useState<string[]>([]);
   const [customInterest, setCustomInterest] = useState("");
+  const [customAtout, setCustomAtout] = useState("");
   const [cguOpen, setCguOpen] = useState(false);
   const [consent, setConsent] = useState({ age: false, sensitive: false });
   // ponytail: acceptance is per-signup (never restored) — editing an existing profile skips it, set in the profile-load effect
@@ -806,10 +836,10 @@ function SignupPage() {
   );
   const photosBlock = () => (
     <div>
-      <Label>Tes photos (1 à 5)</Label>
+      <Label>Tes photos (1 à 5, 2,5 Mo max)</Label>
       {/* ponytail: union rendered inline (photos = saved, customPhotos = this-session uploads) — extract if a third source appears */}
       {[...photos, ...customPhotos.filter((c) => !photos.includes(c))].length === 0 ? (
-        <p className="text-sm text-[#777]">Ajoute jusqu&apos;à 5 photos de toi avec le bouton ci-dessous.</p>
+        <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">⚠️ Sans photo, ton profil reste invisible — ajoute-en une pour apparaître.</p>
       ) : (
         <div className="grid max-h-72 grid-cols-4 gap-2 overflow-y-auto rounded-md border border-border p-2 sm:grid-cols-6">
           {[...photos, ...customPhotos.filter((c) => !photos.includes(c))].map((src) => {
@@ -1016,7 +1046,7 @@ function SignupPage() {
     { key: "bodyStyle", title: "Ta silhouette", pre: false, render: () => selQ("bodyStyle", () => forGender(BODY, f.gender)), validate: () => (!f.bodyStyle ? "Ta silhouette est obligatoire." : null) },
     { key: "ethnicity", title: "Tes origines", sub: "Donnée sensible, traitée uniquement pour le service.", pre: false, render: () => selQ("ethnicity", () => forGender(ETHNI, f.gender)), validate: () => (!f.ethnicity ? "Ton origine est obligatoire." : null) },
     { key: "selfAppearance", title: "Ton style", pre: false, render: () => selQ("selfAppearance", () => forGender(STYLE, f.gender)), validate: () => (!req(f.selfAppearance) ? "Ton style est obligatoire." : null) },
-    { key: "bestFeature", title: "Ton plus bel atout", sub: "Personnalité ou physique.", pre: false, render: () => inputQ("bestFeature", { placeholder: "Sourire, regard…", maxLength: 40 }), validate: () => (!req(f.bestFeature) ? "Ton plus bel atout est obligatoire." : null) },
+    { key: "bestFeature", title: "Mes plus beaux atouts", sub: "Sélectionnez jusqu'à 5 qualités qui vous correspondent.", pre: false, render: () => atoutsBlock(), validate: () => (selAtouts().length === 0 ? "Choisis au moins un atout (5 maximum)." : null) },
     { key: "occupation", title: "Ton métier", pre: false, render: () => selQ("occupation", () => forGender(METIERS, f.gender)), validate: () => (!req(f.occupation) ? "Ton métier est obligatoire." : null) },
     { key: "education", title: "Tes études", pre: false, render: () => selQ("education", () => EDUC), validate: () => (!f.education ? "Tes études sont obligatoires." : null) },
     { key: "drink", title: "Alcool ?", pre: false, render: () => selQ("drink", () => DRINK), validate: () => (!f.drink ? "Le champ alcool est obligatoire." : null) },
@@ -1122,8 +1152,6 @@ function SignupPage() {
       petsDetails: keep(pp.petsDetails, unDash(p.petsDetails)),
       wantsMorePets: keep(pp.wantsMorePets, p.wantsMorePets),
       haveChildren: keep(pp.haveChildren, p.haveChildren),
-      childrenCount: keep(pp.childrenCount, p.childrenCount || ""),
-      childrenAges: keep(pp.childrenAges, unDash(p.childrenAges)),
       wantMoreChildren: keep(pp.wantMoreChildren, p.wantMoreChildren),
       brothers: keep(pp.brothers, p.brothersCount),
       sisters: keep(pp.sisters, p.sistersCount),
@@ -1295,7 +1323,7 @@ function SignupPage() {
       if (!f.bodyStyle) return "Ta silhouette est obligatoire.";
       if (!f.ethnicity) return "Ton origine est obligatoire.";
       if (!req(f.selfAppearance)) return "Ton style est obligatoire.";
-      if (!req(f.bestFeature)) return "Ton plus bel atout est obligatoire.";
+      if (selAtouts().length === 0) return "Choisis au moins un atout (5 maximum).";
       if (!req(f.occupation)) return "Ton métier est obligatoire.";
       if (!req(f.education)) return "Tes études sont obligatoires.";
       return null;
@@ -1346,6 +1374,46 @@ function SignupPage() {
     setErr(null);
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ponytail: same resend pattern as sign-in (no session yet, so email-keyed) — server rate-limits; the inline message is the only feedback, no toast system here
+  async function resendConfirm() {
+    setResendMsg(null);
+    const { error } = await supabase.auth.resend({ type: "signup", email: (f.email ?? "").trim().toLowerCase() }).catch(() => ({ error: true as const }));
+    setResendMsg(error ? "Envoi impossible pour le moment. Réessaie dans quelques minutes." : "E-mail renvoyé ! Vérifie ta boîte de réception (et tes spams).");
+  }
+
+  // ponytail: one render fn for both returns (quiz-flow + main) — a shared component would remount on each render; this holds no state
+  function welcomeDialog() {
+    return (
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="max-w-sm text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e91e63]/10">
+            <Mail className="h-7 w-7 text-[#e91e63]" />
+          </div>
+          <DialogHeader>
+            <DialogTitle>Merci pour ton inscription !</DialogTitle>
+            <DialogDescription>
+              On t&apos;a envoyé un e-mail à <span className="font-medium text-[#e91e63]">{(f.email ?? "").trim()}</span> : clique sur son lien pour confirmer ton adresse et activer ton compte.
+            </DialogDescription>
+          </DialogHeader>
+          <button
+            type="button"
+            onClick={() => nav({ to: "/mon-profil" })}
+            className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+          >
+            OK
+          </button>
+          <div className="border-t border-border pt-3 text-sm text-[#777]">
+            Pas reçu ? Vérifie tes spams, ou{" "}
+            <button type="button" onClick={resendConfirm} className="font-medium text-[#e91e63] hover:underline">
+              Renvoyer l&apos;e-mail de confirmation
+            </button>
+            {resendMsg && <p className="mt-2 text-sm text-[#333]">{resendMsg}</p>}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   async function submit() {
@@ -1466,7 +1534,7 @@ function SignupPage() {
       bodyStyle: f.bodyStyle,
       ethnicity: f.ethnicity,
       selfAppearance: f.selfAppearance.trim(),
-      bestFeature: f.bestFeature.trim(),
+      bestFeature: csv(f.bestFeature).slice(0, ATOUT_MAX).join(", "),
       hasPets: f.hasPets,
       petsDetails: f.petsDetails.trim() || "—",
       wantsMorePets: f.wantsMorePets,
@@ -1479,8 +1547,6 @@ function SignupPage() {
       livingSituation: f.livingSituation,
       willingToRelocate: f.relocate === "Oui" ? "yes" : f.relocate === "Non" ? "no" : "maybe",
       haveChildren: f.haveChildren,
-      childrenCount: num(f.childrenCount) || 0,
-      childrenAges: f.childrenAges.trim() || "—",
       wantMoreChildren: f.wantMoreChildren,
       brothersCount: b,
       sistersCount: si,
@@ -1545,6 +1611,93 @@ function SignupPage() {
     setCustomInterest("");
   }
 
+  const selAtouts = () => csv(f.bestFeature);
+  function toggleAtout(v: string) {
+    const cur = selAtouts();
+    if (cur.includes(v)) upd("bestFeature", cur.filter((x) => x !== v).join(", "));
+    else {
+      if (cur.length >= ATOUT_MAX) {
+        setErr(`Maximum ${ATOUT_MAX} atouts — retire-en un pour en ajouter un autre.`);
+        return;
+      }
+      setErr(null);
+      upd("bestFeature", [...cur, v].join(", "));
+    }
+  }
+  function addCustomAtout() {
+    const v = customAtout.trim().replace(/,+$/, "").trim().slice(0, 40);
+    if (!v) return;
+    const cur = selAtouts();
+    if (cur.includes(v)) {
+      setCustomAtout("");
+      return;
+    }
+    if (cur.length >= ATOUT_MAX) {
+      setErr(`Maximum ${ATOUT_MAX} atouts — retire-en un pour en ajouter un autre.`);
+      return;
+    }
+    setErr(null);
+    upd("bestFeature", [...cur, v].join(", "));
+    setCustomAtout("");
+  }
+  const atoutsBlock = () => {
+    const sel = selAtouts();
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-[#555]">Sélectionnez jusqu&apos;à 5 qualités qui vous correspondent. Vous pouvez aussi ajouter un atout personnel.</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-[#333]">Mes atouts sélectionnés</p>
+          <p className="text-sm font-medium tabular-nums text-[#e91e63]" aria-live="polite">{sel.length}/{ATOUT_MAX}</p>
+        </div>
+        {sel.length === 0 ? (
+          <p className="rounded-md border border-border bg-[#f7f7f7] px-3 py-2.5 text-sm text-[#999]">Vos choix apparaîtront ici.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {sel.map((a) => (
+              <button key={a} type="button" onClick={() => toggleAtout(a)} aria-label={`Retirer ${a}`} className="rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/20">
+                {a} ×
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="space-y-2">
+          {ATOUTS.map((c) => {
+            const n = c.items.filter((i) => sel.includes(i)).length;
+            const Icon = c.icon;
+            return (
+              <details key={c.name} className="rounded-md border border-border bg-white">
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${c.bg}`} aria-hidden="true">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="text-[15px] font-medium text-[#333]">{c.name}</span>
+                  {n > 0 && <span className="ml-auto rounded-full bg-[#e91e63]/10 px-2 py-0.5 text-xs font-medium text-[#e91e63]">{n}</span>}
+                </summary>
+                <div className="max-h-56 overflow-y-auto border-t border-border p-1">
+                  {c.items.map((l) => (
+                    <label key={l} className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-[#333] hover:bg-[#f2f2f2]">
+                      <input type="checkbox" checked={sel.includes(l)} onChange={() => toggleAtout(l)} className="h-4 w-4 accent-[#e91e63]" />
+                      {l}
+                    </label>
+                  ))}
+                </div>
+              </details>
+            );
+          })}
+        </div>
+        <div>
+          <Label optional>Un autre atout à ajouter ?</Label>
+          <div className="flex gap-2">
+            <input value={customAtout} onChange={(e) => setCustomAtout(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomAtout(); } }} placeholder="Ton atout personnel…" maxLength={40} className={inputCls} />
+            <button type="button" onClick={addCustomAtout} className="shrink-0 rounded-md border border-[#e91e63] px-4 font-medium text-[#e91e63]">
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // --- signup question flow (Meetic-style): few required questions pre-account, rest skippable after ---
   const editing = !!doneProfile;
   const hasAccount = !!authUser;
@@ -1553,8 +1706,11 @@ function SignupPage() {
   const flowQs = phase === "pre" ? preQs : postQs;
   const flowQ = flowQs[Math.min(qi, Math.max(flowQs.length - 1, 0))];
   // ponytail: completion across the whole signup (pre + post) — skipped questions simply stay unfilled; photo-gate if finishing ever needs more than photos
+  // ponytail: thresholds mirror the validators (tagline 10, bio 20) so the missing-only revisit pass never skips an answer that would fail saving
   const isFilled = (key: string): boolean => {
     if (key === "photos") return photos.length > 0;
+    if (key === "tagline") return f.tagline.trim().length >= 10;
+    if (key === "bio") return f.bio.trim().length >= 20;
     if (key === "consent") return editing || (cguAccepted && consent.age && consent.sensitive);
     if (key === "password") return hasAccount || (f.password.length >= 8 && f.password === f.confirm);
     if (key === "ageRange") {
@@ -1689,6 +1845,8 @@ function SignupPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
         return;
       }
+      // ponytail: fire-and-forget analytics (never blocks signup) — swivv_events.signup_completed feeds acquisition funnels
+      trackEvent("signup_completed");
       try {
         localStorage.removeItem(DRAFT_KEY);
       } catch {}
@@ -1735,7 +1893,7 @@ function SignupPage() {
           <div className="flex w-full flex-wrap items-center gap-3 px-4 py-3">
             <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
             <span className="ml-auto text-sm font-medium tabular-nums text-[#333]">
-              {pct} %
+              {phase === "pre" ? `Question ${qi + 1}/${preQs.length}` : `${pct} %`}
             </span>
             <SwivvAuthButtons />
           </div>
@@ -1799,24 +1957,7 @@ function SignupPage() {
             } catch {}
           }}
         />
-        <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
-          <DialogContent className="max-w-sm text-center">
-            <DialogHeader>
-              <DialogTitle>Bienvenue sur SWIVV ! 🎉</DialogTitle>
-              <DialogDescription>
-                Ton compte est créé. Tu devrais avoir reçu un e-mail : clique sur son lien pour confirmer
-                ton adresse avant de continuer.
-              </DialogDescription>
-            </DialogHeader>
-            <button
-              type="button"
-              onClick={() => nav({ to: "/mon-profil" })}
-              className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
-            >
-              OK
-            </button>
-          </DialogContent>
-        </Dialog>
+        {welcomeDialog()}
         <SwivvFooter />
       </div>
     );
@@ -1827,7 +1968,6 @@ function SignupPage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-3xl items-center gap-3 px-4 py-3">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <span className="text-sm text-[#777]">{editing ? "Modifier mon profil" : "Créer mon profil"}</span>
           <span className="ml-auto text-sm text-[#777]">
             Étape {step + 1}/{STEPS.length}
           </span>
@@ -1845,8 +1985,9 @@ function SignupPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-6">
         <p className="mb-4 text-sm text-[#777]">
-          Tous les champs marqués <span className="text-[#e91e63]">*</span> sont obligatoires. Seules la
-          2e nationalité, les autres langues et les détails sans objet (enfants, animaux) peuvent rester vides.
+          Tous les champs marqués <span className="text-[#e91e63]">*</span> sont obligatoires, mais tu peux passer
+          chaque question avec « Ignorer » et y revenir plus tard. Seules la 2e nationalité, les autres langues
+          et les détails sans objet (enfants, animaux) peuvent rester vides définitivement.
         </p>
         {err && (
           <p role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-700">
@@ -1959,8 +2100,8 @@ function SignupPage() {
                 <Sel value={f.selfAppearance} onChange={(v) => upd("selfAppearance", v)} options={forGender(STYLE, f.gender)} placeholder="Choisir…" />
               </div>
               <div>
-                <Label>Ton plus bel atout (personnalité ou physique)</Label>
-                <input value={f.bestFeature} onChange={(e) => upd("bestFeature", e.target.value)} placeholder="Sourire, regard…" maxLength={40} className={inputCls} />
+                <Label>Mes plus beaux atouts (1 à 5)</Label>
+                {atoutsBlock()}
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -2168,24 +2309,7 @@ function SignupPage() {
           } catch {}
         }}
       />
-      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
-        <DialogContent className="max-w-sm text-center">
-          <DialogHeader>
-            <DialogTitle>Bienvenue sur SWIVV ! 🎉</DialogTitle>
-            <DialogDescription>
-              Ton compte est créé. Tu devrais avoir reçu un e-mail : clique sur son lien pour confirmer
-              ton adresse avant de continuer.
-            </DialogDescription>
-          </DialogHeader>
-          <button
-            type="button"
-            onClick={() => nav({ to: "/mon-profil" })}
-            className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
-          >
-            OK
-          </button>
-        </DialogContent>
-      </Dialog>
+      {welcomeDialog()}
       <SwivvFooter />
     </div>
   );

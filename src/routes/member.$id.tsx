@@ -2,18 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Ban, Flag, Heart, MessageCircle, Mic, Square, X } from "lucide-react";
 import { SWIVV_PROFILES, getProfile, type SwivvProfile } from "@/lib/swivv-data";
-import { displayPct, load, MatchTooltip, topMatches } from "@/routes/matches";
-import { fmtFull, getBlocked, getLikes, isMatch, isReported, logModReport, mediaUrl, rememberPeer, reportMember, sendFeedback, toggleBlock, toggleLike, bumpProfileView, getChat, sendChat, sendVoice, subscribe } from "@/lib/swivv-store";
+import { displayPct, load, MatchLoginPrompt, MatchTooltip, topMatches } from "@/lib/match-score";
+import { useAuth } from "@/hooks/use-auth";
+import { fmtFull, getLikes, isBlockedById, isBlockedId, isMatch, isReported, logModReport, mediaUrl, rememberPeer, reportMember, sendFeedback, toggleBlock, toggleLike, bumpProfileView, getChat, sendChat, sendVoice, pullMatchCriteria, subscribe, useSignedMediaMap } from "@/lib/swivv-store";
 import { PROFILE_REPORT_REASONS, REPORT_REASONS, findOffensive } from "@/lib/swivv-moderation";
 import { toast } from "sonner";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
-import { SwivvAuthButtons, getSwivvUser, requireSwivvAuth } from "@/lib/swivv-auth";
+import { SwivvAuthButtons, getSwivvUser, requireSwivvAuth, usePublicProfiles } from "@/lib/swivv-auth";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvHint } from "@/components/swivv-hint";
 import { SwivvVoicePlayer } from "@/components/swivv-voice-player";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvProfileView } from "@/components/swivv-profile-view";
+import { PhotoReact } from "./browse";
+import { isMemberUuid, preloadMyReactions, subscribeReactions, togglePhotoReaction, type ReactionId } from "@/lib/swivv-reactions";
 import { realDistance, useMyCity } from "@/lib/location-distance";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +29,7 @@ export const Route = createFileRoute("/member/$id")({
 
 function MemberPage() {
   const { id } = Route.useParams();
+  const { user, loading: authLoading } = useAuth();
   const [, force] = useState(0);
   const [reportChoice, setReportChoice] = useState("");
   const [reportDetail, setReportDetail] = useState("");
@@ -35,39 +39,75 @@ function MemberPage() {
     const close = (e: PointerEvent) => {
       if (!reportRef.current?.contains(e.target as Node))
         reportRef.current?.querySelectorAll("details[open]").forEach((d) => d.removeAttribute("open"));
+      if (!(e.target as Element | null)?.closest?.("[data-reactscope]")) setOpenReact(null);
     };
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
   }, []);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setMyUid(data.session?.user.id ?? null)).catch(() => {});
+  }, []);
+  // ponytail: async arrivals (boot likes-pull, real-mutual match) re-render without refresh — same subscribe as the message dialog below
+  useEffect(() => subscribe(() => force((x) => x + 1)), []);
   const seed = getProfile(id);
   // ponytail: real members resolve by uid on demand — extend getProfile with a cache if remote lookups multiply
   const [remote, setRemote] = useState<SwivvProfile | null>(null);
   const [remoteDone, setRemoteDone] = useState(false);
+  // ponytail: same photo-reaction toolbar as Photos récentes (shared component) — my highlight loads with the profile, taps record a real like too
+  const [myUid, setMyUid] = useState<string | null>(null);
+  const { profiles: members } = usePublicProfiles();
+  const [openReact, setOpenReact] = useState<string | null>(null);
+  const pendingReact = useRef<Set<string>>(new Set());
+  // ponytail: taps from Photos récentes re-render here without refresh (shared photo-URL cache) — same subscribe as the boot likes-pull above
+  useEffect(() => subscribeReactions(() => force((x) => x + 1)), []);
   useEffect(() => {
-    if (seed || !id.startsWith("u:")) return;
+    // ponytail: notif + stats links ride bare uuids (in-app uses u:-prefix) — canonicalize to u: so likes/matches/reactions/message state matches every other entry point
+    if (seed || !isMemberUuid(id)) return;
+    const bare = id.replace(/^u:/, "");
     (supabase as any)
       .from("swivv_profiles")
       .select("data")
-      .eq("user_id", id.slice(2))
+      .eq("user_id", bare)
       .maybeSingle()
       .then(({ data }: any) => {
-        if (data?.data?.name) setRemote({ ...data.data, id });
+        if (data?.data?.name) setRemote({ ...data.data, id: `u:${bare}` });
         setRemoteDone(true);
       })
       .catch(() => setRemoteDone(true));
   }, [id, seed]);
   const profile = seed ?? remote;
-  useEffect(() => { bumpProfileView(id); }, [id]);
+  // ponytail: own profile never counts (real ids ride u:-prefixed; seeds can't be self) — u: views wait for identity so a slow session can't sneak one self-count in; logged-out viewers were never counted anywhere, no regression
+  const bumped = useRef("");
+  useEffect(() => {
+    if (bumped.current === id) return;
+    if (myUid && (id === `u:${myUid}` || id === myUid)) return;
+    if (!myUid && isMemberUuid(id)) return;
+    bumped.current = id;
+    bumpProfileView(id);
+  }, [id, myUid]);
   // ponytail: peer directory feeds the message inbox (real ids don't resolve from seeds) — refresh on view, keyed by id
   useEffect(() => {
     if (profile) rememberPeer({ id: profile.id, name: profile.name, photo: profile.photo });
   }, [profile?.id]);
+  const profileForReact = seed ?? remote;
+  useEffect(() => {
+    if (!profileForReact) return;
+    const owner = isMemberUuid(profileForReact.id) ? profileForReact.id : null;
+    void preloadMyReactions(owner);
+  }, [seed, remote]);
   // ponytail: all hooks above the early return — profile flips null→remote on real-member loads, hook count must not change
   const [msgOpen, setMsgOpen] = useState(false);
   const viewer = useMyCity();
+  const [criteria, setCriteria] = useState(() => load());
+  // ponytail: pull once per view — the boot pull is once per tab, so a device that synced on another machine otherwise showed only the criteria it happened to match
+  useEffect(() => {
+    let live = true;
+    void pullMatchCriteria().then(() => { if (live) setCriteria(load()); }).catch(() => {});
+    return () => { live = false; };
+  }, []);
 
   if (!profile) {
-    if (id.startsWith("u:") && !remoteDone) {
+    if (isMemberUuid(id) && !remoteDone) {
       return (
         <div className="mx-auto max-w-2xl px-4 py-16 text-center">
           <p className="text-[#777]">Chargement…</p>
@@ -85,31 +125,53 @@ function MemberPage() {
   }
 
   const liked = getLikes().includes(profile.id);
+  const ownerUid = isMemberUuid(profile.id) ? profile.id : null;
+  const reactTo = async (src: string, kind: ReactionId) => {
+    if (pendingReact.current.has(src)) return;
+    pendingReact.current.add(src);
+    force((x) => x + 1);
+    try {
+      const r = await togglePhotoReaction(ownerUid, src, kind, profile.id);
+      if (!r.ok) {
+        if (r.error === "own") toast.error("Tu ne peux pas réagir à tes propres photos.");
+        else toast.error("Réaction non enregistrée. Réessaie.");
+      } else {
+        setOpenReact(null);
+        force((x) => x + 1);
+      }
+    } finally {
+      pendingReact.current.delete(src);
+      force((x) => x + 1);
+    }
+  };
   const matched = isMatch(profile.id);
-  const blocked = getBlocked().includes(profile.id);
+  const blocked = isBlockedId(profile.id);
+  const blockedBy = !blocked && isBlockedById(profile.id);
   const reported = isReported(profile.id);
 
   // Similar profiles: same gender as visited profile, ranked by real similarities
   // (city, age, interests, height, religion, languages, marital status, intention).
+  // ponytail: seeds + real members in one pool (same source as browse) — ?? guards because server rows can lack optional arrays
   function similarityScore(a: SwivvProfile, b: SwivvProfile) {
     let score = 0;
     if (a.city === b.city) score += 30;
     if (a.country === b.country) score += 5;
     score += Math.max(0, 20 - Math.abs(a.age - b.age) * 2);
-    const sharedInterests = b.interests.filter((i) => a.interests.includes(i)).length;
+    const sharedInterests = (b.interests ?? []).filter((i) => (a.interests ?? []).includes(i)).length;
     score += sharedInterests * 12;
     if (a.religion === b.religion) score += 15;
-    const sharedLang = b.languages.filter((l) => a.languages.includes(l)).length;
+    const sharedLang = (b.languages ?? []).filter((l) => (a.languages ?? []).includes(l)).length;
     score += sharedLang * 5;
     if (a.maritalStatus === b.maritalStatus) score += 10;
     if (a.lookingFor === b.lookingFor) score += 10;
-    score += Math.max(0, 10 - Math.abs(a.heightCm - b.heightCm) / 2);
+    score += Math.max(0, 10 - Math.abs((a.heightCm ?? 0) - (b.heightCm ?? 0)) / 2);
     if (a.occupation === b.occupation) score += 5;
     if (b.online) score += 2;
     return score;
   }
 
-  const similar = SWIVV_PROFILES.filter((p) => p.id !== profile.id && p.gender === profile.gender)
+  const selfId = myUid ? `u:${myUid}` : "";
+  const similar = [...SWIVV_PROFILES, ...members].filter((p) => p.id !== profile.id && p.id !== selfId && p.gender === profile.gender)
     .map((p) => ({ p, score: similarityScore(profile, p) }))
     .sort((x, y) => y.score - x.score)
     .slice(0, 6)
@@ -120,9 +182,6 @@ function MemberPage() {
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <Link to="/browse" search={{ q: "", type: "", location: "" }} className="text-sm text-[#555]">
-          ← Retour
-          </Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -131,19 +190,38 @@ function MemberPage() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         <SwivvProfileView
           profile={profile}
+          reactToolbar={
+            myUid && profile.id === `u:${myUid}`
+              ? undefined
+              : (src: string) => (
+                  <PhotoReact
+                    photo={src}
+                    open={openReact === src}
+                    pending={pendingReact.current.has(src)}
+                    onToggle={() => setOpenReact(openReact === src ? null : src)}
+                    onPick={(kind) => reactTo(src, kind)}
+                  />
+                )
+          }
           badge={
-            <MatchTooltip
-              fem={profile.gender === "woman"}
-              badge={
-                <p className="mt-2 inline-block rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63]">
-                  {displayPct(profile, load())}% compatible · {profile.lookingFor}
-                </p>
-              }
-              items={topMatches(profile, load(), 12, realDistance(viewer.city, viewer.country, profile))}
-            />
+            authLoading || user ? (
+              <MatchTooltip
+                fem={profile.gender === "woman"}
+                badge={
+                  <p className="mt-2 inline-block rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63]">
+                    {displayPct(profile, criteria)}% compatible · {profile.lookingFor}
+                  </p>
+                }
+                criteria={criteria}
+                items={topMatches(profile, criteria, 12, realDistance(viewer.city, viewer.country, profile))}
+              />
+            ) : (
+              <MatchLoginPrompt name={profile.name} className="mt-2" />
+            )
           }
           actions={
             <>
+              {!blocked && !blockedBy && (
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
@@ -169,6 +247,7 @@ function MemberPage() {
                   <MessageCircle className="mr-2 h-4 w-4" /> Message
                 </button>
               </div>
+              )}
               {matched && (
                 <p className="mt-2 rounded-md bg-green-50 p-2 text-center text-sm font-medium text-green-700">
                   C&apos;est un match ! Va dans Messages pour discuter.
@@ -184,6 +263,10 @@ function MemberPage() {
                   >
                     Débloquer
                   </button>
+                </div>
+              ) : blockedBy ? (
+                <div className="mt-2 rounded-md bg-[#f2f2f2] p-3 text-center">
+                  <p className="text-sm font-medium text-[#555]">{profile.name} a bloqué la communication avec toi.</p>
                 </div>
               ) : (
                 <div ref={reportRef} className="mt-2 flex gap-2">
@@ -295,6 +378,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
   const [draft, setDraft] = useState("");
   const [, force] = useState(0);
   const chat = getChat(profile.id);
+  const signed = useSignedMediaMap(chat.flatMap((m) => [m.audio, m.image]));
   // ponytail: live thread — server-pushed messages re-render without refresh
   useEffect(() => subscribe(() => force((x) => x + 1)), []);
   const voice = useVoiceRecorder();
@@ -312,7 +396,8 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
       toast.error(`Message non envoyé — langage inapproprié (${bad.map((w) => `« ${w} »`).join(", ")}). Reformule ton message.`);
       return;
     }
-    sendChat(profile.id, draft.trim());
+    const chatErr = sendChat(profile.id, draft.trim());
+    if (chatErr) { toast.error(chatErr); return; }
     setDraft("");
     force((x) => x + 1);
     window.setTimeout(() => force((x) => x + 1), 1500);
@@ -338,7 +423,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
               {m.audio ? (
                 <>
                   <span className="flex items-center gap-1">
-                    <SwivvVoicePlayer src={mediaUrl(m.audio)} dark={m.from === "me"} />
+                    <SwivvVoicePlayer src={m.audio ? (signed[m.audio] ?? mediaUrl(m.audio)) : undefined} dark={m.from === "me"} />
                     <SwivvHint text="Signaler ce vocal">
                       <button
                         type="button"

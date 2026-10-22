@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Espace membre, profils et outils internes — jamais indexés
+Disallow: /admin
+Disallow: /api/
+Disallow: /browse
+Disallow: /emails
+Disallow: /facturation
+Disallow: /matches
+Disallow: /member/
+Disallow: /messagerie
+Disallow: /moderation
+Disallow: /mon-profil
+Disallow: /notifications
+Disallow: /parametres
+Disallow: /progress
+Disallow: /recherche-avancee
+Disallow: /statistiques
+Disallow: /swipe
+Disallow: /temoignage
+Disallow: /verification
+
+Sitemap: https://swivvmatch.com/sitemap.xml

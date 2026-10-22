@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 240" role="img" aria-label="Illustration de cœurs, confiance et sécurité">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#eaf3f6"/>
+      <stop offset="0.5" stop-color="#d3e7ee"/>
+      <stop offset="1" stop-color="#eaf3f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="240" fill="url(#bg)"/>
+  <g fill="#8fbdd1">
+    <path d="M150 120c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+    <path d="M1050 80c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+    <path d="M420 190c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+    <path d="M780 60c-11-7-18-13-18-23 0-7 6-13 13-13 4 0 8 3 10 6 2-3 6-6 10-6 7 0 13 6 13 13 0 10-7 16-18 23l-5 3-5-3z"/>
+  </g>
+  <g fill="#2a7a9b">
+    <path d="M300 150c-20-13-34-25-34-43 0-13 11-24 24-24 9 0 16 5 20 11 4-6 11-11 19-11 14 0 24 11 24 24 0 18-14 30-34 43l-9 6-10-6z"/>
+    <path d="M900 170c-20-13-34-25-34-43 0-13 11-24 24-24 9 0 16 5 20 11 4-6 11-11 19-11 14 0 24 11 24 24 0 18-14 30-34 43l-9 6-10-6z"/>
+    <path d="M80 190c-12-8-20-15-20-26 0-8 6-14 14-14 5 0 10 3 12 7 2-4 7-7 12-7 8 0 14 6 14 14 0 11-8 18-20 26l-6 4-6-4z"/>
+    <path d="M1120 190c-12-8-20-15-20-26 0-8 6-14 14-14 5 0 10 3 12 7 2-4 7-7 12-7 8 0 14 6 14 14 0 11-8 18-20 26l-6 4-6-4z"/>
+  </g>
+  <g fill="none" stroke="#2a7a9b" stroke-width="10">
+    <circle cx="540" cy="120" r="52"/>
+    <circle cx="660" cy="120" r="52"/>
+  </g>
+  <g fill="#143d52">
+    <path d="M600 130c-26-17-45-33-45-57 0-17 13-30 30-30 11 0 20 6 25 14 5-8 14-14 25-14 17 0 30 13 30 30 0 24-19 40-45 57l-10 6-10-6z"/>
+  </g>
+  <g fill="#2a7a9b" opacity="0.25">
+    <circle cx="240" cy="60" r="6"/>
+    <circle cx="520" cy="60" r="5"/>
+    <circle cx="840" cy="60" r="6"/>
+    <circle cx="60" cy="120" r="5"/>
+    <circle cx="1140" cy="120" r="5"/>
+    <circle cx="360" cy="200" r="5"/>
+    <circle cx="640" cy="200" r="6"/>
+    <circle cx="980" cy="200" r="5"/>
+  </g>
+</svg>
+<!-- ponytail: same mariage-banner composition as hearts-love-banner, trust palette (teal/navy) for the safety article -->

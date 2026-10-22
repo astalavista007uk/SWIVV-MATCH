@@ -1,16 +1,29 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Ban, Banknote, Handshake, Heart, Lock, Scale, ShieldCheck } from "lucide-react";
-import { SwivvLogo } from "@/components/swivv-logo";
-import { SwivvAuthButtons } from "@/lib/swivv-auth";
-import { SwivvCategoryNav } from "@/components/swivv-category-nav";
-import { SwivvFooter } from "@/components/swivv-footer";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/legal/terms")({
-  head: () => ({ meta: [{ title: "Conditions d'utilisation détaillées — SWIVV" }] }),
-  component: LegalTermsPage,
+  head: () => ({ meta: [{ title: "Conditions d'utilisation — SWIVV" }] }),
+  // ponytail: canonical terms page is /terms-and-conditions (one terms page for visitors + SEO) — this route survives only as a redirect so old links never 404; delete outright when no inbound link remains
+  beforeLoad: () => {
+    throw redirect({ to: "/terms-and-conditions" });
+  },
+  component: LegalTermsRedirect,
 });
 
-// ponytail: paragraphs split on blank lines, "•" blocks become lists — rich legal formatting (tables, anchors) waits for a real CMS
+function LegalTermsRedirect() {
+  return (
+    <main className="mx-auto max-w-xl px-4 py-16 text-center">
+      <p className="text-sm text-[#555]">
+        Nos conditions ont déménagé :{" "}
+        <Link to="/terms-and-conditions" className="font-medium text-[#e91e63] hover:underline">
+          lire les conditions d'utilisation
+        </Link>
+        .
+      </p>
+    </main>
+  );
+}
+
+// ponytail: full legal wording lives here (not in the short /terms-and-conditions page) because the signup CGU dialog renders it — move it if the dialog ever reads from elsewhere
 export const ARTICLES: [string, string][] = [
   ["1. IDENTIFICATION DE SWIVV", "Le service est exploité sous le nom :\n\nSWIVV MATCH\n\nAdresse :\n10 Rue Thureau Dangin\n75015 Paris\nFrance\n\nTéléphone :\n+33 (0)6 60 36 82 20\n\nSWIVV est actuellement proposé dans le cadre d'une phase initiale de développement sous la forme d'un MVP (Minimum Viable Product).\n\nLe service est actuellement gratuit."],
   ["2. OBJET DU SERVICE", "SWIVV est une plateforme numérique destinée à faciliter les rencontres et les échanges entre personnes majeures.\n\nSelon les fonctionnalités disponibles, SWIVV peut notamment permettre aux utilisateurs de :\n\n• créer un profil ;\n• ajouter des photographies ;\n• présenter leurs centres d'intérêt ;\n• rechercher ou découvrir d'autres utilisateurs ;\n• indiquer leur intérêt pour un autre profil ;\n• recevoir des suggestions de profils ;\n• obtenir une correspondance (« Match ») ;\n• communiquer avec d'autres utilisateurs ;\n• utiliser différentes fonctionnalités destinées à faciliter les rencontres.\n\nSWIVV est une plateforme de mise en relation et ne constitue pas une agence matrimoniale ni un service garantissant une relation sentimentale.\n\nSWIVV ne garantit aucun résultat particulier, notamment aucune rencontre, relation, compatibilité ou mariage."],
@@ -51,85 +64,5 @@ export const ARTICLES: [string, string][] = [
   ["37. ABSENCE DE RENONCIATION", "Le fait pour SWIVV de ne pas exercer immédiatement un droit prévu par les présentes CGU ne constitue pas une renonciation à ce droit."],
 ];
 
-// ponytail: lucide icons in a black chip instead of emoji — swap the set in one place when the brand evolves
-const COMMUNITY_RULES = [
-  { icon: Heart, title: "Être respectueux", text: "Traiter les autres utilisateurs avec respect." },
-  { icon: Handshake, title: "Être honnête", text: "Ne pas utiliser de faux profils ou de fausses identités dans un but trompeur ou frauduleux." },
-  { icon: Ban, title: "Ne pas harceler", text: "Respecter le refus ou la volonté d'une personne de ne plus communiquer." },
-  { icon: Banknote, title: "Ne pas demander d'argent", text: "Ne pas utiliser SWIVV pour obtenir frauduleusement de l'argent auprès d'autres utilisateurs." },
-  { icon: Lock, title: "Protéger sa vie privée", text: "Ne pas publier ou communiquer inutilement des informations personnelles sensibles." },
-  { icon: ShieldCheck, title: "Signaler les comportements suspects", text: "Utiliser les fonctionnalités de signalement lorsqu'un comportement semble dangereux, frauduleux ou contraire aux règles." },
-  { icon: Scale, title: "Respecter la loi", text: "Ne pas utiliser SWIVV pour commettre ou faciliter une infraction." },
-];
+// ponytail: the old page's community-rules strip was dropped with the redirect (its substance lives in short-page sections 2–3) — restore it here if moderation ever needs a linkable rules anchor
 
-function LegalTermsPage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <span className="text-sm text-[#777]">Juridique</span>
-          <SwivvAuthButtons />
-        </div>
-      </header>
-      <SwivvCategoryNav />
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-3xl font-medium text-[#333]">Conditions Générales d'Utilisation (CGU)</h1>
-        <p className="mt-2 text-sm text-[#777]">Dernière mise à jour : 22 septembre 2026.</p>
-        <p className="mt-4 text-[15px] leading-relaxed text-[#555]">
-          Bienvenue sur SWIVV, une plateforme de rencontre et de mise en relation permettant à des personnes majeures de découvrir d'autres utilisateurs, d'échanger et, lorsque les fonctionnalités le permettent, de créer des relations et des rencontres.
-        </p>
-        <p className="mt-2 text-[15px] leading-relaxed text-[#555]">
-          Les présentes Conditions Générales d'Utilisation (« CGU ») régissent l'accès et l'utilisation du site internet SWIVV.
-        </p>
-        <p className="mt-2 text-[15px] leading-relaxed text-[#555]">
-          En utilisant le site ou en créant un compte, l'utilisateur reconnaît avoir pris connaissance des présentes CGU et les accepter.
-        </p>
-        <div className="mt-6 space-y-4">
-          {ARTICLES.map(([t, d]) => (
-            <article key={t} className="rounded-xl bg-white p-5">
-              <h2 className="font-medium text-[#333]">{t}</h2>
-              {d.split("\n\n").map((b, i) =>
-                b.split("\n").every((l) => l.startsWith("•")) ? (
-                  <ul key={i} className="mt-1 list-disc space-y-1 pl-5 text-sm leading-relaxed text-[#555]">
-                    {b.split("\n").map((l) => (
-                      <li key={l}>{l.replace(/^•\s*/, "")}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p
-                    key={i}
-                    className={`mt-1 whitespace-pre-line text-sm leading-relaxed text-[#555] ${/^\d+\.\d+\s/.test(b) ? "font-medium text-[#333]" : ""}`}
-                  >
-                    {b}
-                  </p>
-                ),
-              )}
-            </article>
-          ))}
-          <article className="rounded-xl bg-white p-5">
-            <h2 className="font-medium text-[#333]">RÈGLES DE LA COMMUNAUTÉ SWIVV</h2>
-            <p className="mt-1 text-sm leading-relaxed text-[#555]">
-              Afin de créer une communauté respectueuse et agréable, chaque utilisateur s'engage à :
-            </p>
-            <ul className="mt-3 space-y-3">
-              {COMMUNITY_RULES.map(({ icon: Icon, title, text }) => (
-                <li key={title} className="flex items-start gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black" aria-hidden="true">
-                    <Icon className="h-4 w-4 text-white" />
-                  </span>
-                  <span className="text-sm leading-relaxed text-[#555]">
-                    <strong className="font-medium text-[#333]">{title}</strong>
-                    <br />
-                    {text}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </article>
-        </div>
-      </main>
-      <SwivvFooter />
-    </div>
-  );
-}

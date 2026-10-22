@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureLike } from "@/lib/swivv-store";
 
 // ponytail: ids are the stable DB contract (emoji/labels are UI only); labels stay French-first here — move to i18n resources if a 2nd locale ships
 export const REACTIONS = [
@@ -38,11 +39,51 @@ export function getPhotoReaction(photo: string): ReactionId | null {
   return isReactionId(v) ? v : null;
 }
 function setCached(photo: string, next: ReactionId | null) {
+  if (typeof localStorage === "undefined") return;
   try {
     const all = readCache();
     if (next) all[photo] = next;
     else delete all[photo];
     localStorage.setItem(CACHE_KEY, JSON.stringify(all));
+  } catch {}
+  notifyReactions();
+}
+
+// ponytail: cache is the cross-page highlight source (profile ↔ recent photos share photo URLs) — same subscribe pattern as swivv-store; realtime channel if highlights ever need cross-device push
+const reactionListeners = new Set<() => void>();
+export function subscribeReactions(fn: () => void) {
+  reactionListeners.add(fn);
+  return () => {
+    reactionListeners.delete(fn);
+  };
+}
+function notifyReactions() {
+  reactionListeners.forEach((l) => l());
+}
+
+/** Seed my highlights for a grid of photos in one query (my rows only, newest first) — per-owner preload if grids ever outgrow the cap. */
+export async function preloadMyReactionsForPhotos(photos: string[]): Promise<void> {
+  if (typeof localStorage === "undefined" || !photos.length) return;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id;
+    if (!uid) return;
+    const want = new Set(photos.filter(Boolean));
+    // ponytail: 30 newest caps the photo payload (rows carry ~750KB data URLs) — per-owner preload if my reaction volume ever passes it
+    const { data: rows } = await (supabase as any).from("swivv_photo_reactions").select("photo,reaction").eq("reactor_id", uid).order("updated_at", { ascending: false }).limit(30);
+    const all = readCache();
+    let changed = false;
+    for (const r of (rows ?? []) as { photo?: unknown; reaction?: unknown }[]) {
+      if (typeof r?.photo === "string" && want.has(r.photo) && isReactionId(r?.reaction) && all[r.photo] !== r.reaction) {
+        all[r.photo] = r.reaction;
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(all));
+    } catch {}
+    notifyReactions();
   } catch {}
 }
 
@@ -79,18 +120,36 @@ export async function fetchReactionCounts(photos: string[]): Promise<Record<stri
 
 export type ToggleResult = { ok: boolean; reaction: ReactionId | null; error?: string };
 
+/** Seed the local mine-cache with my server reactions to one owner's photos (cross-device highlight). */
+export async function preloadMyReactions(ownerUid: string | null): Promise<void> {
+  if (typeof localStorage === "undefined" || !ownerUid || !isMemberUuid(ownerUid)) return;
+  try {
+    const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id;
+    if (!uid) return;
+    const { data: rows } = await (supabase as any).from("swivv_photo_reactions").select("photo,reaction").eq("owner_id", ownerUid.replace(/^u:/, "")).eq("reactor_id", uid).limit(50);
+    for (const r of (rows ?? []) as { photo?: unknown; reaction?: unknown }[]) {
+      if (typeof r?.photo === "string" && isReactionId(r?.reaction)) setCached(r.photo, r.reaction);
+    }
+  } catch {}
+}
+
 /**
  * Like-toggle twin: optimistic local cache (seed photos stay local-only, like likes),
  * idempotent server upsert for real-member photos, event row for history.
  * ponytail: server is best-effort (warn-only) so gallery taps never hang on RLS/network; the UNIQUE key + rate trigger are the real dedup — a confirm-then-retry flow if silent drops ever matter
  */
-export async function togglePhotoReaction(ownerUid: string | null, photo: string, kind: ReactionId): Promise<ToggleResult> {
+export async function togglePhotoReaction(ownerUid: string | null, photo: string, kind: ReactionId, likeId: string | null = ownerUid): Promise<ToggleResult> {
   if (!photo || !isReactionId(kind)) return { ok: false, reaction: getPhotoReaction(photo), error: "invalid" };
   const prev = getPhotoReaction(photo);
   const { next, event } = resolveToggle(prev, kind);
   if (!event) return { ok: false, reaction: prev, error: "invalid" };
   setCached(photo, next);
-  if (!ownerUid || !isMemberUuid(ownerUid)) return { ok: true, reaction: next };
+  if (!ownerUid || !isMemberUuid(ownerUid)) {
+    // ponytail: a reaction IS a like (add-only — removing an emoticon never unlikes); the like machinery (Likes reçus, matches, unlocks) follows from here on every surface
+    if (next && likeId) void ensureLike(likeId);
+    return { ok: true, reaction: next };
+  }
   try {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user.id;
@@ -99,6 +158,8 @@ export async function togglePhotoReaction(ownerUid: string | null, photo: string
       setCached(photo, prev); // ponytail: own-photo taps roll back (server CHECK would reject anyway) — a disabled toolbar state if self-taps ever need hiding
       return { ok: false, reaction: prev, error: "own" };
     }
+    // ponytail: same add-only like as seeds — past the self-tap guard, so reacting to your own photo never self-likes
+    if (next && likeId) void ensureLike(likeId);
     const db = supabase as any;
     const owner = ownerUid.replace(/^u:/, "");
     // ponytail: event first (rate trigger gates before state changes); a failed second write leaves a phantom event — atomic RPC if phantoms ever skew stats
@@ -106,7 +167,11 @@ export async function togglePhotoReaction(ownerUid: string | null, photo: string
       const { error: evErr } = await db.from("swivv_photo_reaction_events").insert({
         photo, owner_id: owner, reactor_id: uid, event, reaction: next,
       });
-      if (evErr) throw evErr;
+      // ponytail: audit row is best-effort — an RLS-denied/failed event must not lose the reaction itself (live policy drift did exactly that); the rate trigger still throws so abuse stays capped
+      if (evErr) {
+        if (/rate_limited/i.test(evErr.message ?? "")) throw evErr;
+        console.warn("[swivv] reaction event skipped", evErr.message);
+      }
       if (next) {
         const { error } = await db.from("swivv_photo_reactions").upsert(
           { photo, owner_id: owner, reactor_id: uid, reaction: next },
@@ -115,8 +180,13 @@ export async function togglePhotoReaction(ownerUid: string | null, photo: string
         );
         if (error) throw error;
       } else {
-        const { error } = await db.from("swivv_photo_reactions").delete().eq("photo", photo).eq("reactor_id", uid);
-        if (error) throw error;
+        // ponytail: photo is a 50-750KB data URL and never fits in a query string — resolve the row id first, delete by PK; fallback clears my rows for this owner (exact row unresolvable) rather than leaving a phantom count; un-react is rare so the extra round trip never matters
+        const { data: mine } = await db.from("swivv_photo_reactions").select("id,photo").eq("owner_id", owner).eq("reactor_id", uid).limit(50);
+        const row = ((mine ?? []) as { id: number; photo: string }[]).find((r) => r.photo === photo);
+        const del = row
+          ? await db.from("swivv_photo_reactions").delete().eq("id", row.id)
+          : await db.from("swivv_photo_reactions").delete().eq("owner_id", owner).eq("reactor_id", uid);
+        if (del.error) throw del.error;
       }
     };
     try {

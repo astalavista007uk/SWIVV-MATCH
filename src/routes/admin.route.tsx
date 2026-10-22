@@ -1,7 +1,9 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import {
   BarChart3,
   BadgeCheck,
+  Activity,
   Flag,
   Images,
   LayoutDashboard,
@@ -10,11 +12,17 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  ShieldAlert,
+  Siren,
+  TrendingUp,
+  HeartPulse,
+  Sparkles,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import { AuthModal, openAuthModal } from "@/lib/swivv-auth";
 import { useAdminRole, type StaffRole } from "@/lib/admin";
+import { supabase } from "@/integrations/supabase/client";
 import { SwivvLogo } from "@/components/swivv-logo";
 
 export const Route = createFileRoute("/admin")({
@@ -32,6 +40,12 @@ const NAV: { to: string; label: string; min: number; end?: boolean; icon: Lucide
   { to: "/admin/support", label: "Support", min: 30, icon: LifeBuoy },
   { to: "/admin/analytics", label: "Analytics", min: 10, icon: BarChart3 },
   { to: "/admin/announcements", label: "Annonces", min: 80, icon: Megaphone },
+  { to: "/admin/alerts", label: "Alertes", min: 30, icon: Siren },
+  { to: "/admin/ai", label: "Centre IA", min: 50, icon: Sparkles },
+  { to: "/admin/live", label: "Activité", min: 50, icon: Activity },
+  { to: "/admin/fraud", label: "Fraude", min: 50, icon: ShieldAlert },
+  { to: "/admin/engage", label: "Engagement", min: 10, icon: TrendingUp },
+  { to: "/admin/health", label: "Santé", min: 50, icon: HeartPulse },
   { to: "/admin/audit", label: "Audit", min: 30, icon: ScrollText },
   { to: "/admin/settings", label: "Réglages", min: 100, icon: Settings },
 ];
@@ -47,6 +61,35 @@ const ROLE_LABEL: Record<StaffRole, string> = {
 function AdminShell() {
   const { role, loading, level } = useAdminRole();
   const nav = useNavigate();
+
+  // ponytail: admin-only client error log (1/10s max, message truncated, no tokens/bodies) —
+  // public pages stay uninstrumented until swivv_client_errors proves useful here
+  useEffect(() => {
+    let last = 0;
+    const send = (message: string, source?: string) => {
+      const now = Date.now();
+      if (now - last < 10000) return;
+      last = now;
+      try {
+        supabase.auth.getUser().then(({ data }) => {
+          void (supabase as any).from("swivv_client_errors").insert({
+            message: String(message).slice(0, 500),
+            source: source?.slice(0, 120) ?? null,
+            url: location.pathname.slice(0, 200),
+            user_id: data.user?.id ?? null,
+          }).then(() => {});
+        }).catch(() => {});
+      } catch {}
+    };
+    const onErr = (e: ErrorEvent) => send(e.message || "Erreur", e.filename);
+    const onRej = (e: PromiseRejectionEvent) => send(e.reason?.message ?? String(e.reason) ?? "Rejet", "promise");
+    window.addEventListener("error", onErr);
+    window.addEventListener("unhandledrejection", onRej);
+    return () => {
+      window.removeEventListener("error", onErr);
+      window.removeEventListener("unhandledrejection", onRej);
+    };
+  }, []);
 
   if (loading) return null;
   if (!role) {
