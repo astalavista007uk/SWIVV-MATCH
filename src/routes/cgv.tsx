@@ -4,6 +4,7 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { useT } from "@/lib/i18n";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/cgv")({
@@ -163,6 +164,7 @@ const SECTIONS: { t: string; body: string[] }[] = [
 
 // ponytail: single bullet-run per section grouped into one <ul>; split into multiple lists if a section ever needs two runs
 function SectionBody({ ps }: { ps: string[] }) {
+  const t = useT();
   const out: ReactNode[] = [];
   let run: string[] = [];
   const flush = () => {
@@ -170,7 +172,7 @@ function SectionBody({ ps }: { ps: string[] }) {
     out.push(
       <ul key={out.length} className="mt-1 list-disc space-y-1 pl-5 text-sm leading-relaxed text-[#555]">
         {run.map((b, j) => (
-          <li key={j}>{b}</li>
+          <li key={j}>{t(b)}</li>
         ))}
       </ul>,
     );
@@ -182,7 +184,7 @@ function SectionBody({ ps }: { ps: string[] }) {
       flush();
       out.push(
         <p key={out.length} className="mt-1 text-sm leading-relaxed text-[#555]">
-          {p}
+          {t(p)}
         </p>,
       );
     }
@@ -192,36 +194,37 @@ function SectionBody({ ps }: { ps: string[] }) {
 }
 
 function CgvPage() {
+  const t = useT();
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
 
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-3xl font-medium text-[#333]">Conditions Générales de Vente et de Services — SWIVV</h1>
-        <p className="mt-2 text-[#777]">Dernière mise à jour : 22 septembre 2026.</p>
+        <h1 className="text-3xl font-medium text-[#333]">{t("Conditions Générales de Vente et de Services — SWIVV")}</h1>
+        <p className="mt-2 text-[#777]">{t("Dernière mise à jour : 22 septembre 2026.")}</p>
         <p className="mt-4 text-[15px] leading-relaxed text-[#555]">
-          Bienvenue sur SWIVV, une plateforme de rencontre et de mise en relation permettant aux personnes majeures de découvrir d'autres utilisateurs, d'échanger et de faire de nouvelles rencontres.
+          {t("Bienvenue sur SWIVV, une plateforme de rencontre et de mise en relation permettant aux personnes majeures de découvrir d'autres utilisateurs, d'échanger et de faire de nouvelles rencontres.")}
         </p>
         <p className="mt-2 text-[15px] leading-relaxed text-[#555]">
-          Les présentes Conditions Générales de Vente et de Services (« CGV ») définissent les conditions applicables aux services proposés par SWIVV.
+          {t("Les présentes Conditions Générales de Vente et de Services (« CGV ») définissent les conditions applicables aux services proposés par SWIVV.")}
         </p>
         <div className="mt-6 space-y-3">
           {SECTIONS.map((s) => (
             <section key={s.t} className="rounded-xl bg-white p-5">
-              <h2 className="font-medium text-[#333]">{s.t}</h2>
+              <h2 className="font-medium text-[#333]">{t(s.t)}</h2>
               <SectionBody ps={s.body} />
             </section>
           ))}
         </div>
         <p className="mt-6 text-sm text-[#777]">
-          Document lié : <Link to="/terms-and-conditions" className="text-[#e91e63] underline">conditions d'utilisation</Link> ·{" "}
-          <Link to="/legal/privacy" className="text-[#e91e63] underline">politique de confidentialité</Link>
+          {t("Document lié :")}{" "}<Link to="/terms-and-conditions" className="text-[#e60050] underline">{t("conditions d'utilisation")}</Link> ·{" "}
+          <Link to="/legal/privacy" className="text-[#e60050] underline">{t("politique de confidentialité")}</Link>
         </p>
       </main>
       <SwivvFooter />

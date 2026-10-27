@@ -203,7 +203,7 @@ function AdminFraud() {
 
   const isUuid = (v: string | null | undefined) => !!v && /^[0-9a-f-]{36}$/i.test(v);
   const memberLink = (ref: string | null | undefined) =>
-    isUuid(ref) ? <Link to="/admin/users/$userId" params={{ userId: ref as string }} className="text-[#e91e63] underline">{nm(ref)}</Link> : <span>{ref}</span>;
+    isUuid(ref) ? <Link to="/admin/users/$userId" params={{ userId: ref as string }} className="text-[#e60050] underline">{nm(ref)}</Link> : <span>{ref}</span>;
   const sigRow = (s: { ref: string; label: string; detail?: string; rule?: string }, kind: string) => (
     <div key={s.ref + s.label} className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 text-sm shadow-sm">
       <div className="min-w-0 flex-1">

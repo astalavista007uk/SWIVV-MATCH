@@ -11,13 +11,15 @@ import {
 import { realDistance, useMyCity } from "@/lib/location-distance";
 import { getAppLang } from "@/lib/swivv-store";
 import { eachImageUrl } from "@/routes/inscription";
+import { useDateLocale, useT } from "@/lib/i18n";
 
 function FactGrid({ items }: { items: [string, ReactNode][] }) {
+  const t = useT();
   return (
     <dl className="mt-2 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-4">
       {items.map(([k, v]) => (
         <div key={k} className="rounded-lg bg-white p-3">
-          <dt className="text-xs uppercase text-[#999]">{k}</dt>
+          <dt className="text-xs uppercase text-[#999]">{t(k)}</dt>
           <dd className="font-medium text-[#333]">{v ?? "—"}</dd>
         </div>
       ))}
@@ -44,6 +46,7 @@ function langCode(name: string | undefined): string | null {
 
 // ponytail: on-demand MyMemory translation (free, no key, writer's declared tongue as source, reader's app language as target) shown only when the two differ — list values are split per item because a joined "a, b, c" makes MT leave words untranslated; server-side translate + cached translations if anonymous quotas ever bite
 function BestFeatureValue({ text = "", firstLanguage }: { text?: string; firstLanguage?: string }) {
+  const t = useT();
   // ponytail: reader's chosen language, not the browser's (a French browser with English set still reads English)
   const [visitor] = useState(getAppLang);
   const [translated, setTranslated] = useState<string | null>(null);
@@ -56,8 +59,8 @@ function BestFeatureValue({ text = "", firstLanguage }: { text?: string; firstLa
     try {
       const r = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(seg)}&langpair=${encodeURIComponent(source)}|${encodeURIComponent(visitor)}`);
       const j = (await r.json()) as { responseData?: { translatedText?: string } };
-      const t = j?.responseData?.translatedText?.trim();
-      return t && t.toLowerCase() !== seg.toLowerCase() ? t : seg;
+      const txt = j?.responseData?.translatedText?.trim();
+      return txt && txt.toLowerCase() !== seg.toLowerCase() ? txt : seg;
     } catch {
       return seg;
     }
@@ -73,7 +76,7 @@ function BestFeatureValue({ text = "", firstLanguage }: { text?: string; firstLa
       const out = await Promise.all(parts.map(one));
       const joined = out.join(", ");
       if (joined && joined !== text) setTranslated(joined);
-      else toast.error("Traduction indisponible. Réessaie.");
+      else toast.error(t("Traduction indisponible. Réessaie."));
     } finally {
       setBusy(false);
     }
@@ -81,8 +84,8 @@ function BestFeatureValue({ text = "", firstLanguage }: { text?: string; firstLa
   return (
     <span>
       {translated ?? text}{" "}
-      <button type="button" onClick={toggle} disabled={busy} className="text-xs font-normal text-[#e91e63] hover:underline disabled:opacity-50">
-        {translated ? "Voir l'original" : "Traduire"}
+      <button type="button" onClick={toggle} disabled={busy} className="text-xs font-normal text-[#e60050] hover:underline disabled:opacity-50">
+        {translated ? t("Voir l'original") : t("Traduire")}
       </button>
     </span>
   );
@@ -105,6 +108,7 @@ type Props = {
 // ponytail: edit UI lives in the gallery, save stays with the caller —
 // a crop/reorder step if photo polish is ever asked for
 function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: SwivvProfile; onSavePhotos: (photos: string[]) => Promise<string | null>; reactToolbar?: (photo: string) => ReactNode }) {
+  const t = useT();
   const [photos, setPhotos] = useState<string[]>(() => (profile.photos ?? []).slice(0, 5));
   const [idx, setIdx] = useState(0);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
@@ -123,8 +127,8 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
     const { skipped, tooBig } = eachImageUrl(files, Math.max(0, 5 - photos.length), (url) => {
       setPhotos((p) => (p.includes(url) || p.length >= 5 ? p : [...p, url]));
     });
-    if (skipped) setErr("5 photos maximum. Les photos en trop ont été ignorées.");
-    else if (tooBig) setErr("Photo trop lourde (2,5 Mo max). Choisis-en une plus légère.");
+    if (skipped) setErr(t("5 photos maximum. Les photos en trop ont été ignorées."));
+    else if (tooBig) setErr(t("Photo trop lourde (2,5 Mo max). Choisis-en une plus légère."));
   }
 
   function remove(src: string) {
@@ -148,7 +152,7 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
 
   async function save() {
     if (photos.length === 0) {
-      setErr("Garde au moins 1 photo.");
+      setErr(t("Garde au moins 1 photo."));
       return;
     }
     setBusy(true);
@@ -164,13 +168,13 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
     <div className="overflow-hidden rounded-xl bg-white">
       <div className="relative">
         {photos[idx] ? (
-          <img src={photos[idx]} alt={`Photo de ${profile.name}`} className="aspect-[4/5] w-full object-cover" />
+          <img src={photos[idx]} alt={t("Photo de {name}", { name: profile.name })} className="aspect-[4/5] w-full object-cover" />
         ) : (
-          <p className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-[#ccc] px-6 text-center text-sm text-[#999]">Aucune photo - Clique sur le bouton + en bas pour ajouter tes photos.</p>
+          <p className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-[#ccc] px-6 text-center text-sm text-[#999]">{t("Aucune photo - Clique sur le bouton + en bas pour ajouter tes photos.")}</p>
         )}
         {idx === 0 && photos.length > 0 && (
-          <span className="absolute right-2 top-2 rounded-full bg-[#e91e63] px-2 py-0.5 text-[11px] font-medium text-white">
-            Principale
+          <span className="absolute right-2 top-2 rounded-full bg-[#e60050] px-2 py-0.5 text-[11px] font-medium text-white">
+            {t("Principale")}
           </span>
         )}
         {/* ponytail: strip + principale-button stack bottom-center (never overlap) — the strip itself is flow-positioned, only this wrapper is absolute */}
@@ -182,7 +186,7 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
               onClick={() => move(idx, 0)}
               className="whitespace-nowrap rounded-full bg-black/60 px-3 py-1.5 text-xs font-medium text-white hover:bg-black/80"
             >
-              Faire de cette photo la principale
+              {t("Faire de cette photo la principale")}
             </button>
           )}
         </div>
@@ -206,19 +210,19 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
               setTouchOver(el ? Number((el as HTMLElement).dataset.thumb) : null);
             }}
             onTouchEnd={() => { if (touchFrom !== null && touchOver !== null) move(touchFrom, touchOver); setTouchFrom(null); setTouchOver(null); setGhost(null); }}
-            className={`relative cursor-grab touch-none active:cursor-grabbing ${dragFrom === i ? "opacity-40" : ""} ${touchFrom === i ? "opacity-70" : ""} ${touchOver === i && touchFrom !== i ? "ring-2 ring-[#e91e63] rounded-md" : ""}`}
+            className={`relative cursor-grab touch-none active:cursor-grabbing ${dragFrom === i ? "opacity-40" : ""} ${touchFrom === i ? "opacity-70" : ""} ${touchOver === i && touchFrom !== i ? "ring-2 ring-[#e60050] rounded-md" : ""}`}
           >
-            <button type="button" onClick={() => setIdx(i)} aria-label={`Voir photo ${i + 1}`}>
+            <button type="button" onClick={() => setIdx(i)} aria-label={t("Voir photo {n}", { n: i + 1 })}>
               <img
                 src={src}
                 alt=""
-                className={`h-16 w-14 rounded-md object-cover ${i === idx ? "ring-2 ring-[#e91e63]" : "opacity-70"}`}
+                className={`h-16 w-14 rounded-md object-cover ${i === idx ? "ring-2 ring-[#e60050]" : "opacity-70"}`}
               />
             </button>
             <button
               type="button"
               onClick={() => remove(src)}
-              aria-label={`Supprimer la photo ${i + 1}`}
+              aria-label={t("Supprimer la photo {n}", { n: i + 1 })}
               className="absolute -right-1.5 -top-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-xs leading-none text-white hover:bg-black/80"
             >
               ×
@@ -226,7 +230,7 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
           </div>
         ))}
         {photos.length < 5 && (
-          <label className="flex h-16 w-14 cursor-pointer items-center justify-center rounded-md border border-dashed border-[#e91e63] text-2xl leading-none text-[#e91e63]" aria-label="Ajouter des photos">
+          <label className="flex h-16 w-14 cursor-pointer items-center justify-center rounded-md border border-dashed border-[#e60050] text-2xl leading-none text-[#e60050]" aria-label={t("Ajouter des photos")}>
             +
             <input
               type="file"
@@ -253,9 +257,9 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
             type="button"
             onClick={save}
             disabled={busy}
-            className="w-full rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="w-full rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
-            {busy ? "Enregistrement…" : "Enregistrer les photos"}
+            {busy ? t("Enregistrement…") : t("Enregistrer les photos")}
           </button>
         </div>
       )}
@@ -266,6 +270,8 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
 /** Full SWIVV profile layout: gallery + all criteria sections. Shared by
  *  member pages and "Mon profil" so signup questions always match display. */
 export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos, reactToolbar }: Props) {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const [photoIdx, setPhotoIdx] = useState(0);
   const viewer = useMyCity();
   const dist = realDistance(viewer.city, viewer.country, profile);
@@ -281,7 +287,7 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
             <div className="group relative">
               <img
                 src={profile.photos[photoIdx]}
-                alt={`Photo de ${profile.name}`}
+                alt={t("Photo de {name}", { name: profile.name })}
                 className="aspect-[4/5] w-full object-cover"
               />
               {profile.photos[photoIdx] ? reactToolbar?.(profile.photos[photoIdx]) : null}
@@ -297,7 +303,7 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
                   <img
                     src={src}
                     alt=""
-                    className={`h-16 w-14 rounded-md object-cover ${i === photoIdx ? "ring-2 ring-[#e91e63]" : "opacity-70"}`}
+                    className={`h-16 w-14 rounded-md object-cover ${i === photoIdx ? "ring-2 ring-[#e60050]" : "opacity-70"}`}
                   />
                 </button>
               ))}
@@ -311,8 +317,8 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
           <h1 className="flex items-center gap-2 text-2xl font-medium text-[#333]">
             {profile.name}, {profile.age}
             {profile.verified && (
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-[#e91e63]">
-                <BadgeCheck className="h-6 w-6" aria-hidden="true" /> Photos vérifiées
+              <span className="inline-flex items-center gap-1 text-sm font-medium text-[#e60050]">
+                <BadgeCheck className="h-6 w-6" aria-hidden="true" /> {t("Photos vérifiées")}
               </span>
             )}
           </h1>
@@ -321,15 +327,16 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
             {profile.lastActive}
           </p>
           <p className="mt-1 text-sm text-[#999]">
-            Membre depuis le{" "}
-            {new Date(profile.joinedAt).toLocaleDateString("fr-FR", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
+            {t("Membre depuis le {date}", {
+              date: new Date(profile.joinedAt).toLocaleDateString(dateLocale, {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              }),
             })}
             {profile.isNew && (
-              <span className="ml-2 rounded-full bg-[#e91e63]/10 px-2 py-0.5 text-xs font-medium text-[#e91e63]">
-                Nouveau
+              <span className="ml-2 rounded-full bg-[#e60050]/10 px-2 py-0.5 text-xs font-medium text-[#e60050]">
+                {t("Nouveau")}
               </span>
             )}
           </p>
@@ -351,13 +358,13 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
               ] as [string, ReactNode][]
             ).map(([k, v]) => (
               <div key={k} className="rounded-lg bg-white px-3 py-2">
-                <dt className="text-xs uppercase text-[#999]">{k}</dt>
+                <dt className="text-xs uppercase text-[#999]">{t(k)}</dt>
                 <dd className="font-medium text-[#333]">{v}</dd>
               </div>
             ))}
           </dl>
 
-          <h2 className="mt-4 font-medium text-[#333]">Centres d&apos;intérêt</h2>
+          <h2 className="mt-4 font-medium text-[#333]">{t("Centres d'intérêt")}</h2>
           <div className="mt-2 flex flex-wrap gap-2">
             {(profile.interests ?? []).map((i) => (
               <span key={i} className="rounded-full bg-[#f2f2f2] px-3 py-1 text-sm text-[#555]">
@@ -368,8 +375,8 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
         </div>
       </div>
 
-      <section aria-label="Apparence" className="mt-8">
-        <h2 className="font-medium text-[#333]">Apparence</h2>
+      <section aria-label={t("Apparence")} className="mt-8">
+        <h2 className="font-medium text-[#333]">{t("Apparence")}</h2>
         <FactGrid
           items={[
             ["Cheveux", profile.hairColor],
@@ -384,8 +391,8 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
         />
       </section>
 
-      <section aria-label="Style de vie" className="mt-8">
-        <h2 className="font-medium text-[#333]">Style de vie</h2>
+      <section aria-label={t("Style de vie")} className="mt-8">
+        <h2 className="font-medium text-[#333]">{t("Style de vie")}</h2>
         <FactGrid
           items={[
             ["Alcool", profile.drink],
@@ -403,8 +410,8 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
         />
       </section>
 
-      <section aria-label="Famille" className="mt-8">
-        <h2 className="font-medium text-[#333]">Famille</h2>
+      <section aria-label={t("Famille")} className="mt-8">
+        <h2 className="font-medium text-[#333]">{t("Famille")}</h2>
         <FactGrid
           items={[
             ["Statut matrimonial", profile.maritalStatus],
@@ -417,8 +424,8 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
         />
       </section>
 
-      <section aria-label="Origines et valeurs" className="mt-8">
-        <h2 className="font-medium text-[#333]">Origines & valeurs</h2>
+      <section aria-label={t("Origines et valeurs")} className="mt-8">
+        <h2 className="font-medium text-[#333]">{t("Origines & valeurs")}</h2>
         <FactGrid
           items={[
             ["Nationalité", profile.nationality],

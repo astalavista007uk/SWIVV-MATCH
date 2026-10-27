@@ -174,7 +174,7 @@ function AdminVerification() {
                 <div className="mt-3 border-t border-border pt-3 text-sm">
                   <p className="font-mono text-[11px] text-[#bbb]">ID {r.id}</p>
                   <div className="mt-1 flex flex-wrap gap-2">
-                    {r.user_id && <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="text-[#e91e63] underline">Fiche membre 360</Link>}
+                    {r.user_id && <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="text-[#e60050] underline">Fiche membre 360</Link>}
                   </div>
                   {(history[r.user_id] ?? []).length > 0 && (
                     <div className="mt-2 rounded-lg bg-[#f7f7f7] p-2">

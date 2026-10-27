@@ -14,6 +14,7 @@ import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { PhotoCountBadge } from "@/components/photo-count-badge";
+import { useDateLocale, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/browse")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -48,6 +49,8 @@ function splitSearch(raw: string): { category: string; text: string } {
 }
 
 function SwivvBrowse() {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const search = Route.useSearch();
   const { user, loading: authLoading } = useAuth();
   const [query, setQuery] = useState(() => splitSearch(search.q ?? "").text);
@@ -129,14 +132,14 @@ function SwivvBrowse() {
     realDistance(myGeo.city, myGeo.country, p);
   // ponytail: joinedAt proxies photo-added date — per-photo timestamps if uploads ever track them
   const fmtDate = (iso: string) =>
-    new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+    new Date(iso).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" });
 
   // Sync when arriving via a menu link: the page does not remount when only
   // the search params change, so update category + text on every navigation.
   useEffect(() => {
-    const { category: c, text: t } = splitSearch(search.q ?? "");
+    const { category: c, text: txt } = splitSearch(search.q ?? "");
     setCategory(c);
-    setQuery(t);
+    setQuery(txt);
   }, [search.q]);
 
   // Default gender filter to who the viewer seeks (saved preference, else opposite).
@@ -242,8 +245,8 @@ function SwivvBrowse() {
     try {
       const r = await togglePhotoReaction(isMemberUuid(owner) ? owner : null, photo, kind, owner);
       if (!r.ok) {
-        if (r.error === "own") toast.error("Tu ne peux pas réagir à tes propres photos.");
-        else toast.error("Réaction non enregistrée. Réessaie.");
+        if (r.error === "own") toast.error(t("Tu ne peux pas réagir à tes propres photos."));
+        else toast.error(t("Réaction non enregistrée. Réessaie."));
       } else {
         setOpenReact(null);
       }
@@ -255,9 +258,9 @@ function SwivvBrowse() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -266,40 +269,40 @@ function SwivvBrowse() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white p-3">
-          <div className="flex overflow-hidden rounded-md border border-border text-sm" role="group" aria-label="Filtrer par genre">
+          <div className="flex overflow-hidden rounded-md border border-border text-sm" role="group" aria-label={t("Filtrer par genre")}>
             {(["all", "woman", "man"] as const).map((g) => (
               <button
                 key={g}
                 type="button"
                 onClick={() => setGender(g)}
                 aria-pressed={gender === g}
-                className={`px-3 py-1.5 ${gender === g ? "bg-[#e91e63] text-white" : "text-[#555]"}`}
+                className={`px-3 py-1.5 ${gender === g ? "bg-[#e60050] text-white" : "text-[#555]"}`}
               >
-                {g === "all" ? "Tous" : g === "woman" ? "Femmes" : "Hommes"}
+                {g === "all" ? t("Tous") : g === "woman" ? t("Femmes") : t("Hommes")}
               </button>
             ))}
           </div>
           <label className="flex items-center gap-1.5 text-sm text-[#555]">
             <input type="checkbox" checked={onlineOnly} onChange={(e) => setOnlineOnly(e.target.checked)} />
-            En ligne
+            {t("En ligne")}
           </label>
           <label className="flex items-center gap-1.5 text-sm text-[#555]">
-            Intention
+            {t("Intention")}
             <select
               value={lookingFor}
               onChange={(e) => setLookingFor(e.target.value)}
               className="rounded-md border border-border px-2 py-1.5"
-              aria-label="Intention"
+              aria-label={t("Intention")}
             >
               {intents.map((i) => (
                 <option key={i} value={i}>
-                  {i === "all" ? "Toutes" : i}
+                  {i === "all" ? t("Toutes") : t(i)}
                 </option>
               ))}
             </select>
           </label>
           <label className="flex items-center gap-1.5 text-sm text-[#555]">
-            Âge
+            {t("Âge")}
             <input
               type="number"
               min={18}
@@ -307,7 +310,7 @@ function SwivvBrowse() {
               value={minAge}
               onChange={(e) => setMinAge(Number(e.target.value) || 18)}
               className="w-14 rounded-md border border-border px-1 py-1"
-              aria-label="Âge minimum"
+              aria-label={t("Âge minimum")}
             />
             –
             <input
@@ -317,19 +320,19 @@ function SwivvBrowse() {
               value={maxAge}
               onChange={(e) => setMaxAge(Number(e.target.value) || 99)}
               className="w-14 rounded-md border border-border px-1 py-1"
-              aria-label="Âge maximum"
+              aria-label={t("Âge maximum")}
             />
           </label>
           {cat === "près de moi" && (
             <label className="flex items-center gap-1.5 text-sm text-[#555]">
-              Distance max
+              {t("Distance max")}
               <select
                 value={maxDist}
                 onChange={(e) => setMaxDist(e.target.value)}
                 className="rounded-md border border-border px-2 py-1.5"
-                aria-label="Distance maximale"
+                aria-label={t("Distance maximale")}
               >
-                <option value="">Illimitée</option>
+                <option value="">{t("Illimitée")}</option>
                 {["5", "10", "25", "50", "100", "250", "500", "750", "1000"].map((d) => (
                   <option key={d} value={d}>
                     {d} km
@@ -339,50 +342,53 @@ function SwivvBrowse() {
             </label>
           )}
           <label className="ml-auto flex items-center gap-1.5 text-sm text-[#555]">
-            Trier            <select
+            {t("Trier")}{" "}
+            <select
               value={effectiveSort}
               onChange={(e) => setSort(e.target.value as typeof sort)}
               className="rounded-md border border-border px-2 py-1.5"
-              aria-label="Trier les profils"
+              aria-label={t("Trier les profils")}
             >
-              <option value="match">Compatibilité</option>
-              <option value="popular">Popularité</option>
-              <option value="distance">Distance</option>
-              <option value="ageAsc">Âge - Croissant</option>
-              <option value="ageDesc">Âge - Décroissant</option>
-              <option value="recent">Ajouts Récents</option>
+              <option value="match">{t("Compatibilité")}</option>
+              <option value="popular">{t("Popularité")}</option>
+              <option value="distance">{t("Distance")}</option>
+              <option value="ageAsc">{t("Âge - Croissant")}</option>
+              <option value="ageDesc">{t("Âge - Décroissant")}</option>
+              <option value="recent">{t("Ajouts Récents")}</option>
             </select>
           </label>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-medium text-[#333]">
-            {cat === "photos récentes"
-              ? `Photos récentes (${results.reduce((n, p) => n + p.photos.length, 0)} photos · ${results.length} profil${results.length > 1 ? "s" : ""})`
-              : search.type === "likes"
-                ? `${results.length} profil${results.length > 1 ? "s" : ""} que j'ai liké`
-                : search.type === "recus"
-                  ? `${results.length} profil${results.length > 1 ? "s" : ""} qui m'ont liké`
-                  : `${results.length} profil${results.length > 1 ? "s" : ""}`}
-            {category && cat !== "photos récentes" ? ` · ${category}` : ""}
-            {CAT_HINT[cat] && <span className="text-sm font-normal text-[#777]"> — {CAT_HINT[cat]}</span>}
+            {(() => {
+              const n = results.length;
+              const profiles = n === 1 ? t("1 profil") : t("{n} profils", { n });
+              if (cat === "photos récentes")
+                return `${t("Photos récentes")} (${results.reduce((sum, p) => sum + p.photos.length, 0)} ${t("photos")} · ${profiles})`;
+              if (search.type === "likes") return `${profiles} ${t("que j'ai liké")}`;
+              if (search.type === "recus") return `${profiles} ${t("qui m'ont liké")}`;
+              return profiles;
+            })()}
+            {category && cat !== "photos récentes" ? ` · ${t(category)}` : ""}
+            {CAT_HINT[cat] && <span className="text-sm font-normal text-[#777]"> — {t(CAT_HINT[cat])}</span>}
           </h1>
           {category && (
             <button
               type="button"
               onClick={() => setCategory("")}
-              className="rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/20"
-              aria-label={`Retirer le filtre ${category}`}
+              className="rounded-full bg-[#e60050]/10 px-3 py-1 text-sm font-medium text-[#e60050] hover:bg-[#e60050]/20"
+              aria-label={t("Retirer le filtre {category}", { category: t(category) })}
             >
-              {category} ✕
+              {t(category)} ✕
             </button>
           )}
         </div>
         {gridReady && !poolLoaded && (
-          <p className="mt-4 text-sm text-[#777]">Chargement des derniers profils…</p>
+          <p className="mt-4 text-sm text-[#777]">{t("Chargement des derniers profils…")}</p>
         )}
         {!gridReady ? (
-          <p className="mt-6 text-sm text-[#777]">Chargement…</p>
+          <p className="mt-6 text-sm text-[#777]">{t("Chargement…")}</p>
         ) : cat === "photos récentes" ? (
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {results.flatMap((p) => p.photos.map((src, i) => ({ p, src, i }))).map(({ p, src, i }) => (
@@ -405,7 +411,7 @@ function SwivvBrowse() {
                   <p className="text-[15px] font-medium text-[#333]">
                     {p.name}, {p.age}
                   </p>
-                  <p className="text-xs text-[#999]">Photo ajoutée le {fmtDate(p.joinedAt)}</p>
+                  <p className="text-xs text-[#999]">{t("Photo ajoutée le {date}", { date: fmtDate(p.joinedAt) })}</p>
                 </div>
               </article>
             ))}
@@ -418,7 +424,7 @@ function SwivvBrowse() {
               <article key={p.id} className="overflow-hidden rounded-lg bg-white">
                 <div className="relative">
                 <Link to="/member/$id" params={{ id: p.id }}>
-                  <img src={p.photo} alt={`Photo de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
+                  <img src={p.photo} alt={t("Photo de {name}", { name: p.name })} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                 </Link>
                 <PhotoCountBadge n={p.photos.length} className={search.type === "recus" && getMatches().includes(p.id) ? "left-[49px]" : ""} />
                   <span className="group/hint absolute right-2 top-2">
@@ -430,7 +436,7 @@ function SwivvBrowse() {
                           force((x) => x + 1);
                         })
                       }
-                      aria-label={liked ? `Déliker ${p.name}` : `Liker ${p.name}`}
+                      aria-label={liked ? t("Déliker {name}", { name: p.name }) : t("Liker {name}", { name: p.name })}
                       aria-pressed={liked}
                       className="rounded-full bg-white/90 p-2 shadow-sm"
                     >
@@ -438,19 +444,19 @@ function SwivvBrowse() {
                     </button>
                     {/* ponytail: same black/white bubble as the reaction hint below — native title dropped to avoid double popups */}
                     <span className="pointer-events-none absolute right-0 top-full z-10 mt-1 hidden whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover/hint:block" aria-hidden="true">
-                      {liked ? `Déliker ${p.name}` : `Liker ${p.name}`}
+                      {liked ? t("Déliker {name}", { name: p.name }) : t("Liker {name}", { name: p.name })}
                     </span>
                   </span>
                   {p.online && (
                     <span className="absolute left-2 top-2 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-medium text-white">
-                      En ligne
+                      {t("En ligne")}
                     </span>
                   )}
                   {(search.type === "matches" || search.type === "recus") && getMatches().includes(p.id) && (
                     <span className="group/hint absolute bottom-2 left-2 flex gap-1 rounded-full bg-white/90 p-1.5 shadow-sm">
-                      <Heart aria-label="Like réciproque" className="h-4 w-4 fill-red-500 text-red-500" />
+                      <Heart aria-label={t("Like réciproque")} className="h-4 w-4 fill-red-500 text-red-500" />
                       <span className="pointer-events-none absolute bottom-full left-0 z-10 mb-1 hidden whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover/hint:block" aria-hidden="true">
-                        {p.name} t&apos;as Liké
+                        {t("{name} t'as Liké", { name: p.name })}
                       </span>
                     </span>
                   )}
@@ -462,9 +468,9 @@ function SwivvBrowse() {
                           {e}
                         </span>
                       ))}
-                        <span className="sr-only">{p.name} a réagi sur tes photos</span>
+                        <span className="sr-only">{t("{name} a réagi sur tes photos", { name: p.name })}</span>
                       <span className="pointer-events-none absolute bottom-full right-0 z-10 mb-1 hidden whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-[11px] font-normal text-white shadow-lg group-hover/hint:block">
-                        {p.name} a réagi sur tes photos
+                        {t("{name} a réagi sur tes photos", { name: p.name })}
                       </span>
                     </span>
                   )}
@@ -472,17 +478,17 @@ function SwivvBrowse() {
                 <Link to="/member/$id" params={{ id: p.id }} className="block p-3">
                   <p className="flex items-center gap-1 font-medium text-[#333]">
                     {p.name}, {p.age}
-                    {p.verified && <BadgeCheck className="h-4 w-4 text-[#e91e63]" />}
+                    {p.verified && <BadgeCheck className="h-4 w-4 text-[#e60050]" />}
                   </p>
                   <p className="text-sm text-[#999]">
                     {p.city} · {dist(p)} km · {p.lastActive}
                   </p>
                   <p className="text-xs text-[#999]">
-                    Membre depuis le {fmtDate(p.joinedAt)}
+                    {t("Membre depuis le {date}", { date: fmtDate(p.joinedAt) })}
                   </p>
                   {authLoading || user ? (
-                    <p className="mt-1 text-xs font-medium text-[#e91e63]">
-                      {displayPct(p, load())}% · {p.lookingFor}
+                    <p className="mt-1 text-xs font-medium text-[#e60050]">
+                      {displayPct(p, load())}% · {t(p.lookingFor)}
                     </p>
                   ) : (
                     <MatchLoginPrompt name={p.name} className="mt-1" />
@@ -499,10 +505,10 @@ function SwivvBrowse() {
             onClick={loadMore}
             className="mx-auto mt-6 block rounded-md border border-border bg-white px-6 py-2.5 text-sm font-medium text-[#555]"
           >
-            Voir plus de profils
+            {t("Voir plus de profils")}
           </button>
         )}
-        {gridReady && poolLoaded && results.length === 0 && <p className="mt-6 text-sm text-[#777]">Aucun profil avec ces filtres. Élargis ta recherche.</p>}
+        {gridReady && poolLoaded && results.length === 0 && <p className="mt-6 text-sm text-[#777]">{t("Aucun profil avec ces filtres. Élargis ta recherche.")}</p>}
       </main>
       <SwivvFooter />
     </div>
@@ -519,6 +525,7 @@ export function PhotoReact({ photo, open, pending, onToggle, onPick }: {
 }) {
   const mine = getPhotoReaction(photo);
   const mineDef = mine ? reactionOf(mine) : undefined;
+  const t = useT();
   return (
     <div
       data-reactscope
@@ -530,19 +537,19 @@ export function PhotoReact({ photo, open, pending, onToggle, onPick }: {
     >
       <div
         role="group"
-        aria-label="Choisir une réaction"
+        aria-label={t("Choisir une réaction")}
         className={`flex max-w-full flex-wrap justify-end gap-0.5 rounded-full bg-black/55 px-2 py-1.5 backdrop-blur-sm transition-opacity motion-safe:duration-200 ${open ? "opacity-100" : "pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100"}`}
       >
         {REACTIONS.map((r) => (
           <button
             key={r.id}
             type="button"
-            title={r.label}
-            aria-label={`Réagir : ${r.label}`}
+            title={t(r.label)}
+            aria-label={t("Réagir : {label}", { label: t(r.label) })}
             aria-pressed={mine === r.id}
             disabled={pending}
             onClick={() => onPick(r.id)}
-            className={`rounded-full px-1.5 py-1 text-xl leading-none transition motion-safe:active:scale-125 ${mine === r.id ? "bg-white/90 ring-2 ring-[#e91e63]" : "hover:bg-white/20"} disabled:opacity-50`}
+            className={`rounded-full px-1.5 py-1 text-xl leading-none transition motion-safe:active:scale-125 ${mine === r.id ? "bg-white/90 ring-2 ring-[#e60050]" : "hover:bg-white/20"} disabled:opacity-50`}
           >
             <span aria-hidden="true">{r.emoji}</span>
           </button>
@@ -552,7 +559,7 @@ export function PhotoReact({ photo, open, pending, onToggle, onPick }: {
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        aria-label={mineDef ? `Ta réaction : ${mineDef.label} — changer` : "Réagir à cette photo"}
+        aria-label={mineDef ? t("Ta réaction : {label} — changer", { label: t(mineDef.label) }) : t("Réagir à cette photo")}
         className="flex min-h-[36px] min-w-[36px] items-center justify-center gap-1 rounded-full bg-black/55 px-2 text-white backdrop-blur-sm"
       >
         <span aria-hidden="true" className="text-lg leading-none">{mineDef?.emoji || "😊"}</span>

@@ -13,6 +13,7 @@ import { HINT_SKIN } from "@/components/swivv-hint";
 import { useAuth } from "@/hooks/use-auth";
 import { ArrowUpRight, CircleAlert, Eye, Heart, Lightbulb, TriangleAlert, Users } from "lucide-react";
 import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
+import { useDateLocale, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/statistiques")({
   head: () => ({ meta: [{ title: "Mes statistiques — SWIVV" }] }),
@@ -49,20 +50,21 @@ type ViewEv = Ev & { viewer: string };
 type LikeEv = Ev & { other: string };
 type MatchEv = Ev & { other: string };
 
-const fmtDate = (ts: number) => new Date(ts).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
-const fmtDT = (ts: number) => new Date(ts).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const fmtDate = (ts: number, loc: string) => new Date(ts).toLocaleDateString(loc, { day: "numeric", month: "short", year: "numeric" });
+const fmtDT = (ts: number, loc: string) => new Date(ts).toLocaleString(loc, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
-function deltaText(cur: number, prev: number): string | null {
-  if (prev <= 0) return cur > 0 ? "Première activité sur la période." : null;
+function deltaText(cur: number, prev: number, t: (fr: string) => string): string | null {
+  if (prev <= 0) return cur > 0 ? t("Première activité sur la période.") : null;
   const pct = Math.round(((cur - prev) / prev) * 100);
-  if (pct === 0) return "Stable par rapport à la période précédente.";
-  return `${pct > 0 ? "+" : ""}${pct} % par rapport à la période précédente.`;
+  if (pct === 0) return t("Stable par rapport à la période précédente.");
+  return `${pct > 0 ? "+" : ""}${pct} % ${t("par rapport à la période précédente.")}`;
 }
 
 function Bars({ a, b, days }: { a: number[]; b: number[]; days: number }) {
+  const t = useT();
   const max = Math.max(1, ...a, ...b);
   return (
-    <div role="img" aria-label={`Visites et likes reçus par jour sur les ${days} derniers jours`}>
+    <div role="img" aria-label={t("Visites et likes reçus par jour sur les {days} derniers jours", { days })}>
       {/* ponytail: h-full on the day wrapper — % bar heights collapse against an indefinite parent (that was the invisible chart) */}
       <div className="flex h-28 items-end gap-[3px]">
         {a.map((v, i) => (
@@ -70,15 +72,15 @@ function Bars({ a, b, days }: { a: number[]; b: number[]; days: number }) {
             <span className="group/hint relative w-full rounded-sm bg-[#e2e2e6]" style={{ height: `${Math.max(v > 0 ? 6 : 1, (v / max) * 100)}%` }}>
               <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{v} visites</span>
             </span>
-            <span className="group/hint relative w-full rounded-sm bg-[#e91e63]" style={{ height: `${Math.max(b[i] > 0 ? 6 : 1, (b[i] / max) * 100)}%` }}>
+            <span className="group/hint relative w-full rounded-sm bg-[#e60050]" style={{ height: `${Math.max(b[i] > 0 ? 6 : 1, (b[i] / max) * 100)}%` }}>
               <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{b[i]} likes</span>
             </span>
           </span>
         ))}
       </div>
       <div className="mt-2 flex gap-4 text-xs text-[#777]">
-        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e2e2e6]" />Visites</span>
-        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e91e63]" />Likes reçus</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e2e2e6]" />{t("Visites")}</span>
+        <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e60050]" />{t("Likes reçus")}</span>
       </div>
     </div>
   );
@@ -86,12 +88,13 @@ function Bars({ a, b, days }: { a: number[]; b: number[]; days: number }) {
 
 // ponytail: single SVG arc (pathLength=100) instead of segmented ticks or a chart lib — ticks are decoration, upgrade only if asked
 function Gauge({ pct }: { pct: number }) {
+  const t = useT();
   const v = Math.max(0, Math.min(100, Math.round(pct)));
   return (
-    <div role="img" aria-label={`Profil complété à ${v} %`} className="relative mx-auto w-full max-w-[220px]">
+    <div role="img" aria-label={t("Profil complété à {n} %", { n: v })} className="relative mx-auto w-full max-w-[220px]">
       <svg viewBox="0 0 200 112" className="w-full">
         <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#ececee" strokeWidth="16" strokeLinecap="round" />
-        <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#e91e63" strokeWidth="16" strokeLinecap="round" pathLength={100} strokeDasharray={`${v} 100`} />
+        <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#e60050" strokeWidth="16" strokeLinecap="round" pathLength={100} strokeDasharray={`${v} 100`} />
       </svg>
       <p className="absolute inset-x-0 bottom-0 text-center text-4xl font-semibold text-[#1b1b1e]">{v}<span className="text-base font-normal text-[#777]"> %</span></p>
     </div>
@@ -102,7 +105,7 @@ function Gauge({ pct }: { pct: number }) {
 const TONES = [
   "bg-[#1b1b1e] text-white",
   "bg-white text-[#333] border border-border",
-  "bg-[#e91e63] text-white",
+  "bg-[#e60050] text-white",
   "bg-[#16A34A] text-white",
 ] as const;
 
@@ -133,6 +136,8 @@ const emptyState = "Continue à compléter ton profil et à découvrir les autre
 
 function StatsPage() {
   const { user, loading } = useAuth();
+  const t = useT();
+  const dateLocale = useDateLocale();
   const [period, setPeriod] = useState<number>(30);
   const { tab } = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -350,17 +355,17 @@ function StatsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-background">
+        <header className="border-b border-border bg-black text-white">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2 sm:py-1">
-            <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+            <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
             <SwivvAuthButtons />
           </div>
         </header>
         <SwivvCategoryNav />
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">Connecte-toi pour voir tes statistiques.</p>
-          <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white">
-            Se connecter / S&apos;inscrire
+          <p className="text-sm text-[#777]">{t("Connecte-toi pour voir tes statistiques.")}</p>
+          <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white">
+            {t("Se connecter / S'inscrire")}
           </button>
         </main>
         <SwivvFooter />
@@ -368,10 +373,10 @@ function StatsPage() {
     );
   }
 
-  const peerName = (id: string) => data?.peers[id]?.name ?? "Membre supprimé";
+  const peerName = (id: string) => data?.peers[id]?.name ?? t("Membre supprimé");
   const myPct = data ? profileCompleteness(data.profile) : 0;
   const myPhoto = data?.profile?.photos?.[0] ? mediaUrl(String(data.profile.photos[0])) : undefined;
-  const myName = String((data?.profile as SwivvProfile | null)?.name ?? "Moi");
+  const myName = String((data?.profile as SwivvProfile | null)?.name ?? t("Moi"));
   const TABS = [
     { id: "overview", label: "Vue d'ensemble" },
     { id: "profil", label: "Mon profil" },
@@ -383,9 +388,9 @@ function StatsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -396,88 +401,88 @@ function StatsPage() {
         <div className="rounded-[22px] bg-white p-5 sm:p-7">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-[#1b1b1e]">Mes statistiques</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-[#1b1b1e]">{t("Mes statistiques")}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="stats-period" className="text-sm text-[#555]">Période :</label>
+            <label htmlFor="stats-period" className="text-sm text-[#555]">{t("Période :")}</label>
             <select id="stats-period" value={period} onChange={(e) => setPeriod(Number(e.target.value))} className="rounded-full border border-[#ececee] bg-[#f7f7f8] px-3 py-2 text-sm">
-              {PERIODS.map((p) => (<option key={p.label} value={p.days}>{p.label}</option>))}
+              {PERIODS.map((p) => (<option key={p.label} value={p.days}>{t(p.label)}</option>))}
             </select>
           </div>
         </div>
         {data && s && (
           <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
-            <p className="flex items-center gap-2 text-sm"><Eye className="h-4 w-4 text-[#e91e63]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.viewsP.length}</span><span className="text-[#777]">Visites</span></p>
-            <p className="flex items-center gap-2 text-sm"><Heart className="h-4 w-4 text-[#e91e63]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.gotP.length}</span><span className="text-[#777]">Likes reçus</span></p>
-            <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-[#e91e63]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{data.matches.length}</span><span className="text-[#777]">Matches</span></p>
+            <p className="flex items-center gap-2 text-sm"><Eye className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.viewsP.length}</span><span className="text-[#777]">{t("Visites")}</span></p>
+            <p className="flex items-center gap-2 text-sm"><Heart className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.gotP.length}</span><span className="text-[#777]">{t("Likes reçus")}</span></p>
+            <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{data.matches.length}</span><span className="text-[#777]">{t("Matches")}</span></p>
           </div>
         )}
-        <div role="tablist" aria-label="Sections des statistiques" className="mt-5 flex gap-1 overflow-x-auto rounded-full bg-[#f1f2f4] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map((t) => (
-            <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
-              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${tab === t.id ? "bg-[#1b1b1e] text-white" : "text-[#555] hover:text-[#1b1b1e]"}`}>
-              {t.label}
+        <div role="tablist" aria-label={t("Sections des statistiques")} className="mt-5 flex gap-1 overflow-x-auto rounded-full bg-[#f1f2f4] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {TABS.map((tabItem) => (
+            <button key={tabItem.id} type="button" role="tab" aria-selected={tab === tabItem.id} onClick={() => setTab(tabItem.id)}
+              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium ${tab === tabItem.id ? "bg-[#1b1b1e] text-white" : "text-[#555] hover:text-[#1b1b1e]"}`}>
+              {t(tabItem.label)}
             </button>
           ))}
         </div>
 
         {failed && (
           <div className="mt-6 rounded-xl border border-border bg-white p-4 text-sm text-[#555]">
-            Impossible de charger tes statistiques. <button type="button" onClick={() => window.location.reload()} className="font-medium text-[#e91e63] hover:underline">Réessayer</button>
+            {t("Impossible de charger tes statistiques.")} <button type="button" onClick={() => window.location.reload()} className="font-medium text-[#e60050] hover:underline">{t("Réessayer")}</button>
           </div>
         )}
-        {!data && !failed && <p className="mt-6 text-sm text-[#777]">Chargement de tes statistiques…</p>}
+        {!data && !failed && <p className="mt-6 text-sm text-[#777]">{t("Chargement de tes statistiques…")}</p>}
 
         {data && s && tab === "overview" && (
           <>
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
               <div className="rounded-[20px] border border-[#ececee] p-5">
-                <p className="text-sm font-semibold text-[#1b1b1e]">Mon profil</p>
+                <p className="text-sm font-semibold text-[#1b1b1e]">{t("Mon profil")}</p>
                 <div className="mt-3 flex items-center gap-3">
                   {myPhoto ? (
                     <img src={myPhoto} alt="" loading="lazy" className="h-12 w-12 rounded-full object-cover" />
                   ) : (
-                    <span aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fce4ec] font-semibold text-[#e91e63]">{myName.charAt(0).toUpperCase()}</span>
+                    <span aria-hidden="true" className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fce4ec] font-semibold text-[#e60050]">{myName.charAt(0).toUpperCase()}</span>
                   )}
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[#1b1b1e]">{myName}</p>
-                    <p className="text-xs text-[#777]">Profil complété à {myPct} %</p>
+                    <p className="text-xs text-[#777]">{t("Profil complété à {n} %", { n: myPct })}</p>
                   </div>
                 </div>
-                <Link to="/mon-profil" className="mt-4 block rounded-full bg-[#f1f2f4] px-4 py-2 text-center text-sm font-medium text-[#1b1b1e] hover:bg-[#e6eaef]">Voir mon profil</Link>
+                <Link to="/mon-profil" className="mt-4 block rounded-full bg-[#f1f2f4] px-4 py-2 text-center text-sm font-medium text-[#1b1b1e] hover:bg-[#e6eaef]">{t("Voir mon profil")}</Link>
               </div>
               <div className="rounded-[20px] border border-[#ececee] p-5">
-                <p className="text-sm font-semibold text-[#1b1b1e]">Performance</p>
+                <p className="text-sm font-semibold text-[#1b1b1e]">{t("Performance")}</p>
                 <div className="mt-2"><Gauge pct={myPct} /></div>
-                <p className="mt-1 text-center text-xs text-[#777]">{data.matches.length} matches · {s.convoList.length} conversations</p>
+                <p className="mt-1 text-center text-xs text-[#777]">{t("{m} matches · {c} conversations", { m: data.matches.length, c: s.convoList.length })}</p>
                 <div className="mt-4 rounded-[16px] bg-[#1b1b1e] p-4 text-white">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium">Ton rapport</p>
-                    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs">{s.convoList.length} conversations</span>
+                    <p className="font-medium">{t("Ton rapport")}</p>
+                    <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs">{t("{n} conversations", { n: s.convoList.length })}</span>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                    <p className="text-xs text-white/70">{s.withReply.length} avec réponse</p>
-                    <Link to="/messagerie" aria-label="Ouvrir la messagerie" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1b1b1e]"><ArrowUpRight className="h-5 w-5" /></Link>
+                    <p className="text-xs text-white/70">{t("{n} avec réponse", { n: s.withReply.length })}</p>
+                    <Link to="/messagerie" aria-label={t("Ouvrir la messagerie")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#1b1b1e]"><ArrowUpRight className="h-5 w-5" /></Link>
                   </div>
                 </div>
               </div>
               <div className="rounded-[20px] border border-[#ececee] p-5">
-                <p className="text-sm font-semibold text-[#1b1b1e]">Analytique</p>
+                <p className="text-sm font-semibold text-[#1b1b1e]">{t("Analytique")}</p>
                 <div className="mt-3"><Bars a={s.av} b={s.al} days={s.chartDays} /></div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.sentP.length}</p><p className="text-[11px] text-[#777]">Likes envoyés</p></div>
-                  <div className="rounded-xl bg-[#1b1b1e] p-2 text-white"><p className="text-lg font-semibold">{s.totSent + s.totGot}</p><p className="text-[11px] text-white/70">Messages</p></div>
-                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.matchesP.length}</p><p className="text-[11px] text-[#777]">Nouveaux matches</p></div>
+                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.sentP.length}</p><p className="text-[11px] text-[#777]">{t("Likes envoyés")}</p></div>
+                  <div className="rounded-xl bg-[#1b1b1e] p-2 text-white"><p className="text-lg font-semibold">{s.totSent + s.totGot}</p><p className="text-[11px] text-white/70">{t("Messages")}</p></div>
+                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.matchesP.length}</p><p className="text-[11px] text-[#777]">{t("Nouveaux matches")}</p></div>
                 </div>
               </div>
             </div>
-            <Section title="Activité récente">
+            <Section title={t("Activité récente")}>
               <div className="flex flex-wrap gap-2">
-                <select aria-label="Type d'activité" value={histType} onChange={(e) => { setHistType(e.target.value); setHistN(20); }} className="rounded-md border border-border bg-white px-3 py-2 text-sm">
-                  <option value="all">Tout</option><option value="view">Visites</option><option value="sent">Likes envoyés</option>
-                  <option value="got">Likes reçus</option><option value="match">Matches</option>
+                <select aria-label={t("Type d'activité")} value={histType} onChange={(e) => { setHistType(e.target.value); setHistN(20); }} className="rounded-md border border-border bg-white px-3 py-2 text-sm">
+                  <option value="all">{t("Tout")}</option><option value="view">{t("Visites")}</option><option value="sent">{t("Likes envoyés")}</option>
+                  <option value="got">{t("Likes reçus")}</option><option value="match">{t("Matches")}</option>
                 </select>
-                <input value={histQ} onChange={(e) => { setHistQ(e.target.value); setHistN(20); }} placeholder="Rechercher un membre…" aria-label="Rechercher un membre" className="rounded-md border border-border px-3 py-2 text-sm" />
+                <input value={histQ} onChange={(e) => { setHistQ(e.target.value); setHistN(20); }} placeholder={t("Rechercher un membre…")} aria-label={t("Rechercher un membre")} className="rounded-md border border-border px-3 py-2 text-sm" />
               </div>
               <HistoryList data={data} histType={histType} histQ={histQ} histN={histN} setHistN={setHistN} peerName={peerName} />
             </Section>
@@ -489,20 +494,20 @@ function StatsPage() {
         {data && s && tab === "likes" && (
           <>
             <div className="mt-6 grid grid-cols-3 gap-3">
-              <Tile tone={1} label="Likes reçus" value={data.likesGot.length} />
-              <Tile tone={0} label="Likes envoyés" value={data.likesSent.length} />
-              <Tile tone={2} label="Matches mutuels" value={data.matches.length} />
+              <Tile tone={1} label={t("Likes reçus")} value={data.likesGot.length} />
+              <Tile tone={0} label={t("Likes envoyés")} value={data.likesSent.length} />
+              <Tile tone={2} label={t("Matches mutuels")} value={data.matches.length} />
             </div>
-            <Section title="Likes et interactions">
+            <Section title={t("Likes et interactions")}>
               <p className="text-sm text-[#555]">
-                {data.likesSent.length} envoyés · {data.likesGot.length} reçus · {data.matches.length} matches mutuels.
-                {data.likesSent.length > 0 && ` ${data.matches.length} de tes likes sont devenus des matches.`}
+                {t("{sent} envoyés · {got} reçus · {m} matches mutuels.", { sent: data.likesSent.length, got: data.likesGot.length, m: data.matches.length })}
+                {data.likesSent.length > 0 && ` ${t("{n} de tes likes sont devenus des matches.", { n: data.matches.length })}`}
               </p>
-              {data.matches.length === 0 && data.likesGot.length === 0 && <p className="mt-2 text-sm text-[#777]">{emptyState}</p>}
+              {data.matches.length === 0 && data.likesGot.length === 0 && <p className="mt-2 text-sm text-[#777]">{t(emptyState)}</p>}
             </Section>
-            <LikeList title="Likes reçus" list={data.likesGot} data={data} peerName={peerName} dir="got" />
-            <LikeList title="Likes envoyés" list={data.likesSent} data={data} peerName={peerName} dir="sent" />
-            <LikeList title="Matches mutuels" list={data.matches} data={data} peerName={peerName} dir="match" match />
+            <LikeList title={t("Likes reçus")} list={data.likesGot} data={data} peerName={peerName} dir="got" />
+            <LikeList title={t("Likes envoyés")} list={data.likesSent} data={data} peerName={peerName} dir="sent" />
+            <LikeList title={t("Matches mutuels")} list={data.matches} data={data} peerName={peerName} dir="match" match />
             <PhotoReactions s={s} period={period} photoSort={photoSort} setPhotoSort={setPhotoSort} />
           </>
         )}
@@ -510,34 +515,34 @@ function StatsPage() {
         {data && s && tab === "messages" && (
           <>
             <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Tile tone={0} label="Messages envoyés" value={s.totSent} />
-              <Tile tone={1} label="Messages reçus" value={s.totGot} />
-              <Tile tone={2} label="Vocaux envoyés / reçus" value={`${s.voiceS} / ${s.voiceG}`} />
-              <Tile tone={3} label="Photos envoyées / reçues" value={`${s.attS} / ${s.attG}`} />
+              <Tile tone={0} label={t("Messages envoyés")} value={s.totSent} />
+              <Tile tone={1} label={t("Messages reçus")} value={s.totGot} />
+              <Tile tone={2} label={t("Vocaux envoyés / reçus")} value={`${s.voiceS} / ${s.voiceG}`} />
+              <Tile tone={3} label={t("Photos envoyées / reçues")} value={`${s.attS} / ${s.attG}`} />
             </div>
-            <Section title="Taux de réponse">
+            <Section title={t("Taux de réponse")}>
               {s.startedP.length < 5 ? (
-                <p className="text-sm text-[#777]">Échantillon trop petit pour un taux fiable ({s.startedP.length} conversation{s.startedP.length > 1 ? "s" : ""} commencée{s.startedP.length > 1 ? "s" : ""} sur la période). Les chiffres ci-dessous restent indicatifs.</p>
+                <p className="text-sm text-[#777]">{t("Échantillon trop petit pour un taux fiable ({count}). Les chiffres ci-dessous restent indicatifs.", { count: s.startedP.length > 1 ? t("{n} conversations commencées sur la période", { n: s.startedP.length }) : t("1 conversation commencée sur la période") })}</p>
               ) : (
-                <p className="text-sm text-[#555]">{s.repliedP.length} de tes {s.startedP.length} conversations commencées ont reçu une réponse ({Math.round((s.repliedP.length / s.startedP.length) * 100)} %). Le volume de messages ne mesure pas la compatibilité.</p>
+                <p className="text-sm text-[#555]">{t("{replied} de tes {started} conversations commencées ont reçu une réponse ({pct} %). Le volume de messages ne mesure pas la compatibilité.", { replied: s.repliedP.length, started: s.startedP.length, pct: Math.round((s.repliedP.length / s.startedP.length) * 100) })}</p>
               )}
               <p className="mt-2 text-sm text-[#555]">
-                {s.convoList.length} correspondant{s.convoList.length > 1 ? "s" : ""} distinct{s.convoList.length > 1 ? "s" : ""} · en moyenne {s.convoList.length ? ((s.totSent + s.totGot) / s.convoList.length).toFixed(1) : "0"} messages échangés par conversation (envoyés + reçus).
-                {s.inactive.length > 0 && ` ${s.inactive.length} conversation${s.inactive.length > 1 ? "s" : ""} sans activité récente.`}
+                {t(s.convoList.length > 1 ? "{n} correspondants distincts · en moyenne {avg} messages échangés par conversation (envoyés + reçus)." : "1 correspondant distinct · en moyenne {avg} messages échangés par conversation (envoyés + reçus).", { n: s.convoList.length, avg: s.convoList.length ? ((s.totSent + s.totGot) / s.convoList.length).toFixed(1) : "0" })}
+                {s.inactive.length > 0 && ` ${s.inactive.length > 1 ? t("{n} conversations sans activité récente.", { n: s.inactive.length }) : t("1 conversation sans activité récente.")}`}
               </p>
             </Section>
-            <Section title="Conversations">
-              {s.convoList.length === 0 ? <p className="text-sm text-[#777]">{emptyState}</p> : (
+            <Section title={t("Conversations")}>
+              {s.convoList.length === 0 ? <p className="text-sm text-[#777]">{t(emptyState)}</p> : (
                 <ul className="divide-y divide-border">
                   {[...s.convoList].sort((x, y) => y.last - x.last).slice(0, 50).map((g) => (
                     <li key={g.peer} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={g.peer} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(g.peer)}</p>
-                        <p className="text-xs text-[#777]">{g.sent} envoyés · {g.got} reçus{g.voiceS + g.voiceG > 0 && ` · ${g.voiceS + g.voiceG} vocaux`}{g.attS + g.attG > 0 && ` · ${g.attS + g.attG} photos`} · {g.replied ? "avec réponse" : "sans réponse"}</p>
-                        <p className="text-xs text-[#999]">Dernière activité : {fmtDT(g.last)}</p>
+                        <p className="text-xs text-[#777]">{t("{sent} envoyés · {got} reçus", { sent: g.sent, got: g.got })}{g.voiceS + g.voiceG > 0 && ` · ${t("{n} vocaux", { n: g.voiceS + g.voiceG })}`}{g.attS + g.attG > 0 && ` · ${t("{n} photos", { n: g.attS + g.attG })}`} · {g.replied ? t("avec réponse") : t("sans réponse")}</p>
+                        <p className="text-xs text-[#999]">{t("Dernière activité : {date}", { date: fmtDT(g.last, dateLocale) })}</p>
                       </div>
-                      <Link to="/messagerie" className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">Ouvrir</Link>
+                      <Link to="/messagerie" className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">{t("Ouvrir")}</Link>
                     </li>
                   ))}
                 </ul>
@@ -548,25 +553,25 @@ function StatsPage() {
 
         {data && s && tab === "visibilite" && (
           <>
-            <Section title={`Visibilité — ${period === 0 ? "30 derniers jours" : PERIODS.find((p) => p.days === period)?.label}`}>
+            <Section title={t("Visibilité — {period}", { period: period === 0 ? t("30 derniers jours") : t(PERIODS.find((p) => p.days === period)?.label ?? "") })}>
               <Bars a={s.av} b={s.al} days={s.chartDays} />
               <p className="mt-3 text-sm text-[#555]">
-                Cette semaine sur SWIVV MATCH : {s.viewsP.length} visites de profil · {s.gotP.length} likes reçus · {s.matchesP.length} nouveaux matches · {s.startedP.length} nouvelles conversations.
+                {t("Cette semaine sur SWIVV MATCH : {views} visites de profil · {likes} likes reçus · {matches} nouveaux matches · {convos} nouvelles conversations.", { views: s.viewsP.length, likes: s.gotP.length, matches: s.matchesP.length, convos: s.startedP.length })}
               </p>
-              {(s.viewsP.length + s.gotP.length + s.matchesP.length + s.startedP.length) === 0 && <p className="mt-2 text-sm text-[#777]">{emptyState}</p>}
+              {(s.viewsP.length + s.gotP.length + s.matchesP.length + s.startedP.length) === 0 && <p className="mt-2 text-sm text-[#777]">{t(emptyState)}</p>}
             </Section>
-            <Section title="Visiteurs récents">
-              {s.viewsP.length === 0 ? <p className="text-sm text-[#777]">{emptyState}</p> : (
+            <Section title={t("Visiteurs récents")}>
+              {s.viewsP.length === 0 ? <p className="text-sm text-[#777]">{t(emptyState)}</p> : (
                 <ul className="divide-y divide-border">
                   {s.viewsP.slice(0, 30).map((x, i) => (
                     <li key={`${x.viewer}-${x.at}-${i}`} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={x.viewer} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(x.viewer)}</p>
-                        <p className="text-xs text-[#999]">{fmtDT(x.at)}</p>
+                        <p className="text-xs text-[#999]">{fmtDT(x.at, dateLocale)}</p>
                       </div>
                       {!data.peers[x.viewer]?.blocked && UUID.test(x.viewer) && (
-                        <Link to="/member/$id" params={{ id: x.viewer }} className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">Voir le profil</Link>
+                        <Link to="/member/$id" params={{ id: x.viewer }} className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">{t("Voir le profil")}</Link>
                       )}
                     </li>
                   ))}
@@ -579,49 +584,49 @@ function StatsPage() {
         {data && tab === "securite" && (
           <>
             <div className="mt-6 grid grid-cols-3 gap-3">
-              <Tile tone={0} label="Signalements" value={data.reports.length} />
-              <Tile tone={1} label="Membres bloqués" value={data.blocks.length} />
-              <Tile tone={2} label="M'ont bloqué" value={data.blockedBy.length} />
+              <Tile tone={0} label={t("Signalements")} value={data.reports.length} />
+              <Tile tone={1} label={t("Membres bloqués")} value={data.blocks.length} />
+              <Tile tone={2} label={t("M'ont bloqué")} value={data.blockedBy.length} />
             </div>
-            <Section title="Mes signalements">
-              {data.reports.length === 0 ? <p className="text-sm text-[#777]">Tu n&apos;as soumis aucun signalement.</p> : (
+            <Section title={t("Mes signalements")}>
+              {data.reports.length === 0 ? <p className="text-sm text-[#777]">{t("Tu n'as soumis aucun signalement.")}</p> : (
                 <ul className="divide-y divide-border">
                   {data.reports.map((r) => (
                     <li key={r.id} className="py-2.5 text-sm">
                       <p className="font-medium text-[#333]">{r.category}</p>
-                      <p className="mt-1 text-xs text-[#777]">{fmtDate(r.at)} · <span className={`inline-block rounded-full px-2.5 py-0.5 font-medium ${REPORT_SKIN[r.status] ?? "bg-[#f2f2f2] text-[#777]"}`}>{REPORT_STATUS[r.status] ?? r.status}</span></p>
+                      <p className="mt-1 text-xs text-[#777]">{fmtDate(r.at, dateLocale)} · <span className={`inline-block rounded-full px-2.5 py-0.5 font-medium ${REPORT_SKIN[r.status] ?? "bg-[#f2f2f2] text-[#777]"}`}>{t(REPORT_STATUS[r.status] ?? r.status)}</span></p>
                     </li>
                   ))}
                 </ul>
               )}
             </Section>
-            <Section title="Mes blocs">
-              {data.blocks.length === 0 ? <p className="text-sm text-[#777]">Tu n&apos;as bloqué aucun membre.</p> : (
+            <Section title={t("Mes blocs")}>
+              {data.blocks.length === 0 ? <p className="text-sm text-[#777]">{t("Tu n'as bloqué aucun membre.")}</p> : (
                 <ul className="divide-y divide-border">
                   {data.blocks.map((bl) => (
                     <li key={bl.id} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={bl.id} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(bl.id)}</p>
-                        <p className="text-xs text-[#777]">{fmtDate(bl.at)} · Actif</p>
+                        <p className="text-xs text-[#777]">{t("{date} · Actif", { date: fmtDate(bl.at, dateLocale) })}</p>
                       </div>
-                      <button type="button" onClick={() => { toggleBlock(bl.id); data.blocks = data.blocks.filter((x) => x.id !== bl.id); setData({ ...data }); }} className="shrink-0 rounded-full border border-[#e91e63] px-4 py-1.5 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/10">
-                        Débloquer
+                      <button type="button" onClick={() => { toggleBlock(bl.id); data.blocks = data.blocks.filter((x) => x.id !== bl.id); setData({ ...data }); }} className="shrink-0 rounded-full border border-[#e60050] px-4 py-1.5 text-sm font-medium text-[#e60050] hover:bg-[#e60050]/10">
+                        {t("Débloquer")}
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
             </Section>
-            <Section title="Membres qui m'ont bloqué">
-              {data.blockedBy.length === 0 ? <p className="text-sm text-[#777]">Aucun membre ne t&apos;a bloqué.</p> : (
+            <Section title={t("Membres qui m'ont bloqué")}>
+              {data.blockedBy.length === 0 ? <p className="text-sm text-[#777]">{t("Aucun membre ne t'a bloqué.")}</p> : (
                 <ul className="divide-y divide-border">
                   {data.blockedBy.map((bl) => (
                     <li key={bl.id} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={bl.id} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(bl.id)}</p>
-                        <p className="text-xs text-[#777]">{fmtDate(bl.at)}</p>
+                        <p className="text-xs text-[#777]">{fmtDate(bl.at, dateLocale)}</p>
                       </div>
                     </li>
                   ))}
@@ -644,7 +649,7 @@ function PeerBadge({ id, data }: { id: string; data: { peers: Record<string, Pee
   return photo ? (
     <img src={photo} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" loading="lazy" />
   ) : (
-    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fce4ec] text-sm font-semibold text-[#e91e63]">
+    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fce4ec] text-sm font-semibold text-[#e60050]">
       {(p?.name ?? "?").charAt(0).toUpperCase()}
     </span>
   );
@@ -654,6 +659,8 @@ function HistoryList({ data, histType, histQ, histN, setHistN, peerName }: {
   data: { views: ViewEv[]; likesSent: LikeEv[]; likesGot: LikeEv[]; matches: MatchEv[]; peers: Record<string, Peer> };
   histType: string; histQ: string; histN: number; setHistN: (f: (n: number) => number) => void; peerName: (id: string) => string;
 }) {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const q = histQ.trim().toLowerCase();
   const all: { at: number; label: string; id: string; key: string }[] = [
     ...(histType === "all" || histType === "view" ? data.views.map((x, i) => ({ at: x.at, label: "Visite de profil", id: x.viewer, key: `v${i}` })) : []),
@@ -664,7 +671,7 @@ function HistoryList({ data, histType, histQ, histN, setHistN, peerName }: {
     .sort((x, y) => y.at - x.at);
   // ponytail: "Afficher plus" lives here where the total is known — a dead button at the end of the list otherwise
   const shown = all.slice(0, histN);
-  if (!all.length) return <p className="mt-2 text-sm text-[#777]">Aucune activité pour ce filtre.</p>;
+  if (!all.length) return <p className="mt-2 text-sm text-[#777]">{t("Aucune activité pour ce filtre.")}</p>;
   return (
     <>
     <ul className="mt-2 divide-y divide-border">
@@ -672,17 +679,17 @@ function HistoryList({ data, histType, histQ, histN, setHistN, peerName }: {
         <li key={e.key} className="flex items-center gap-3 py-2">
           <PeerBadge id={e.id} data={data} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm text-[#333]"><span className="font-medium">{e.label}</span> — {peerName(e.id)}</p>
-            <p className="text-xs text-[#999]">{e.at ? fmtDT(e.at) : "date inconnue"}</p>
+            <p className="truncate text-sm text-[#333]"><span className="font-medium">{t(e.label)}</span> — {peerName(e.id)}</p>
+            <p className="text-xs text-[#999]">{e.at ? fmtDT(e.at, dateLocale) : t("date inconnue")}</p>
           </div>
           {!data.peers[e.id]?.blocked && UUID.test(e.id) && (
-            <Link to="/member/$id" params={{ id: e.id }} className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">Voir</Link>
+            <Link to="/member/$id" params={{ id: e.id }} className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">{t("Voir")}</Link>
           )}
         </li>
       ))}
     </ul>
     {all.length > histN && (
-      <button type="button" onClick={() => setHistN((n) => n + 20)} className="mt-3 text-sm font-medium text-[#e91e63] hover:underline">Afficher plus</button>
+      <button type="button" onClick={() => setHistN((n) => n + 20)} className="mt-3 text-sm font-medium text-[#e60050] hover:underline">{t("Afficher plus")}</button>
     )}
     </>
   );
@@ -700,6 +707,8 @@ type ReactSummary = {
 function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
   s: ReactSummary; period: number; photoSort: string; setPhotoSort: (v: string) => void;
 }) {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const empty = s.reactTotal === 0 && s.newP.length === 0;
   const top = s.photoPerf.find((x) => x.photo === s.reactTop);
   const sorted = [...s.photoPerf].sort((a, b) =>
@@ -709,19 +718,19 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
   const emojiOf = (id: string | null) => REACTIONS.find((r) => r.id === id);
   return (
     <>
-      <Section title="Interactions sur mes photos">
+      <Section title={t("Interactions sur mes photos")}>
         <p className="text-sm text-[#555]">
-          {s.reactTotal} réaction{s.reactTotal > 1 ? "s" : ""} active{s.reactTotal > 1 ? "s" : ""} en ce moment
-          {period !== 0 && ` · ${s.newP.length} nouvelle${s.newP.length > 1 ? "s" : ""} sur la période`}.
+          {s.reactTotal > 1 ? t("{n} réactions actives en ce moment", { n: s.reactTotal }) : t("1 réaction active en ce moment")}
+          {period !== 0 && ` · ${s.newP.length > 1 ? t("{n} nouvelles sur la période", { n: s.newP.length }) : t("1 nouvelle sur la période")}`}.
         </p>
         {empty ? (
-          <p className="mt-2 text-sm text-[#777]">{emptyState}</p>
+          <p className="mt-2 text-sm text-[#777]">{t(emptyState)}</p>
         ) : (
           <>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Tile tone={0} label="Réactions reçues" value={s.reactTotal} sub={period === 0 ? "actives en ce moment" : (deltaText(s.newP.length, s.newPrev.length) ?? "sur la période")} />
-              <Tile tone={1} label="Membres ayant réagi" value={s.reactorsP.size} sub={period === 0 ? "au total" : (deltaText(s.reactorsP.size, s.reactorsPrev.size) ?? "sur la période")} />
-              <Tile tone={2} label="Photos avec réactions" value={s.photosP.size} sub={period === 0 ? "au total" : "sur la période"} />
+              <Tile tone={0} label={t("Réactions reçues")} value={s.reactTotal} sub={period === 0 ? t("actives en ce moment") : (deltaText(s.newP.length, s.newPrev.length, t) ?? t("sur la période"))} />
+              <Tile tone={1} label={t("Membres ayant réagi")} value={s.reactorsP.size} sub={period === 0 ? t("au total") : (deltaText(s.reactorsP.size, s.reactorsPrev.size, t) ?? t("sur la période"))} />
+              <Tile tone={2} label={t("Photos avec réactions")} value={s.photosP.size} sub={period === 0 ? t("au total") : t("sur la période")} />
               <div className="flex min-h-[128px] flex-col justify-between rounded-[22px] bg-[#16A34A] p-5 text-white">
                 {top ? (
                   <span className="flex items-center gap-3">
@@ -731,27 +740,27 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
                 ) : (
                   <p className="text-4xl font-bold leading-none">—</p>
                 )}
-                <p className="text-sm font-medium">Photo la plus réactive</p>
+                <p className="text-sm font-medium">{t("Photo la plus réactive")}</p>
               </div>
             </div>
-            <h3 className="mt-5 text-sm font-semibold text-[#333]">Répartition des réactions actives</h3>
+            <h3 className="mt-5 text-sm font-semibold text-[#333]">{t("Répartition des réactions actives")}</h3>
             <ul className="mt-2 space-y-2">
               {s.reactBreak.map((b) => (
                 <li key={b.id} className="flex items-center gap-2 text-sm">
                   <span aria-hidden="true" className="w-6 text-center text-lg leading-none">{b.emoji}</span>
                   <span className="w-32 shrink-0 truncate text-[#555]">{b.label}</span>
                   <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-[#f0f0f0]">
-                    <span className="block h-full rounded-full bg-[#e91e63]/70" style={{ width: `${b.pct}%` }} />
+                    <span className="block h-full rounded-full bg-[#e60050]/70" style={{ width: `${b.pct}%` }} />
                   </span>
                   <span className="w-20 shrink-0 text-right text-[#333]">{b.n} · {b.pct} %</span>
                 </li>
               ))}
             </ul>
-            <h3 className="mt-5 text-sm font-semibold text-[#333]">Nouvelles réactions par jour</h3>
-            <div role="img" aria-label={`Nouvelles réactions par jour sur les ${s.chartDays} derniers jours`} className="mt-2 flex h-20 items-end gap-[3px]">
+            <h3 className="mt-5 text-sm font-semibold text-[#333]">{t("Nouvelles réactions par jour")}</h3>
+            <div role="img" aria-label={t("Nouvelles réactions par jour sur les {days} derniers jours", { days: s.chartDays })} className="mt-2 flex h-20 items-end gap-[3px]">
               {s.reactChart.map((v, i) => (
-                <span key={i} className="group/hint relative w-full rounded-sm bg-[#e91e63]/70" style={{ height: `${Math.max(v > 0 ? 8 : 2, (v / max) * 100)}%` }}>
-                  <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{v} nouvelles réactions</span>
+                <span key={i} className="group/hint relative w-full rounded-sm bg-[#e60050]/70" style={{ height: `${Math.max(v > 0 ? 8 : 2, (v / max) * 100)}%` }}>
+                  <span className={`pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden w-max -translate-x-1/2 whitespace-nowrap px-2 py-1 group-hover/hint:block ${HINT_SKIN}`} aria-hidden="true">{t("{n} nouvelles réactions", { n: v })}</span>
                 </span>
               ))}
             </div>
@@ -759,26 +768,26 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
         )}
       </Section>
       {!empty && (
-        <Section title="Performance de mes photos">
+        <Section title={t("Performance de mes photos")}>
           <div className="flex flex-wrap items-center gap-2">
-            <label htmlFor="photo-sort" className="text-sm text-[#555]">Trier :</label>
+            <label htmlFor="photo-sort" className="text-sm text-[#555]">{t("Trier :")}</label>
             <select id="photo-sort" value={photoSort} onChange={(e) => setPhotoSort(e.target.value)} className="rounded-md border border-border bg-white px-3 py-2 text-sm">
-              <option value="top">Plus de réactions</option>
-              <option value="recent">Activité récente</option>
-              <option value="oldest">Activité ancienne</option>
+              <option value="top">{t("Plus de réactions")}</option>
+              <option value="recent">{t("Activité récente")}</option>
+              <option value="oldest">{t("Activité ancienne")}</option>
             </select>
           </div>
-          <p className="mt-2 text-xs text-[#777]">« Récent / ancien » = dernière réaction reçue (les dates d&apos;ajout par photo ne sont pas suivies).</p>
+          <p className="mt-2 text-xs text-[#777]">{t("« Récent / ancien » = dernière réaction reçue (les dates d'ajout par photo ne sont pas suivies).")}</p>
           <ul className="mt-2 divide-y divide-border">
             {sorted.slice(0, 50).map((x) => {
-              const t = emojiOf(x.top);
+              const topReaction = emojiOf(x.top);
               return (
                 <li key={x.photo} className="flex items-center gap-3 py-2.5">
                   <img src={mediaUrl(x.photo)} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#333]">{x.n} réaction{x.n > 1 ? "s" : ""} · {x.reactors} membre{x.reactors > 1 ? "s" : ""}</p>
+                    <p className="truncate text-sm font-medium text-[#333]">{x.n > 1 ? t("{n} réactions", { n: x.n }) : t("1 réaction")} · {x.reactors > 1 ? t("{n} membres", { n: x.reactors }) : t("1 membre")}</p>
                     <p className="text-xs text-[#777]">
-                      {t ? `${t.emoji} ${t.label} en tête` : "Aucune réaction active"} · Dernière activité : {x.last ? fmtDT(x.last) : "—"}
+                      {topReaction ? t("{emoji} {label} en tête", { emoji: topReaction.emoji, label: topReaction.label }) : t("Aucune réaction active")} · {t("Dernière activité : {date}", { date: x.last ? fmtDT(x.last, dateLocale) : "—" })}
                     </p>
                   </div>
                 </li>
@@ -793,19 +802,22 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
 
 function LikeList({ title, list, data, peerName, dir, match }: {
   title: string; list: LikeEv[] | MatchEv[]; data: { peers: Record<string, Peer> }; peerName: (id: string) => string; dir: string; match?: boolean;
-}) {  return (
+}) {
+  const t = useT();
+  const dateLocale = useDateLocale();
+  return (
     <Section title={`${title} (${list.length})`}>
-      {list.length === 0 ? <p className="text-sm text-[#777]">Rien ici pour le moment.</p> : (
+      {list.length === 0 ? <p className="text-sm text-[#777]">{t("Rien ici pour le moment.")}</p> : (
         <ul className="divide-y divide-border">
           {list.slice(0, 50).map((x, i) => (
             <li key={`${dir}-${i}`} className="flex items-center gap-3 py-2.5">
               <PeerBadge id={x.other} data={data} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-[#333]">{peerName(x.other)}</p>
-                <p className="text-xs text-[#999]">{match ? "Match mutuel" : dir === "got" ? "T'a liké" : "Tu as liké"} · {x.at ? fmtDT(x.at) : "date inconnue"}</p>
+                <p className="text-xs text-[#999]">{match ? t("Match mutuel") : dir === "got" ? t("T'a liké") : t("Tu as liké")} · {x.at ? fmtDT(x.at, dateLocale) : t("date inconnue")}</p>
               </div>
               {!data.peers[x.other]?.blocked && UUID.test(x.other) && (
-                <Link to="/member/$id" params={{ id: x.other }} className="shrink-0 rounded-full bg-[#e91e63] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">Voir le profil</Link>
+                <Link to="/member/$id" params={{ id: x.other }} className="shrink-0 rounded-full bg-[#e60050] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">{t("Voir le profil")}</Link>
               )}
             </li>
           ))}
@@ -816,6 +828,7 @@ function LikeList({ title, list, data, peerName, dir, match }: {
 }
 
 function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | null; views: number; got: number; convos: number }) {
+  const t = useT();
   const pct = profileCompleteness(profile);
   const missing = (Object.keys(FIELD_LABELS) as (keyof SwivvProfile)[]).filter((k) => {
     const v = profile?.[k];
@@ -837,41 +850,41 @@ function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | n
   if (!photos.length) tips.push({ level: "À compléter", text: "Tu n'as pas de photo de profil. Ajoute une photo claire et récente qui te représente bien.", to: "/mon-profil", cta: "Ajouter une photo" });
   else if (photos.length === 1) tips.push({ level: "Recommandé", text: "Ton profil ne contient qu'une seule photo. Ajouter une photo supplémentaire pourrait donner une vision plus complète de ton profil.", to: "/mon-profil", cta: "Ajouter une photo" });
   if (!tagline) tips.push({ level: "À compléter", text: "Ton titre est vide. Une phrase distinctive aide les autres membres à te remarquer.", to: FLOW, cta: "Modifier mon profil" });
-  else if (tagline.length < 10 || generic) tips.push({ level: "Recommandé", text: `Ton titre (« ${tagline} ») est très court ou générique. Inspire-toi de tes centres d'intérêt pour le rendre plus personnel — par exemple à partir de « ${(profile?.interests ?? []).slice(0, 2).join(", ") || "tes loisirs"} ». Ce n'est qu'une piste, à valider par toi.`, to: FLOW, cta: "Modifier mon profil" });
+  else if (tagline.length < 10 || generic) tips.push({ level: "Recommandé", text: t("Ton titre (« {tagline} ») est très court ou générique. Inspire-toi de tes centres d'intérêt pour le rendre plus personnel — par exemple à partir de « {interests} ». Ce n'est qu'une piste, à valider par toi.", { tagline, interests: (profile?.interests ?? []).slice(0, 2).join(", ") || t("tes loisirs") }), to: FLOW, cta: "Modifier mon profil" });
   else if (capsRatio > 0.7 && tagline.length > 5) tips.push({ level: "Optionnel", text: "Ton titre est presque tout en majuscules, ce qui peut donner une impression de cri. Envisage une casse normale.", to: FLOW, cta: "Modifier mon profil" });
   if (!bio) tips.push({ level: "À compléter", text: "Ta section « À propos de moi » est vide. Ajoute quelques phrases pour aider les autres membres à mieux te connaître et à entamer la conversation.", to: FLOW, cta: "Compléter ma présentation" });
   else if (bio.length < 50) tips.push({ level: "Recommandé", text: "Ta présentation est très courte. Quelques phrases sur tes valeurs, tes loisirs ou tes intentions aideraient à démarrer des échanges.", to: FLOW, cta: "Compléter ma présentation" });
   else if (bio.length > 1500) tips.push({ level: "Optionnel", text: "Ta présentation est très longue. Une version plus concise a plus de chances d'être lue en entier.", to: FLOW, cta: "Modifier mon profil" });
   if (!(profile?.interests ?? []).length) tips.push({ level: "Recommandé", text: "Ajoute tes centres d'intérêt : c'est le moyen le plus simple de donner aux autres une accroche pour t'écrire.", to: FLOW, cta: "Modifier mon profil" });
   if (views > 5 && got === 0) tips.push({ level: "Recommandé", text: "Tu reçois des visites, mais peu de likes. Pense à vérifier ta photo principale et ta présentation. L'activité dépend aussi des préférences, de la localisation et du nombre de membres actifs.", to: "/mon-profil", cta: "Revoir mon profil" });
-  if (convos > 0) tips.push({ level: "Optionnel", text: `Tu as ${convos} conversation${convos > 1 ? "s" : ""} en cours. Continue à privilégier les échanges qui t'intéressent réellement.`, to: "/messagerie", cta: "Voir mes messages" });
+  if (convos > 0) tips.push({ level: "Optionnel", text: t(convos > 1 ? "Tu as {n} conversations en cours. Continue à privilégier les échanges qui t'intéressent réellement." : "Tu as 1 conversation en cours. Continue à privilégier les échanges qui t'intéressent réellement.", { n: convos }), to: "/messagerie", cta: "Voir mes messages" });
 
   return (
     <>
-      <Section title="Complétude du profil">
+      <Section title={t("Complétude du profil")}>
         <div className="flex items-center gap-4">
-          <p className="whitespace-nowrap text-3xl font-semibold text-[#e91e63]">{pct}&nbsp;%</p>
-          <p className="text-sm text-[#555]">Ce score mesure la complétude de ton profil, pas ton attractivité ni tes chances de rencontrer quelqu&apos;un.</p>
+          <p className="whitespace-nowrap text-3xl font-semibold text-[#e60050]">{pct}&nbsp;%</p>
+          <p className="text-sm text-[#555]">{t("Ce score mesure la complétude de ton profil, pas ton attractivité ni tes chances de rencontrer quelqu'un.")}</p>
         </div>
         {missing.length > 0 ? (
-          <p className="mt-2 text-sm text-[#555]">Sections incomplètes : {missing.slice(0, 12).map((k) => FIELD_LABELS[String(k)] ?? String(k)).join(", ")}{missing.length > 12 && ` (+${missing.length - 12} autres)`}.</p>
+          <p className="mt-2 text-sm text-[#555]">{t("Sections incomplètes : {list}.", { list: `${missing.slice(0, 12).map((k) => t(FIELD_LABELS[String(k)] ?? String(k))).join(", ")}${missing.length > 12 ? ` (+${t("{n} autres", { n: missing.length - 12 })})` : ""}` })}</p>
         ) : (
-          <p className="mt-2 text-sm font-medium text-[#16A34A]">Profil complet, bravo !</p>
+          <p className="mt-2 text-sm font-medium text-[#16A34A]">{t("Profil complet, bravo !")}</p>
         )}
         {pct < 100 && (
-          <a href="/inscription?revoir=manquantes" className="mt-3 inline-block rounded-md bg-[#e91e63] px-5 py-2.5 text-sm font-medium text-white">
-            Complète ton profil maintenant
+          <a href="/inscription?revoir=manquantes" className="mt-3 inline-block rounded-md bg-[#e60050] px-5 py-2.5 text-sm font-medium text-white">
+            {t("Complète ton profil maintenant")}
           </a>
         )}
       </Section>
-      <Section title="Comment améliorer mon profil ?">
-        {tips.length === 0 ? <p className="text-sm text-[#777]">Rien à signaler : ton profil est bien rempli. Les suggestions apparaîtront ici si quelque chose manque.</p> : (
+      <Section title={t("Comment améliorer mon profil ?")}>
+        {tips.length === 0 ? <p className="text-sm text-[#777]">{t("Rien à signaler : ton profil est bien rempli. Les suggestions apparaîtront ici si quelque chose manque.")}</p> : (
           <ul className="space-y-3">
-            {tips.map((t, i) => {
+            {tips.map((tip, i) => {
               // ponytail: level drives the whole card skin (bg + bar + icon) — one map, no per-level branches
-              const skin = t.level === "À compléter"
+              const skin = tip.level === "À compléter"
                 ? { card: "border-red-200 bg-red-50", bar: "bg-[#DC2626]", text: "text-[#DC2626]", Icon: CircleAlert }
-                : t.level === "Recommandé"
+                : tip.level === "Recommandé"
                   ? { card: "border-orange-200 bg-orange-50", bar: "bg-[#F97316]", text: "text-[#F97316]", Icon: TriangleAlert }
                   : { card: "border-border bg-[#f7f7f7]", bar: "bg-[#999]", text: "text-[#777]", Icon: Lightbulb };
               return (
@@ -879,10 +892,10 @@ function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | n
                 <span className={`w-1.5 shrink-0 ${skin.bar}`} aria-hidden="true" />
                 <div className="min-w-0 flex-1 py-3 pr-3">
                   <p className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide ${skin.text}`}>
-                    <skin.Icon className="h-4 w-4" />{t.level}
+                    <skin.Icon className="h-4 w-4" />{t(tip.level)}
                   </p>
-                  <p className="mt-1 text-sm text-[#333]">{t.text}</p>
-                  <a href={t.to} className="mt-2 inline-block rounded-full bg-[#e91e63] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">{t.cta}</a>
+                  <p className="mt-1 text-sm text-[#333]">{t(tip.text)}</p>
+                  <a href={tip.to} className="mt-2 inline-block rounded-full bg-[#e60050] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">{t(tip.cta)}</a>
                 </div>
               </li>
               );

@@ -4,6 +4,7 @@ import { useUnreadCount, useRecusCount, useSwivvStore } from "@/lib/swivv-store"
 import { useUnreadNotifs } from "@/lib/swivv-notifs";
 import { requireSwivvAuth } from "@/lib/swivv-auth";
 import { useAuth } from "@/hooks/use-auth";
+import { useT } from "@/lib/i18n";
 
 export function MessageHeartBadge() {
   const n = useUnreadCount();
@@ -13,7 +14,7 @@ export function MessageHeartBadge() {
       aria-label={`${n} message${n > 1 ? "s" : ""} non lu${n > 1 ? "s" : ""}`}
       className="absolute right-1 -top-0.5 flex h-4 w-4 items-center justify-center"
     >
-      <Heart className="h-4 w-4" fill="#E91E63" strokeWidth={0} aria-hidden="true" />
+      <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
         {n > 9 ? "9+" : n}
       </span>
@@ -29,7 +30,7 @@ export function NotifBadge() {
       aria-label={`${n} notification${n > 1 ? "s" : ""} non lue${n > 1 ? "s" : ""}`}
       className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
     >
-      <Heart className="h-4 w-4" fill="#E91E63" strokeWidth={0} aria-hidden="true" />
+      <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
         {n > 99 ? "99+" : n}
       </span>
@@ -45,7 +46,7 @@ export function LikesRecusBadge() {  const n = useRecusCount();
       aria-label={`${n} like${n > 1 ? "s" : ""} reçu${n > 1 ? "s" : ""}`}
       className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
     >
-      <Heart className="h-4 w-4" fill="#E91E63" strokeWidth={0} aria-hidden="true" />
+      <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
         {n > 9 ? "9+" : n}
       </span>
@@ -62,7 +63,7 @@ export function MyLikesBadge() {
       aria-label={`${n} like${n > 1 ? "s" : ""} donné${n > 1 ? "s" : ""}`}
       className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
     >
-      <Heart className="h-4 w-4" fill="#E91E63" strokeWidth={0} aria-hidden="true" />
+      <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
         {n > 9 ? "9+" : n}
       </span>
@@ -81,6 +82,7 @@ function Tip({ label }: { label: string }) {
 }
 export function SwivvTopIcons() {
   const { user } = useAuth();
+  const t = useT();
   const nav = useNavigate();
   if (!user) return null;
   return (
@@ -90,13 +92,13 @@ export function SwivvTopIcons() {
         type="button"
         onClick={() => requireSwivvAuth("message", () => nav({ to: "/messagerie" }))}
         aria-label="Messages"
-        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-black hover:underline"
+        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-white hover:underline"
       >
         <Tip label="Mes Messages" />
         <span className="relative block">
           <Mail className="h-6 w-11" strokeWidth={1.5} />
           {/* ponytail: lucide overlay, custom love-letter SVG if brand wants its own mark */}
-          <Heart className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2" fill="black" strokeWidth={0} aria-hidden="true" />
+          <Heart className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2" fill="currentColor" strokeWidth={0} aria-hidden="true" />
         </span>
         {/* ponytail: unread counted live from localStore, server badge if push ever lands */}
         <MessageHeartBadge />
@@ -104,27 +106,27 @@ export function SwivvTopIcons() {
       <Link
         to="/browse"
         search={{ q: "", type: "likes", location: "" }}
-        aria-label="Profils likés"
-        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-[#007782] hover:underline"
+        aria-label={t("Profils likés")}
+        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-white hover:underline"
       >
-        <Tip label="Mes Likes" />
-        <Heart className="h-6 w-6 text-black" strokeWidth={1.5} />
+        <Tip label={t("Mes Likes")} />
+        <Heart className="h-6 w-6" strokeWidth={1.5} />
         <MyLikesBadge />
       </Link>
       {/* ponytail: bell lives left of the avatar in SwivvAuthButtons (all viewports) — don't re-add a copy here */}
       <Link
         to="/matches"
-        className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-black hover:underline"
+        className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-white hover:underline"
         // ponytail: router-driven active state like the category nav — shared ActiveLink if a third text link appears
-        activeProps={{ className: "inline-flex items-center gap-1 whitespace-nowrap font-medium text-black underline decoration-[#e91e63] decoration-2 underline-offset-4" }}
+        activeProps={{ className: "inline-flex items-center gap-1 whitespace-nowrap font-medium text-white underline decoration-[#e60050] decoration-2 underline-offset-4" }}
       >
         <Flame className="h-4 w-4" aria-hidden="true" />
-        Mes Matches
+        {t("Mes Matches")}
       </Link>
       <Link
         to="/swipe"
-        className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-black hover:underline"
-        activeProps={{ className: "inline-flex items-center gap-1 whitespace-nowrap font-medium text-black underline decoration-[#e91e63] decoration-2 underline-offset-4" }}
+        className="inline-flex items-center gap-1 whitespace-nowrap font-medium text-white hover:underline"
+        activeProps={{ className: "inline-flex items-center gap-1 whitespace-nowrap font-medium text-white underline decoration-[#e60050] decoration-2 underline-offset-4" }}
       >
         <Zap className="h-4 w-4" aria-hidden="true" />
         SWIVV SWIPE
@@ -133,10 +135,10 @@ export function SwivvTopIcons() {
         to="/browse"
         search={{ q: "", type: "recus", location: "" }}
         aria-label="Likes reçus"
-        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-black hover:underline"
+        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-white hover:underline"
       >
         <Tip label="Likes Reçus" />
-        <Heart className="h-6 w-6 fill-black text-black" strokeWidth={1.5} />
+        <Heart className="h-6 w-6 fill-current" strokeWidth={1.5} />
         <LikesRecusBadge />
       </Link>
     </div>

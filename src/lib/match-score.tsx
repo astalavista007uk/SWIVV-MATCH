@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import type { SwivvProfile } from "@/lib/swivv-data";
 import { HINT_SKIN } from "@/components/swivv-hint";
+import { useT } from "@/lib/i18n";
 import { MATCH_CRITERIA_KEY as KEY, hasSavedMatchCriteria, hasVisitedMatchCriteria } from "@/lib/swivv-store";
 
 // ponytail: single source of matching truth — routes/matches.tsx CRITERIA reuses these
@@ -152,9 +153,10 @@ export function displayPct(p: SwivvProfile, c: Record<string, string>): number {
 
 // ponytail: logged-out prompt shared by every profile list — one copy so the wording can't drift; plain text because cards already sit inside a profile <Link> (nested buttons break taps)
 export function MatchLoginPrompt({ name, className = "" }: { name: string; className?: string }) {
+  const t = useT();
   return (
-    <span className={`block text-[11px] font-medium leading-snug text-[#e91e63] ${className}`}>
-      Connecte-toi ou inscris-toi pour voir à quel point tu matches avec {name}.
+    <span className={`block text-[11px] font-medium leading-snug text-[#e60050] ${className}`}>
+      {t("Connecte-toi ou inscris-toi pour voir à quel point tu matches avec {name}.", { name })}
     </span>
   );
 }
@@ -169,6 +171,7 @@ export function MatchTooltip({ badge, items, fem, criteria }: { badge: ReactNode
   const hint = !hasSoft && !hasVisitedMatchCriteria() && !hasSavedMatchCriteria();
   // ponytail: tap-to-open for touch (hover is a no-op there) — add outside-tap close / flip positioning if it ever feels sticky
   const [open, setOpen] = useState(false);
+  const t = useT();
   return (
     <span className="group/pct relative inline-block" onMouseLeave={() => setOpen(false)}>
       <span
@@ -194,7 +197,7 @@ export function MatchTooltip({ badge, items, fem, criteria }: { badge: ReactNode
         ) : (
           // ponytail: explicit text-white (link cascade) + before: bridge over the mt-1 hover gap so the click lands — popover API if touch ever needs it
           <Link to="/matches" className="block py-1 text-white underline underline-offset-2 before:absolute before:-top-1 before:left-0 before:h-1 before:w-full before:content-['']">
-            Clique sur Mes Matches pour définir ton Swivv parfait{fem ? "e" : ""} !
+            {t("Clique sur Mes Matches pour définir ton Swivv parfait{e} !", { e: fem ? "e" : "" })}
           </Link>
         )}
       </span>

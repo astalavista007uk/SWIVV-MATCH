@@ -7,6 +7,7 @@ import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { BLOG_POSTS, getBannerStyle, getCategories } from "@/lib/blog-data";
 import { pageHead } from "@/lib/seo";
+import { useDateLocale, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/blog/")({
   head: () =>
@@ -18,11 +19,13 @@ export const Route = createFileRoute("/blog/")({
   component: BlogPage,
 });
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+function formatDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
 }
 
 function BlogPage() {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const [filter, setFilter] = useState<string>("Tout");
   const [search, setSearch] = useState("");
   const categories = ["Tout", ...getCategories()];
@@ -44,9 +47,9 @@ function BlogPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -54,12 +57,12 @@ function BlogPage() {
 
       <div className="mx-auto max-w-5xl px-4 py-8">
         <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-[#555]">
-          <ArrowLeft className="h-4 w-4" /> Accueil
+          <ArrowLeft className="h-4 w-4" /> {t("Accueil")}
         </Link>
 
-        <h1 className="text-3xl font-medium text-[#333]">Le blog SWIVV</h1>
+        <h1 className="text-3xl font-medium text-[#333]">{t("Le blog SWIVV")}</h1>
         <p className="mt-2 text-[#777]">
-          Conseils rencontres, mariage, idées de sorties et témoignages de couples.
+          {t("Conseils rencontres, mariage, idées de sorties et témoignages de couples.")}
         </p>
 
         <div className="relative mb-4 mt-6">
@@ -67,9 +70,9 @@ function BlogPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un article…"
-            aria-label="Rechercher un article"
-            className="w-full rounded-md border border-border bg-white py-2.5 pl-9 pr-3 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+            placeholder={t("Rechercher un article…")}
+            aria-label={t("Rechercher un article")}
+            className="w-full rounded-md border border-border bg-white py-2.5 pl-9 pr-3 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
           />
         </div>
 
@@ -81,10 +84,10 @@ function BlogPage() {
               onClick={() => setFilter(c)}
               aria-pressed={filter === c}
               className={`rounded-full px-3 py-1 text-sm ${
-                filter === c ? "bg-[#e91e63] text-white" : "bg-[#f2f2f2] text-[#555]"
+                filter === c ? "bg-[#e60050] text-white" : "bg-[#f2f2f2] text-[#555]"
               }`}
             >
-              {c}
+              {t(c)}
             </button>
           ))}
         </div>
@@ -93,11 +96,11 @@ function BlogPage() {
           <Link to="/blog/$slug" params={{ slug: featured.slug }} className="mt-6 block overflow-hidden rounded-xl bg-white">
             <img src={featured.thumbnail} alt={featured.title} style={getBannerStyle(featured.slug)} className="aspect-[16/8] w-full object-cover object-center" />
             <div className="p-5">
-              <p className="text-xs font-bold uppercase tracking-wide text-[#e91e63]">{featured.category}</p>
-              <h2 className="mt-1 text-2xl font-medium text-[#333]">{featured.title}</h2>
-              <p className="mt-2 text-sm text-[#777]">{featured.excerpt}</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-[#e60050]">{t(featured.category)}</p>
+              <h2 className="mt-1 text-2xl font-medium text-[#333]">{t(featured.title)}</h2>
+              <p className="mt-2 text-sm text-[#777]">{t(featured.excerpt)}</p>
               <p className="mt-3 text-xs text-[#999]">
-                {featured.author} · {formatDate(featured.date)} · {featured.readTime}
+                {t(featured.author)} · {formatDate(featured.date, dateLocale)} · {t(featured.readTime)}
               </p>
             </div>
           </Link>
@@ -116,20 +119,20 @@ function BlogPage() {
                 />
               </div>
               <div className="p-4">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#e91e63]">{p.category}</p>
-                <h3 className="mt-1 font-medium leading-snug text-[#333] group-hover:text-[#e91e63]">
-                  {p.title}
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#e60050]">{t(p.category)}</p>
+                <h3 className="mt-1 font-medium leading-snug text-[#333] group-hover:text-[#e60050]">
+                  {t(p.title)}
                 </h3>
-                <p className="mt-1 line-clamp-2 text-sm text-[#777]">{p.excerpt}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-[#777]">{t(p.excerpt)}</p>
                 <p className="mt-2 flex items-center gap-1 text-xs text-[#999]">
-                  <Clock className="h-3.5 w-3.5" /> {p.readTime} · {formatDate(p.date)}
+                  <Clock className="h-3.5 w-3.5" /> {t(p.readTime)} · {formatDate(p.date, dateLocale)}
                 </p>
               </div>
             </Link>
           ))}
         </div>
         {rest.length === 0 && !featured && (
-          <p className="mt-6 text-sm text-[#777]">Aucun article trouvé.</p>
+          <p className="mt-6 text-sm text-[#777]">{t("Aucun article trouvé.")}</p>
         )}
       </div>
       <SwivvFooter />

@@ -168,7 +168,7 @@ function AdminHealth() {
       {tab === "Notifications" && (
         <div className="mt-3 grid gap-3 lg:grid-cols-4">
           <div className={card}><p className="text-3xl font-bold text-[#333]">{mail ? mail.sent : "…"}</p><p className="mt-1 text-[#777]">E-mails envoyés</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#e91e63]">{mail ? mail.failed : "…"}</p><p className="mt-1 text-[#777]">E-mails en échec</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#e60050]">{mail ? mail.failed : "…"}</p><p className="mt-1 text-[#777]">E-mails en échec</p></div>
           <div className={card}><p className="text-3xl font-bold text-[#333]">{mail ? mail.queued : "…"}</p><p className="mt-1 text-[#777]">En file</p></div>
           <div className={card}><p className="text-3xl font-bold text-[#333]">{notifVol ?? "…"}</p><p className="mt-1 text-[#777]">Notifications in-app / 24 h</p></div>
         </div>

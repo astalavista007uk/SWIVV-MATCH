@@ -387,7 +387,7 @@ function AdminUserDetail() {
       {/* sticky member header */}
       <div className="sticky top-0 z-10 -mx-2 bg-[#f4f3fa]/95 px-2 py-2 backdrop-blur">
         <div className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
-          {(d.photos ?? [])[0] ? <img src={d.photos[0]} alt="" className="h-14 w-14 rounded-full object-cover" /> : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e91e63] text-xl text-white">{(d.name ?? "?").charAt(0)}</span>}
+          {(d.photos ?? [])[0] ? <img src={d.photos[0]} alt="" className="h-14 w-14 rounded-full object-cover" /> : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e60050] text-xl text-white">{(d.name ?? "?").charAt(0)}</span>}
           <div className="min-w-0">
             <h1 className="truncate text-xl font-medium text-[#333]">{d.name ?? userId}{d.age ? `, ${d.age}` : ""}{d.city ? ` · ${d.city}` : ""}</h1>
             <p className="truncate font-mono text-xs text-[#999]">{userId}</p>
@@ -483,7 +483,7 @@ function AdminUserDetail() {
             {(d.photos ?? []).map((p: string, i: number) => (
               <div key={p} className="relative">
                 <img src={p} alt="" className="aspect-square w-full rounded-lg object-cover" />
-                {i === 0 && <span className="absolute left-1 top-1 rounded-full bg-[#e91e63] px-2 py-0.5 text-xs text-white">Principale</span>}
+                {i === 0 && <span className="absolute left-1 top-1 rounded-full bg-[#e60050] px-2 py-0.5 text-xs text-white">Principale</span>}
                 {canAct && (
                   <div className="mt-1 flex gap-1">
                     {i > 0 && <button type="button" onClick={() => updateData((cur) => ({ ...cur, photos: [p, ...((cur as any).photos ?? []).filter((x: string) => x !== p)] }), "admin.photo.primary", "Photo principale mise à jour.")} className="rounded border border-border px-2 py-0.5 text-xs text-[#555]">Principale</button>}
@@ -531,7 +531,7 @@ function AdminUserDetail() {
           <ul className="mt-2 max-h-96 space-y-1 overflow-y-auto text-sm">
             {messages.map((m: any, i: number) => (
               <li key={`${m.created_at}-${i}`} className="text-[#555]">
-                <span className={`font-medium ${m.sender === "me" ? "text-[#e91e63]" : "text-[#333]"}`}>{m.sender === "me" ? "→" : "←"}</span> <MemberLink id={m.peer_id} name={nm(m.peer_id)} />{" "}
+                <span className={`font-medium ${m.sender === "me" ? "text-[#e60050]" : "text-[#333]"}`}>{m.sender === "me" ? "→" : "←"}</span> <MemberLink id={m.peer_id} name={nm(m.peer_id)} />{" "}
                 {canReadMsgs ? (m.audio_url ? <SwivvVoicePlayer src={signed[m.audio_url] ?? m.audio_url} /> : (m.body || "—")) : <em className="text-[#999]">[contenu masqué]</em>}{" "}
                 <span className="text-xs text-[#999]">· {new Date(m.created_at).toLocaleString("fr-FR")}</span>
               </li>
@@ -581,7 +581,7 @@ function AdminUserDetail() {
               </select>
               <button type="button" onClick={() => setAccountStatus("suspended", Number(suspendFor))} className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white">Suspendre</button>
               <input value={warnMsg} onChange={(e) => setWarnMsg(e.target.value)} placeholder="Motif de l'avertissement…" maxLength={500} aria-label="Motif" className="min-w-52 flex-1 rounded-md border border-border px-3 py-2 text-sm" />
-              <button type="button" onClick={warn} className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white">Avertir</button>
+              <button type="button" onClick={warn} className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white">Avertir</button>
             </div>
           )}
         </section>
@@ -607,7 +607,7 @@ function AdminUserDetail() {
                 setMsg("Vérification demandée au membre.");
                 refresh();
               }}
-              className="mt-2 rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white"
+              className="mt-2 rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white"
             >
               Demander une vérification
             </button>
@@ -646,14 +646,14 @@ function AdminUserDetail() {
                 }
                 const { data } = await (supabase as any).from("swivv_support_messages").select("body,is_staff,created_at").eq("ticket_id", t.id).order("created_at");
                 setTicketMsgs((m) => ({ ...m, [t.id]: data ?? [] }));
-              }} className="text-xs text-[#e91e63] hover:underline">{ticketMsgs[t.id] ? "Masquer" : "Voir"}</button>
+              }} className="text-xs text-[#e60050] hover:underline">{ticketMsgs[t.id] ? "Masquer" : "Voir"}</button>
               {ticketMsgs[t.id]?.map((m: any, i: number) => <span key={i} className="block pl-3 text-[13px] text-[#777]">{m.is_staff ? "Équipe" : "Membre"} : {m.body}</span>)}
             </li>
           ), "Aucun.")}
           {canAct && (
             <div className="mt-3 flex gap-2">
               <input value={contactMsg} onChange={(e) => setContactMsg(e.target.value)} placeholder="Écrire au membre (notification)…" maxLength={1000} aria-label="Message au membre" className="flex-1 rounded-md border border-border px-3 py-2 text-sm" />
-              <button type="button" onClick={contact} className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white">Contacter</button>
+              <button type="button" onClick={contact} className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white">Contacter</button>
             </div>
           )}
         </section>
@@ -671,7 +671,7 @@ function AdminUserDetail() {
           <h2 className="font-medium text-[#333]">Notes internes (invisibles à l'utilisateur)</h2>
           <form onSubmit={addNote} className="mt-2 flex gap-2">
             <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Ajouter une note…" maxLength={1000} aria-label="Note interne" className="flex-1 rounded-md border border-border px-3 py-2 text-sm" />
-            <button type="submit" className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white">Noter</button>
+            <button type="submit" className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white">Noter</button>
           </form>
           <ul className="mt-2 space-y-2">
             {notes.map((n: any) => (
@@ -702,5 +702,5 @@ function AdminUserDetail() {
 function MemberLink({ id, name }: { id: string; name: string }) {
   const bare = id.startsWith("u:") ? id.slice(2) : id;
   if (!/^[0-9a-f-]{36}$/i.test(bare)) return <span>{name}</span>;
-  return <a href={`/admin/users/${bare}`} className="text-[#e91e63] hover:underline">{name}</a>;
+  return <a href={`/admin/users/${bare}`} className="text-[#e60050] hover:underline">{name}</a>;
 }

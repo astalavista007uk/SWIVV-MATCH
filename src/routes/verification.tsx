@@ -9,13 +9,15 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons, openAuthModal } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/verification")({
   head: () => ({ meta: [{ title: "Vérification — SWIVV" }] }),
-  component: VerifyPage,
+  component: VerificationPage,
 });
 
-function VerifyPage() {
+export default function VerificationPage() {
+  const t = useT();
   const { user, loading } = useAuth();
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -173,38 +175,39 @@ function VerifyPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
       <main className="mx-auto max-w-md px-4 py-8">
         <h1 className="flex items-center gap-2 text-2xl font-medium text-[#333]">
-          <BadgeCheck className="h-6 w-6 text-[#e91e63]" /> Vérifie ton profil
+          <BadgeCheck className="h-6 w-6 text-[#e60050]" /> {t("Vérifie ton profil")}
         </h1>
         <p className="mt-1 text-sm text-[#777]">
-          Prends un selfie : on le compare à ta photo de profil, sur ton appareil uniquement. Rien n&apos;est envoyé ni stocké.
+          {t("Prends un selfie : on le compare à ta photo de profil, sur ton appareil uniquement. Rien n'est envoyé ni stocké.")}
         </p>
         {!loading && !user ? (
           <button
             type="button"
             onClick={() => openAuthModal("account", "signin")}
-            className="mt-6 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+            className="mt-6 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
           >
-            Se connecter pour vérifier mon profil
+            {t("Se connecter pour vérifier mon profil")}
           </button>
         ) : !photo ? (
           <div className="mt-6 text-center">
             <p className="text-sm text-[#777]">
-              Ajoute d&apos;abord une <Link to="/mon-profil" className="font-medium text-[#e91e63] underline">photo à ton profil</Link>.
+              {t("Ajoute d'abord une")}{" "}
+          <Link to="/mon-profil" className="font-medium text-[#e60050] underline">{t("photo à ton profil")}</Link>.
             </p>
             {/* ponytail: fetch-once froze a transient radio failure as "no photo" — one tap re-asks the server; drop if getMyProfile ever distinguishes error from empty */}
             <button
               type="button"
               onClick={() => setReloadKey((k) => k + 1)}
-              className="mt-3 text-sm font-medium text-[#e91e63] hover:underline"
+              className="mt-3 text-sm font-medium text-[#e60050] hover:underline"
             >
               Recharger mes photos
             </button>
@@ -226,16 +229,16 @@ function VerifyPage() {
                 <button
                   type="button"
                   onClick={() => photoFileRef.current?.click()}
-                  className="mt-1 w-full text-center text-xs font-medium text-[#e91e63] hover:underline"
+                  className="mt-1 w-full text-center text-xs font-medium text-[#e60050] hover:underline"
                 >
-                  Modifier cette photo
+                  {t("Modifier cette photo")}
                 </button>
                 <input
                   ref={photoFileRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  aria-label="Modifier la photo de profil"
+                  aria-label={t("Modifier la photo de profil")}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     e.target.value = "";
@@ -264,14 +267,14 @@ function VerifyPage() {
             </div>
             {camErr && !selfie && (
               <>
-                <p className="text-center text-sm text-red-600">{camErr}</p>
-                <label className="block cursor-pointer text-center text-sm font-medium text-[#e91e63] hover:underline">
-                Choisir une photo existante
+                <p className="text-center text-sm text-red-600">{t(camErr)}</p>
+                <label className="block cursor-pointer text-center text-sm font-medium text-[#e60050] hover:underline">
+                {t("Choisir une photo existante")}
                 <input
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  aria-label="Choisir une photo existante"
+                  aria-label={t("Choisir une photo existante")}
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     if (!f) return;
@@ -301,7 +304,7 @@ function VerifyPage() {
                 <button
                   type="button"
                   onClick={capture}
-                  className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+                  className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
                 >
                   Capturer
                 </button>
@@ -318,21 +321,21 @@ function VerifyPage() {
               type="button"
               disabled={!selfie || busy}
               onClick={() => verify()}
-              className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white disabled:opacity-40"
+              className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-40"
             >
-              {busy ? "Comparaison…" : "Vérifier que c'est bien moi"}
+              {busy ? t("Comparaison…") : t("Vérifier que c'est bien moi")}
             </button>
-            {err && <p className="text-center text-sm text-red-600">{err}</p>}
+            {err && <p className="text-center text-sm text-red-600">{t(err)}</p>}
             {checks && (
               <div className="flex justify-center gap-2" aria-label="Résultat par photo">
                 {photos.map((p, i) => (
-                  <span key={i} className="relative block w-14" title={checks[i]?.match ? "Visage correspondant" : checks[i]?.face ? "Visage différent" : "Aucun visage détecté"}>
+                  <span key={i} className="relative block w-14" title={checks[i]?.match ? t("Visage correspondant") : checks[i]?.face ? t("Visage différent") : t("Aucun visage détecté")}>
                     <img src={p} alt={`Photo ${i + 1}`} className="aspect-[4/5] w-full rounded-lg object-cover" />
                     <span className={`absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold text-white ${checks[i]?.match ? "bg-green-600" : checks[i]?.face ? "bg-red-500" : "bg-[#999]"}`}>
                       {checks[i]?.match ? "✓" : checks[i]?.face ? "✗" : "?"}
                     </span>
                     {!checks[i]?.match && (
-                      <span className="mt-0.5 block text-center text-[10px] leading-tight text-red-600">Sera supprimée</span>
+                      <span className="mt-0.5 block text-center text-[10px] leading-tight text-red-600">{t("Sera supprimée")}</span>
                     )}
                   </span>
                 ))}
@@ -340,19 +343,19 @@ function VerifyPage() {
             )}
             {result === "ok" && (
               <p className="rounded-xl bg-green-50 p-4 text-center text-sm font-medium text-green-800">
-                ✓ C&apos;est bien toi ! Ton profil affiche désormais le badge vérifié.
+                ✓ {t("C'est bien toi ! Ton profil affiche désormais le badge vérifié.")}
               </p>
             )}
             {result === "ko" && (
               <div className="rounded-xl bg-red-50 p-4 text-center">
                 <p className="text-sm font-medium text-red-700">
-                  Ce selfie ne correspond à aucune de tes photos. Si c&apos;est bien toi aujourd&apos;hui, utilise-le comme nouvelle photo de profil.
+                  {t("Ce selfie ne correspond à aucune de tes photos. Si c'est bien toi aujourd'hui, utilise-le comme nouvelle photo de profil.")}
                 </p>
                 <button
                   type="button"
                   disabled={busy}
                   onClick={useSelfieAsPhoto}
-                  className="mt-3 w-full rounded-md bg-[#e91e63] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-40"
+                  className="mt-3 w-full rounded-md bg-[#e60050] px-4 py-2.5 text-sm font-medium text-white disabled:opacity-40"
                 >
                   Utiliser ce selfie comme photo de profil
                 </button>

@@ -59,7 +59,7 @@ export function SwivvVoicePlayer({ src, dark = false }: { src: string | undefine
           setPos(a.currentTime);
         }}
         aria-label="Position de lecture"
-        className={`h-1 min-w-0 flex-1 cursor-pointer ${dark ? "accent-white" : "accent-[#e91e63]"}`}
+        className={`h-1 min-w-0 flex-1 cursor-pointer ${dark ? "accent-white" : "accent-[#e60050]"}`}
       />
       <span className={`shrink-0 text-[11px] tabular-nums ${sub}`}>{fmt(len)}</span>
       <span className="relative shrink-0">

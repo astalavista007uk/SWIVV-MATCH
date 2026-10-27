@@ -163,13 +163,13 @@ function AdminLive() {
                 <div className="mt-1 border-t border-border pt-1 text-xs text-[#555]">
                   <p>{new Date(r.at).toLocaleString("fr-FR")} · source : temps réel / sondage · résultat : enregistré</p>
                   {r.targetKind === "user" && r.targetId && /^[0-9a-f-]{36}$/i.test(r.targetId) && (
-                    <p className="mt-1"><a href={`/admin/users/${r.targetId}`} className="text-[#e91e63] underline">Fiche membre</a></p>
+                    <p className="mt-1"><a href={`/admin/users/${r.targetId}`} className="text-[#e60050] underline">Fiche membre</a></p>
                   )}
                   {r.targetKind === "ticket" && (
-                    <p className="mt-1"><Link to="/admin/support" search={{ status: "all" } as any} className="text-[#e91e63] underline">Ouvrir le support</Link></p>
+                    <p className="mt-1"><Link to="/admin/support" search={{ status: "all" } as any} className="text-[#e60050] underline">Ouvrir le support</Link></p>
                   )}
                   {r.type === "report" && (
-                    <p className="mt-1"><Link to="/admin/reports" search={{ status: "new" } as any} className="text-[#e91e63] underline">File signalements</Link></p>
+                    <p className="mt-1"><Link to="/admin/reports" search={{ status: "new" } as any} className="text-[#e60050] underline">File signalements</Link></p>
                   )}
                 </div>
               )}

@@ -37,7 +37,7 @@ export function CguAcceptDialog({ open, onOpenChange, onAccept }: { open: boolea
           ))}
         </div>
         <p className="text-xs text-[#777]">{atBottom ? "Tu as tout lu — tu peux accepter." : "Fais défiler jusqu'en bas pour pouvoir accepter."}</p>
-        <button type="button" disabled={!atBottom} onClick={() => { onAccept(); onOpenChange(false); }} className="rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white disabled:opacity-40">
+        <button type="button" disabled={!atBottom} onClick={() => { onAccept(); onOpenChange(false); }} className="rounded-md bg-[#e60050] px-6 py-3 font-medium text-white disabled:opacity-40">
           Accepter
         </button>
       </DialogContent>

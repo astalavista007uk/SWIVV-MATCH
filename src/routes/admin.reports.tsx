@@ -194,10 +194,10 @@ function AdminReports() {
                 <div className="mt-3 border-t border-border pt-3 text-sm">
                   <p className="font-mono text-[11px] text-[#bbb]">ID {r.id}</p>
                   {r.description && <p className="mt-1 text-[#555]">« {r.description} »</p>}
-                  {r.evidence_url && <a href={r.evidence_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[#e91e63] underline">Voir la pièce jointe (contenu signalé uniquement)</a>}
+                  {r.evidence_url && <a href={r.evidence_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[#e60050] underline">Voir la pièce jointe (contenu signalé uniquement)</a>}
                   <div className="mt-2 flex flex-wrap gap-2 text-sm">
-                    {r.reported_user_id && <Link to="/admin/users/$userId" params={{ userId: r.reported_user_id }} className="text-[#e91e63] underline">Fiche membre 360</Link>}
-                    {r.reporter_id && <Link to="/admin/users/$userId" params={{ userId: r.reporter_id }} className="text-[#e91e63] underline">Signaleur</Link>}
+                    {r.reported_user_id && <Link to="/admin/users/$userId" params={{ userId: r.reported_user_id }} className="text-[#e60050] underline">Fiche membre 360</Link>}
+                    {r.reporter_id && <Link to="/admin/users/$userId" params={{ userId: r.reporter_id }} className="text-[#e60050] underline">Signaleur</Link>}
                   </div>
                   {d ? (
                     <div className="mt-2 grid gap-2 lg:grid-cols-2">

@@ -188,7 +188,7 @@ function AdminAnnouncements() {
               </select>
               <input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Pays (optionnel)" aria-label="Pays cible" className="rounded-md border border-border px-3 py-2 text-sm" />
               <input value={scheduled} onChange={(e) => setScheduled(e.target.value)} type="datetime-local" aria-label="Envoi planifié (Europe/Paris, manuel)" className="rounded-md border border-border px-3 py-2 text-sm" />
-              <button type="submit" disabled={busy} className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Créer (brouillon)</button>
+              <button type="submit" disabled={busy} className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Créer (brouillon)</button>
             </div>
             <p className="text-xs text-[#999]">Planification = intention + fanion « à envoyer » (aucun worker : l'envoi reste manuel, fuseau Europe/Paris). Audiences : attributs non sensibles uniquement.</p>
           </form>
@@ -197,7 +197,7 @@ function AdminAnnouncements() {
             <div role="alert" className="mt-2 rounded-lg bg-amber-50 p-3 text-sm">
               <p>Envoyer à <strong>{confirm.recipients}</strong> utilisateur(s) ? {confirm.skipped} écarté(s) (annonce {"<"} 7 j). Aucun envoi auto, aucun par l'IA.</p>
               <div className="mt-2 flex gap-2">
-                <button type="button" onClick={confirmSend} disabled={busy} className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Oui, envoyer</button>
+                <button type="button" onClick={confirmSend} disabled={busy} className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Oui, envoyer</button>
                 <button type="button" onClick={() => setConfirm(null)} className="rounded-md border border-border bg-white px-4 py-2 text-sm">Annuler</button>
               </div>
             </div>

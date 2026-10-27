@@ -116,7 +116,8 @@ export function setSetting<K extends keyof SwivvSettings>(k: K, v: SwivvSettings
 
 // ponytail: relies on the native shell tagging its WebView — append "SwivvApp" to the UA or inject window.__SWIVV_NATIVE__ true; plain browsers never match
 export function isNativeApp(): boolean {
-  if (typeof navigator === "undefined") return false;
+  // ponytail: window guard, not navigator — Node 22 exposes navigator but not window, so SSR crashed here
+  if (typeof window === "undefined") return false;
   return (
     navigator.userAgent.includes("SwivvApp") ||
     (window as { __SWIVV_NATIVE__?: boolean }).__SWIVV_NATIVE__ === true

@@ -35,3 +35,10 @@ dist-ssr
 .https/
 .vercel
 .env*
+
+# QA test-account credentials manifest (never commit)
+secrets/
+
+# Marketing renders and Supabase CLI scratch (211 MB of video, regenerable)
+marketing/
+supabase/.temp/

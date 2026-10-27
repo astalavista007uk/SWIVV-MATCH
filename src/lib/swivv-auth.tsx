@@ -9,6 +9,7 @@ import { findOffensive } from "@/lib/swivv-moderation";
 import { useAuth, forceSignOut } from "@/hooks/use-auth";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { NotifBadge, SwivvTopIcons } from "@/components/swivv-top-icons";
+import { useT } from "@/lib/i18n";
 
 export type SwivvUser = { name: string; email: string; nationalities: string[] };
 
@@ -403,6 +404,8 @@ const FEED_FIELDS = [
   "languages:data->languages",
   "otherLanguages:data->otherLanguages",
   "thumb:data->thumb",
+  // ponytail: hidden members are filtered below in the browser - RLS is the real gate (20261029000000), this stops the obvious leak until it lands
+  "profileHidden:data->profileHidden",
 ].join(",");
 // withPhotos: only the "Photos récentes" grid needs every photo (it shows one card per photo) — the other six categories and the matches list stay lean
 export function usePublicProfiles(withPhotos = false): { profiles: SwivvProfile[]; hasMore: boolean; loaded: boolean; loadMore: () => void } {
@@ -442,6 +445,7 @@ export function usePublicProfiles(withPhotos = false): { profiles: SwivvProfile[
           .filter((r) => {
             if (r.user_id === user.id) return false;
             const d = withPhotos ? r.data : r;
+            if (d?.profileHidden === true) return false;
             return !!d?.name && !!photoOf(d);
           })
           // ponytail: joinedAt backfilled from the row — pre-signup-form rows lack it and crashed every recent-sort; drop once caches turn over
@@ -519,7 +523,7 @@ export async function requireSwivvAuth(reason: AuthReason, run: () => void) {
   setModal({ open: true, reason, tab: "signin" });
 }
 
-const REASON_COPY: Record<AuthReason, string> = {
+const REASON_COPY = {
   like: "Crée un compte ou connecte-toi pour liker ce membre.",
   message: "Crée un compte ou connecte-toi pour envoyer un message.",
   account: "Crée ton compte gratuit ou connecte-toi pour continuer.",
@@ -527,9 +531,10 @@ const REASON_COPY: Record<AuthReason, string> = {
   report: "Crée un compte ou connecte-toi pour signaler ce membre.",
   block: "Crée un compte ou connecte-toi pour bloquer ce membre.",
   unblock: "Crée un compte ou connecte-toi pour débloquer ce membre.",
-};
+} as const;
 
 export function AuthModal() {
+  const t = useT();
   const state = useAuthModal();
   const [tab, setTab] = useState<AuthTab>("signin");
   const [email, setEmail] = useState("");
@@ -566,11 +571,11 @@ export function AuthModal() {
     e.preventDefault();
     const cleanEmail = email.trim();
     if (!/.+@.+\..+/.test(cleanEmail)) {
-      setError("Entre un e-mail valide.");
+      setError(t("Entre un e-mail valide."));
       return;
     }
     if (!password) {
-      setError("Entre ton mot de passe.");
+      setError(t("Entre ton mot de passe."));
       return;
     }
     setBusy(true);
@@ -592,34 +597,34 @@ export function AuthModal() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Connexion requise"
+      aria-label={t("Connexion requise")}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
       onClick={closeAuthModal}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
+        className="w-full max-w-sm rounded-2xl bg-white p-6 text-[#333] shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <SwivvLogo />
-        <h2 className="mt-2 text-xl font-medium text-[#333]">Connexion requise</h2>
-        <p className="mt-1 text-sm text-[#777]">{REASON_COPY[state.reason]}</p>
+        <h2 className="mt-2 text-xl font-medium text-[#333]">{t("Connexion requise")}</h2>
+        <p className="mt-1 text-sm text-[#777]">{t(REASON_COPY[state.reason])}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-1 rounded-md bg-[#f2f2f2] p-1 text-sm" role="tablist">
-          {(["signup", "signin"] as const).map((t) => (
+          {(["signup", "signin"] as const).map((k) => (
             <button
-              key={t}
+              key={k}
               role="tab"
-              aria-selected={tab === t}
+              aria-selected={tab === k}
               type="button"
               onClick={() => {
-                setTab(t);
+                setTab(k);
                 setError(null);
               }}
               className={`rounded px-3 py-1.5 font-medium ${
-                tab === t ? "bg-white text-[#e91e63] shadow-sm" : "text-[#777]"
+                tab === k ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"
               }`}
             >
-              {t === "signup" ? "Créer un compte" : "Se connecter"}
+              {k === "signup" ? t("Créer un compte") : t("Se connecter")}
             </button>
           ))}
         </div>
@@ -628,7 +633,7 @@ export function AuthModal() {
           <form onSubmit={submit} className="mt-4 space-y-3">
             <div>
               <label htmlFor="swivv-email" className="mb-1 block text-sm font-medium text-[#333]">
-                Ton e-mail
+                {t("Ton e-mail")}
               </label>
               <input
                 id="swivv-email"
@@ -637,12 +642,12 @@ export function AuthModal() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="camille@exemple.fr"
                 autoComplete="email"
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
             <div>
               <label htmlFor="swivv-password" className="mb-1 block text-sm font-medium text-[#333]">
-                Ton mot de passe
+                {t("Ton mot de passe")}
               </label>
               <input
                 id="swivv-password"
@@ -651,7 +656,7 @@ export function AuthModal() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
@@ -660,29 +665,29 @@ export function AuthModal() {
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="h-4 w-4 shrink-0 accent-[#e91e63]"
+                className="h-4 w-4 shrink-0 accent-[#e60050]"
               />
-              Rester connecté
+              {t("Rester connecté")}
             </label>
             <button
               type="submit"
               disabled={busy}
-              className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white disabled:opacity-60"
+              className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-60"
             >
-              {busy ? "Connexion…" : "Se connecter"}
+              {busy ? t("Connexion…") : t("Se connecter")}
             </button>
           </form>
         ) : (
           <div className="mt-4 space-y-3">
             <p className="text-sm leading-relaxed text-[#555]">
-              Crée ton compte Swivv et commence une nouvelle histoire. Avec Swivv, moins de swipe, plus de vraies rencontres.
+              {t("Crée ton compte Swivv et commence une nouvelle histoire. Avec Swivv, moins de swipe, plus de vraies rencontres.")}
             </p>
             <Link
               to="/inscription"
               onClick={closeAuthModal}
-              className="block w-full rounded-md bg-[#e91e63] px-4 py-3 text-center font-medium text-white"
+              className="block w-full rounded-md bg-[#e60050] px-4 py-3 text-center font-medium text-white"
             >
-              Créer mon profil
+              {t("Créer mon profil")}
             </Link>
           </div>
         )}
@@ -691,7 +696,7 @@ export function AuthModal() {
           onClick={closeAuthModal}
           className="mt-3 w-full text-center text-sm text-[#777] hover:text-[#333]"
         >
-          Plus tard
+          {t("Plus tard")}
         </button>
       </div>
     </div>
@@ -700,6 +705,7 @@ export function AuthModal() {
 
 /** Header buttons: sign-in state aware (Sign up / Sign in vs Hello + hamburger menu). */
 export function SwivvAuthButtons() {
+  const t = useT();
   const user = useSwivvUser();
   const nav = useNavigate();
   // ponytail: avatar URL cached locally for instant paint, refreshed in background — keyed per browser, cleared on logout
@@ -760,21 +766,21 @@ export function SwivvAuthButtons() {
 
   if (user) {
     const itemCls = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-[#333] hover:bg-[#f2f2f2]";
-    const itemIcon = "h-4 w-4 shrink-0 text-[#e91e63]";
+    const itemIcon = "h-4 w-4 shrink-0 text-[#e60050]";
     return (
       <>
       <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-0 sm:order-3 sm:gap-2 -mt-2 sm:mt-0">
         {/* ponytail: bell sits left of the avatar on all viewports — was mobile-only until desktop asked for the same spot; extract a shared HeaderBell if a third placement appears */}
         <Link
           to="/notifications"
-          aria-label="Notifications"
-          className="relative p-0.5 text-black"
+          aria-label={t("Notifications")}
+          className="relative p-0.5 text-white"
         >
           <Bell className="h-6 w-6" strokeWidth={1.5} />
           <NotifBadge />
         </Link>
         {photo ? (
-          <Link to="/mon-profil" aria-label="Mon profil">
+          <Link to="/mon-profil" aria-label={t("Mon profil")}>
             <img
               src={photo}
               alt=""
@@ -794,50 +800,50 @@ export function SwivvAuthButtons() {
         ) : (
           <Link
             to="/mon-profil"
-            aria-label="Mon profil"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e91e63] text-sm font-medium text-white"
+            aria-label={t("Mon profil")}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e60050] text-sm font-medium text-white"
           >
             {user.name.charAt(0).toUpperCase()}
           </Link>
         )}
           <Link
             to="/mon-profil"
-          className="rounded-md border border-black px-4 py-2 text-sm font-medium text-black hover:underline"
+          className="rounded-md border border-white px-4 py-2 text-sm font-medium text-white hover:underline"
           >
-            Mon profil
+            {t("Mon profil")}
           </Link>
         {/* ponytail: native details dropdown, no menu lib — custom popover if a11y audit demands it */}
         <details className="relative group">
           <summary
-            aria-label="Menu du compte"
-            className="cursor-pointer list-none rounded-md border border-black px-3 py-2 text-black [&::-webkit-details-marker]:hidden"
+            aria-label={t("Menu du compte")}
+            className="cursor-pointer list-none rounded-md border border-white px-3 py-2 [&::-webkit-details-marker]:hidden"
           >
             <Menu className="h-5 w-5" />
           </summary>
           {/* Click anywhere to dismiss: invisible layer under the panel, only rendered while open */}
           <button
             type="button"
-            aria-label="Fermer le menu"
+            aria-label={t("Fermer le menu")}
             onClick={(e) => (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open")}
             className="fixed inset-0 z-40 hidden cursor-default bg-transparent group-open:block"
           />
           <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-white p-1.5 shadow-lg">
-            <Link to="/parametres" className={itemCls}><Settings className={itemIcon} />Réglages du profil</Link>
-            <Link to="/statistiques" search={{ tab: "overview" }} className={itemCls}><ChartColumn className={itemIcon} />Mes statistiques</Link>
+            <Link to="/parametres" className={itemCls}><Settings className={itemIcon} />{t("Réglages du profil")}</Link>
+            <Link to="/statistiques" search={{ tab: "overview" }} className={itemCls}><ChartColumn className={itemIcon} />{t("Mes statistiques")}</Link>
             <Link to="/progress" search={{ tab: "progress" }} className={itemCls}><Sparkles className={itemIcon} />SWIVV PROGRESS</Link>
-            <Link to="/facturation" className={itemCls}><Receipt className={itemIcon} />Relevés d'accès</Link>
-            <Link to="/notifications" className={itemCls}><Bell className={itemIcon} />Notifications</Link>
-            <Link to="/help" className={itemCls}><LifeBuoy className={itemIcon} />Centre d&apos;aide</Link>
+            <Link to="/facturation" className={itemCls}><Receipt className={itemIcon} />{t("Relevés d'accès")}</Link>
+            <Link to="/notifications" className={itemCls}><Bell className={itemIcon} />{t("Notifications")}</Link>
+            <Link to="/help" className={itemCls}><LifeBuoy className={itemIcon} />{t("Centre d'aide")}</Link>
             <button
               type="button"
               onClick={async () => {
                 await signOutSwivv();
                 nav({ to: "/" });
               }}
-              className={`${itemCls} font-medium text-[#e91e63]`}
+              className={`${itemCls} font-medium text-[#e60050]`}
             >
               <LogOut className={itemIcon} />
-              Déconnexion
+              {t("Déconnexion")}
             </button>
           </div>
         </details>
@@ -854,23 +860,23 @@ export function SwivvAuthButtons() {
       <button
         type="button"
         onClick={() => openAuthModal("account", "signin")}
-        className="hidden rounded-md border border-[#e91e63] px-4 py-2 text-sm font-medium text-[#e91e63] hover:underline sm:block"
+        className="hidden rounded-md border border-[#e60050] px-4 py-2 text-sm font-medium text-[#e60050] hover:underline sm:block"
       >
-        S&apos;inscrire | Se connecter
+        {t("S'inscrire | Se connecter")}
       </button>
       <button
         type="button"
         onClick={() => openAuthModal("account", "signin")}
-        aria-label="Se connecter"
-        className="rounded-md border border-[#e91e63] p-2 text-[#e91e63] sm:hidden"
+        aria-label={t("Se connecter")}
+        className="rounded-md border border-[#e60050] p-2 text-[#e60050] sm:hidden"
       >
         <LogIn className="h-5 w-5" />
       </button>
       <Link
         to="/inscription"
-        className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white"
+        className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white"
       >
-        Créer mon profil
+        {t("Créer mon profil")}
       </Link>
     </div>
     <AuthModal />

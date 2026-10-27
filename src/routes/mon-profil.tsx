@@ -10,6 +10,7 @@ import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvProfileView } from "@/components/swivv-profile-view";
 import { REACTIONS, fetchReactionCounts, type ReactionId } from "@/lib/swivv-reactions";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/mon-profil")({
   head: () => ({ meta: [{ title: "Mon profil — SWIVV" }] }),
@@ -18,15 +19,16 @@ export const Route = createFileRoute("/mon-profil")({
 
 // ponytail: read-only received-reactions strip (own photos can't be self-reacted) — reacted-only, count on top, centered row; counts refresh with the profile below
 function ReactionStrip({ counts }: { counts: Partial<Record<ReactionId, number>> | undefined }) {
+  const t = useT();
   const shown = REACTIONS.filter((r) => (counts?.[r.id] ?? 0) > 0);
   if (!shown.length) return null;
   return (
     <div className="flex items-end justify-center gap-1.5">
       {shown.map((r) => (
-        <span key={r.id} title={`${r.label} × ${counts?.[r.id]}`} className="flex min-w-[38px] flex-col items-center rounded-full bg-black/55 px-2 py-1 text-white backdrop-blur-sm">
+        <span key={r.id} title={`${t(r.label)} × ${counts?.[r.id]}`} className="flex min-w-[38px] flex-col items-center rounded-full bg-black/55 px-2 py-1 text-white backdrop-blur-sm">
           <span className="text-[11px] font-semibold leading-tight">{counts?.[r.id]}</span>
           <span aria-hidden="true" className="text-lg leading-none">{r.emoji}</span>
-          <span className="sr-only">{r.label}</span>
+          <span className="sr-only">{t(r.label)}</span>
         </span>
       ))}
     </div>
@@ -34,6 +36,7 @@ function ReactionStrip({ counts }: { counts: Partial<Record<ReactionId, number>>
 }
 
 function MyProfilePage() {
+  const t = useT();
   const user = useSwivvUser();
   const { user: authUser, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<SwivvProfile | null | undefined>(undefined);
@@ -169,9 +172,9 @@ function MyProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -180,35 +183,35 @@ function MyProfilePage() {
       <main className="mx-auto max-w-6xl px-4 py-6">
         {offline ? (
           <div className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="font-medium text-[#333]">Connexion perdue</p>
+            <p className="font-medium text-[#333]">{t("Connexion perdue")}</p>
             <p className="mt-1 text-sm text-[#777]">
-              Impossible de charger ton profil sans connexion. Tes données sont en sécurité — réessaie quand internet revient.
+              {t("Impossible de charger ton profil sans connexion. Tes données sont en sécurité — réessaie quand internet revient.")}
             </p>
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-4 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+              className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
             >
-              Réessayer
+              {t("Réessayer")}
             </button>
           </div>
         ) : profile === undefined ? (
-          <p className="py-16 text-center text-[#777]">Chargement…</p>
+          <p className="py-16 text-center text-[#777]">{t("Chargement…")}</p>
         ) : !profile ? (
           // ponytail: no dead-end card — profile-less signups go straight to the form that creates the row; a transient null lands on a prefilled edit form, never a wall
           !user ? (
           <div className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center shadow-sm">
             <SwivvLogo />
-            <h1 className="mt-2 text-xl font-medium text-[#333]">Crée ton profil SWIVV</h1>
+            <h1 className="mt-2 text-xl font-medium text-[#333]">{t("Crée ton profil SWIVV")}</h1>
             <p className="mt-1 text-sm text-[#777]">
-              Crée ton profil complet pour le voir ici.
+              {t("Crée ton profil complet pour le voir ici.")}
             </p>
             <button
               type="button"
               onClick={() => openAuthModal("account", "signin")}
-              className="mt-4 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+              className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
             >
-              Se connecter / S&apos;inscrire
+              {t("Se connecter / S'inscrire")}
             </button>
           </div>
           ) : (
@@ -224,25 +227,25 @@ function MyProfilePage() {
               if (pct >= 100) {
                 return (
                   <p className="min-w-52 flex-1 rounded-2xl bg-emerald-500/10 p-4 text-center text-sm font-medium text-emerald-900">
-                    Bravo ! Ton profil SWIVV est 100 % complet 🎉
+                    {t("Bravo ! Ton profil SWIVV est 100 % complet 🎉")}
                   </p>
                 );
               }
               return (
-              <div className="flex min-w-52 flex-1 flex-wrap items-center gap-3 rounded-2xl bg-[#e91e63]/5 p-4">
+              <div className="flex min-w-52 flex-1 flex-wrap items-center gap-3 rounded-2xl bg-[#e60050]/5 p-4">
                 <div className="min-w-52 flex-1">
                   <p className="text-sm font-medium text-[#333]">
-                    Ton profil est à {pct} % — ajoute ta photo et tes détails pour recevoir plus de messages.
+                    {t("Ton profil est à {pct} % — ajoute ta photo et tes détails pour recevoir plus de messages.", { pct })}
                   </p>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e91e63]/15" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-                    <div className="h-full rounded-full bg-[#e91e63]" style={{ width: `${pct}%` }} />
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e60050]/15" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="h-full rounded-full bg-[#e60050]" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
                 <Link
                   to="/inscription"
-                  className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white"
+                  className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white"
                 >
-                  Compléter mon profil
+                  {t("Compléter mon profil")}
                 </Link>
               </div>
               );
@@ -252,19 +255,19 @@ function MyProfilePage() {
                 to="/verification"
                 className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
               >
-                Vérifier avec un selfie
+                {t("Vérifier avec un selfie")}
               </Link>
               <Link
                 to="/parametres"
                 className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
               >
-                Paramètres
+                {t("Paramètres")}
               </Link>
               <Link
                 to="/inscription"
-                className="rounded-md border border-[#e91e63] px-4 py-2 text-sm font-medium text-[#e91e63]"
+                className="rounded-md border border-[#e60050] px-4 py-2 text-sm font-medium text-[#e60050]"
               >
-                Modifier mon profil
+                {t("Modifier mon profil")}
                 </Link>
             </div>
             </div>
@@ -272,8 +275,8 @@ function MyProfilePage() {
               profile={profile}
               reactToolbar={(src: string) => <ReactionStrip counts={reactCounts[src]} />}
               badge={
-                <p className="mt-2 inline-block rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63]">
-                  Mon profil · {profile.lookingFor}
+                <p className="mt-2 inline-block rounded-full bg-[#e60050]/10 px-3 py-1 text-sm font-medium text-[#e60050]">
+                  {t("Mon profil")} · {t(profile.lookingFor)}
                 </p>
               }
               onSavePhotos={async (photos) => {
@@ -281,7 +284,7 @@ function MyProfilePage() {
                 const saveErr = await saveMyProfile(next);
                 if (!saveErr) {
                   setProfile(next);
-                  toast.success("Photos mises à jour.");
+                  toast.success(t("Photos mises à jour."));
                 }
                 return saveErr;
               }}

@@ -75,19 +75,19 @@
   --card-foreground: oklch(0.18 0.01 220);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.01 220);
-  --primary: oklch(0.52 0.09 200);
+  --primary: oklch(0.583 0.251 12);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.96 0.01 210);
   --secondary-foreground: oklch(0.22 0.03 210);
   --muted: oklch(0.96 0.005 220);
   --muted-foreground: oklch(0.45 0.02 220);
-  --accent: oklch(0.94 0.03 200);
-  --accent-foreground: oklch(0.32 0.07 200);
+  --accent: oklch(0.96 0.03 12);
+  --accent-foreground: oklch(0.4 0.16 12);
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.92 0.005 220);
   --input: oklch(0.92 0.005 220);
-  --ring: oklch(0.52 0.09 200);
+  --ring: oklch(0.583 0.251 12);
   --chart-1: oklch(0.52 0.09 200);
   --chart-2: oklch(0.72 0.12 180);
   --chart-3: oklch(0.65 0.15 150);
@@ -261,6 +261,48 @@
 .leaflet-container {
   z-index: 0;
   isolation: isolate;
+}
+
+/* Mobile home hero photo wall — CSS-only drift of duplicated strips; the
+   reduced-motion block below freezes it. ponytail: seam jumps by half a gap
+   every loop; switch to JS/requestAnimationFrame if that ever shows. */
+@keyframes swivvHeroUp {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+@keyframes swivvHeroDown {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Desktop hero story slider — active segment fills over the 5s slide. */
+@keyframes swivvStoryFill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Feature slider fade-in on slide change — reduced-motion block below freezes it. */
+@keyframes swivvFeatureIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Respect reduced-motion: collapse transitions and entrance/loop animations

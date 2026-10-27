@@ -11,6 +11,31 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { useDateLocale, useT } from "@/lib/i18n";
+
+// ponytail: the server stores titles/messages as French text, so known templates are matched at render. Admin/broadcast free text stays as written.
+const NOTIF_TEMPLATES: [RegExp, string][] = [
+  [/^(.+?) a consulté ton profil\.$/, "{name} a consulté ton profil."],
+  [/^(.+?) t'a écrit\.$/, "{name} t'a écrit."],
+  [/^(.+?) t'a envoyé un message vocal\.$/, "{name} t'a envoyé un message vocal."],
+  [/^(.+?) t'a envoyé une photo\.$/, "{name} t'a envoyé une photo."],
+  [/^(.+?) s'intéresse à ton profil\.$/, "{name} s'intéresse à ton profil."],
+  [/^Toi et (.+?) vous êtes plu\.$/, "Toi et {name} vous êtes plu."],
+  [/^(.+?) ne peut plus te contacter ni voir ton profil\.$/, "{name} ne peut plus te contacter ni voir ton profil."],
+  [/^La communication avec (.+?) est de nouveau possible\.$/, "La communication avec {name} est de nouveau possible."],
+  [/^(.*?) ?Un membre a réagi à l'une de tes photos\.$/, "{emoji} Un membre a réagi à l'une de tes photos."],
+];
+
+function notifText(t: (fr: string, vars?: Record<string, string | number>) => string, s: string | null): string | null {
+  if (!s) return s;
+  const direct = t(s);
+  if (direct !== s) return direct;
+  for (const [re, key] of NOTIF_TEMPLATES) {
+    const m = s.match(re);
+    if (m) return t(key, key.includes("{emoji}") ? { emoji: m[1].trim() } : { name: m[1] });
+  }
+  return s;
+}
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({ meta: [{ title: "Notifications — SWIVV" }] }),
@@ -55,23 +80,26 @@ function matchFilter(n: SwivvNotif, f: string): boolean {
 }
 
 function Toggle({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
+  const t = useT();
   return (
     <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-white p-3 shadow-sm">
       <span>
-        <span className="block text-[15px] font-medium text-[#333]">{label}</span>
-        <span className="block text-sm text-[#777]">{desc}</span>
+        <span className="block text-[15px] font-medium text-[#333]">{t(label)}</span>
+        <span className="block text-sm text-[#777]">{t(desc)}</span>
       </span>
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-5 w-5 shrink-0 accent-[#e91e63]"
+        className="h-5 w-5 shrink-0 accent-[#e60050]"
       />
     </label>
   );
 }
 
 function NotificationsPage() {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const navigate = useNavigate();
   const [settings, setS] = useState<SwivvSettings>(getSettings);
   const [marketing, setMarketing] = useState(false);
@@ -170,9 +198,9 @@ function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -180,41 +208,41 @@ function NotificationsPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-medium text-[#333]">Notifications{unreadCount > 0 && <span className="ml-2 text-base text-[#e91e63]">{unreadCount}</span>}</h1>
+          <h1 className="text-2xl font-medium text-[#333]">{t("Notifications")}{unreadCount > 0 && <span className="ml-2 text-base text-[#e60050]">{unreadCount}</span>}</h1>
           {unreadCount > 0 && (
-            <button type="button" onClick={markAll} className="shrink-0 text-sm font-medium text-[#e91e63] hover:underline">
-              Tout marquer comme lu
+            <button type="button" onClick={markAll} className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">
+              {t("Tout marquer comme lu")}
             </button>
           )}
         </div>
         <SwivvSettingsTabs />
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Filtres">
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label={t("Filtres")}>
           {FILTERS.map((f) => (
             <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} onClick={() => { setFilter(f.id); setShown(PAGE); }}
-              className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium ${filter === f.id ? "border-[#e91e63] bg-[#e91e63] text-white" : "border-border bg-white text-[#555] hover:text-[#e91e63]"}`}>
-              {f.label}
+              className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium ${filter === f.id ? "border-[#e60050] bg-[#e60050] text-white" : "border-border bg-white text-[#555] hover:text-[#e60050]"}`}>
+              {t(f.label)}
             </button>
           ))}
         </div>
         <div className="mt-4 space-y-2" aria-live="polite">
           {failed && notifs === null ? (
-            <p className="text-sm text-[#555]">Impossible de charger tes notifications. <button type="button" onClick={() => { setFailed(false); setNotifs(null); listNotifs(100, 0).then(setNotifs, () => setFailed(true)); }} className="font-medium text-[#e91e63] hover:underline">Réessayer</button></p>
+            <p className="text-sm text-[#555]">{t("Impossible de charger tes notifications.")} <button type="button" onClick={() => { setFailed(false); setNotifs(null); listNotifs(100, 0).then(setNotifs, () => setFailed(true)); }} className="font-medium text-[#e60050] hover:underline">{t("Réessayer")}</button></p>
           ) : notifs === null ? (
-            <p className="text-sm text-[#777]">Chargement…</p>
+            <p className="text-sm text-[#777]">{t("Chargement…")}</p>
           ) : visible.length === 0 ? (
-            <p className="text-sm text-[#777]">Tu es à jour ! Aucune nouvelle notification pour le moment.</p>
+            <p className="text-sm text-[#777]">{t("Tu es à jour ! Aucune nouvelle notification pour le moment.")}</p>
           ) : (
             visible.slice(0, shown).map((n) => {
               const Icon = ICONS[n.type] ?? Bell;
               return (
               <article key={n.id} className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2 shadow-sm ${n.read ? "bg-white" : "bg-[#ececee]"}`}>
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.read ? "bg-[#f2f2f2] text-[#999]" : "bg-[#e91e63] text-white"}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.read ? "bg-[#f2f2f2] text-[#999]" : "bg-[#e60050] text-white"}`}>
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm"><span className="font-medium text-[#333]">{n.title}</span>{n.message && <span className="text-[#555]"> — {n.message}</span>}</p>
+                  <p className="text-sm"><span className="font-medium text-[#333]">{notifText(t, n.title)}</span>{n.message && <span className="text-[#555]"> — {notifText(t, n.message)}</span>}</p>
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#999]">
-                    <span>{new Date(n.created_at).toLocaleString("fr-FR")}</span>
+                    <span>{new Date(n.created_at).toLocaleString(dateLocale)}</span>
                     {/* ponytail: SPA navigation instead of a plain href - a full page load cancelled the mark-read write, so "Voir" came back as unread */}
                     {n.link && validLink(n.link) && (
                       <a
@@ -224,13 +252,13 @@ function NotificationsPage() {
                           if (!n.read) void markOne(n.id);
                           void navigate({ href: n.link as string });
                         }}
-                        className="font-medium text-[#e91e63] hover:underline"
+                        className="font-medium text-[#e60050] hover:underline"
                       >
-                        Voir
+                        {t("Voir")}
                       </a>
                     )}
-                    {!n.read && <button type="button" onClick={() => markOne(n.id)} className="font-medium text-[#555] hover:underline">Marquer comme lu</button>}
-                    <button type="button" onClick={() => dismiss(n.id)} aria-label="Supprimer cette notification" className="font-medium text-[#999] hover:underline">Supprimer</button>
+                    {!n.read && <button type="button" onClick={() => markOne(n.id)} className="font-medium text-[#555] hover:underline">{t("Marquer comme lu")}</button>}
+                    <button type="button" onClick={() => dismiss(n.id)} aria-label={t("Supprimer cette notification")} className="font-medium text-[#999] hover:underline">{t("Supprimer")}</button>
                   </p>
                 </div>
               </article>
@@ -238,27 +266,27 @@ function NotificationsPage() {
             }))}
         </div>
         {visible.length > shown && (
-          <button type="button" onClick={() => setShown((s) => s + PAGE)} className="mt-3 text-sm font-medium text-[#e91e63] hover:underline">
-            Afficher plus
+          <button type="button" onClick={() => setShown((s) => s + PAGE)} className="mt-3 text-sm font-medium text-[#e60050] hover:underline">
+            {t("Afficher plus")}
           </button>
         )}
         <div className="mt-4 space-y-2">
           <Toggle
-            label="Badge de messages non lus"
-            desc="Afficher un badge sur l'icône Messages lorsque tu reçois des messages non lus."
+            label={t("Badge de messages non lus")}
+            desc={t("Afficher un badge sur l'icône Messages lorsque tu reçois des messages non lus.")}
             checked={settings.msgBadge}
             onChange={(v) => flip("msgBadge", v)}
           />
         </div>
         {sections.map((s) => (
           <section key={s.title} className="mt-6">
-            <h2 className="mb-2 text-xl font-bold text-[#333]">{s.title}</h2>
+            <h2 className="mb-2 text-xl font-bold text-[#333]">{t(s.title)}</h2>
             <div className="space-y-2">
               {s.items.map((it) => (
                 <Toggle
                   key={it.k}
-                  label={it.label}
-                  desc={it.desc}
+                  label={t(it.label)}
+                  desc={t(it.desc)}
                   checked={settings[it.k]}
                   onChange={(v) => flip(it.k, v)}
                 />
@@ -267,23 +295,23 @@ function NotificationsPage() {
           </section>
         ))}
         <section className="mt-6">
-          <h2 className="mb-2 text-xl font-bold text-[#333]">Résumé d&apos;activité</h2>
+          <h2 className="mb-2 text-xl font-bold text-[#333]">{t("Résumé d'activité")}</h2>
           <div className="space-y-2">
             <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-white p-3 shadow-sm">
               <span>
-                <span className="block text-[15px] font-medium text-[#333]">Fréquence du résumé</span>
-                <span className="block text-sm text-[#777]">Un e-mail récapitulatif, seulement en cas d&apos;activité réelle.</span>
+                <span className="block text-[15px] font-medium text-[#333]">{t("Fréquence du résumé")}</span>
+                <span className="block text-sm text-[#777]">{t("Un e-mail récapitulatif, seulement en cas d'activité réelle.")}</span>
               </span>
-              <select value={digest} onChange={(e) => { setDigest(e.target.value); void persist(settings, marketing, e.target.value); }} className="shrink-0 rounded-md border border-border bg-white px-3 py-2 text-sm" aria-label="Fréquence du résumé">
-                <option value="daily">Quotidien</option>
-                <option value="weekly">Hebdomadaire</option>
-                <option value="off">Désactivé</option>
+              <select value={digest} onChange={(e) => { setDigest(e.target.value); void persist(settings, marketing, e.target.value); }} className="shrink-0 rounded-md border border-border bg-white px-3 py-2 text-sm" aria-label={t("Fréquence du résumé")}>
+                <option value="daily">{t("Quotidien")}</option>
+                <option value="weekly">{t("Hebdomadaire")}</option>
+                <option value="off">{t("Désactivé")}</option>
               </select>
             </label>
           </div>
         </section>
         <section className="mt-6">
-          <h2 className="mb-2 text-xl font-bold text-[#333]">Offres et nouveautés SWIVV</h2>
+          <h2 className="mb-2 text-xl font-bold text-[#333]">{t("Offres et nouveautés SWIVV")}</h2>
           <div className="space-y-2">
             <Toggle
               label="E-mails marketing"
@@ -293,7 +321,7 @@ function NotificationsPage() {
             />
           </div>
         </section>
-        {saving && <p className="mt-3 text-xs text-[#999]">Enregistrement…</p>}
+        {saving && <p className="mt-3 text-xs text-[#999]">{t("Enregistrement…")}</p>}
       </main>
       <SwivvFooter />
     </div>

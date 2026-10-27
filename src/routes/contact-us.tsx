@@ -8,6 +8,7 @@ import { SwivvFooter } from "@/components/swivv-footer";
 import { MODERATION_EMAIL } from "@/lib/swivv-email-templates";
 import { supabase } from "@/integrations/supabase/client";
 import { submitContactTicket } from "@/lib/contact.functions";
+import { useT } from "@/lib/i18n";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact-us")({
@@ -40,6 +41,8 @@ const ABUSE_SUBJECT = "Signaler un abus ou un faux profil";
 // behind answer() if volume ever justifies it
 type KbEntry = { keys: string[]; text: string; to?: string; link?: string };
 
+// ponytail: the keyword responder matches French keys only and its answers are translated at render —
+// add per-locale keys if EN/ES chatbot traffic ever matters
 const KB: KbEntry[] = [
   { keys: ["match", "compatible", "pourcentage", "%"], text: "Le % sur chaque profil vient de tes critères Mes Matches : plus tu remplis de critères correspondants, plus il grimpe. Change tes critères puis « Sauvegarder et rechercher » pour voir les chiffres se mettre à jour partout.", to: "/matches", link: "Ouvrir Mes Matches" },
   { keys: ["like", "liker", "coeur"], text: "Touche le cœur sur un profil ou glisse sa photo vers la droite dans SWIVV Swipe. Tu peux déjà lui écrire ; s'il te like en retour, c'est un match et les vocaux et photos se débloquent.", to: "/swipe", link: "Ouvrir SWIVV Swipe" },
@@ -88,6 +91,7 @@ function answer(q: string): KbEntry {
 type ChatMsg = { from: "bot" | "me"; text: string; to?: string; link?: string };
 
 function SupportChat() {
+  const t = useT();
   const [msgs, setMsgs] = useState<ChatMsg[]>([
     { from: "bot", text: "Salut ! Je suis l'assistant SWIVV. Pose-moi une question sur les matches, les messages, les appels, ton profil… ou écris « humain » pour contacter le support." },
   ]);
@@ -114,14 +118,14 @@ function SupportChat() {
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm" role="region" aria-label="Discussion avec l'assistant SWIVV">
+    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm" role="region" aria-label={t("Discussion avec l'assistant SWIVV")}>
       <div ref={boxRef} className="max-h-80 space-y-2 overflow-y-auto" aria-live="polite">
         {msgs.map((m, i) => (
-          <div key={i} className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${m.from === "me" ? "ml-auto bg-[#e91e63] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
-            <p>{m.text}</p>
+          <div key={i} className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${m.from === "me" ? "ml-auto bg-[#e60050] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
+            <p>{m.from === "bot" ? t(m.text) : m.text}</p>
             {m.to && (
-              <Link to={m.to as never} className={`mt-1 inline-block text-xs font-medium underline ${m.from === "me" ? "" : "text-[#e91e63]"}`}>
-                {m.link ?? "Ouvrir"}
+              <Link to={m.to as never} className={`mt-1 inline-block text-xs font-medium underline ${m.from === "me" ? "" : "text-[#e60050]"}`}>
+                {t(m.link ?? "Ouvrir")}
               </Link>
             )}
           </div>
@@ -131,23 +135,24 @@ function SupportChat() {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Écris ta question…"
-          aria-label="Écris ta question à l'assistant"
+          placeholder={t("Écris ta question…")}
+          aria-label={t("Écris ta question à l'assistant")}
           maxLength={300}
-          className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+          className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e60050]"
         />
-        <button type="submit" disabled={!draft.trim()} className="rounded-lg bg-[#e91e63] px-5 py-2 font-medium text-white disabled:opacity-40">
-          Envoyer
+        <button type="submit" disabled={!draft.trim()} className="rounded-lg bg-[#e60050] px-5 py-2 font-medium text-white disabled:opacity-40">
+          {t("Envoyer")}
         </button>
       </form>
-      <button type="button" onClick={mailSupport} className="mt-2 w-full rounded-md border border-[#e91e63] px-4 py-2 text-sm font-medium text-[#e91e63]">
-        Écrire un e-mail à l'équipe support
+      <button type="button" onClick={mailSupport} className="mt-2 w-full rounded-md border border-[#e60050] px-4 py-2 text-sm font-medium text-[#e60050]">
+        {t("Écrire un e-mail à l'équipe support")}
       </button>
     </div>
   );
 }
 
 function ContactPage() {
+  const t = useT();
   const search = Route.useSearch();
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
 
@@ -203,9 +208,9 @@ function ContactPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -214,29 +219,29 @@ function ContactPage() {
       {/* ponytail: plain hero, tint lives on the cards — full-bleed color if brand ever wants it */}
       <main className="bg-background">
         <div className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e91e63]">
-          Contact
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#e60050]">
+          {t("Contact")}
         </p>
-        <h1 className="mt-1 text-3xl font-medium text-[#333]">Parlons-nous</h1>
+        <h1 className="mt-1 text-3xl font-medium text-[#333]">{t("Parlons-nous")}</h1>
         <p className="mt-2 text-[#777]">
-          Une question, un abus à signaler, un témoignage à partager ? Réponse en général sous 1 à 2 jours ouvrés.
+          {t("Une question, un abus à signaler, un témoignage à partager ? Réponse en général sous 1 à 2 jours ouvrés.")}
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           {[
-            { icon: <CircleHelp className="h-5 w-5 text-[#e91e63]" />, t: "Question simple ?", d: <>La réponse est sûrement dans la <Link to="/faq" className="font-medium text-white underline">FAQ</Link>.</> },
-            { icon: <ShieldAlert className="h-5 w-5 text-[#e91e63]" />, t: "Urgence sécurité ?", d: "Choisis « Signaler un abus » ci-dessous." },
-            { icon: <Mail className="h-5 w-5 text-[#e91e63]" />, t: "Par e-mail", d: <a className="font-medium text-white underline" href={`mailto:${MODERATION_EMAIL}`}>{MODERATION_EMAIL}</a> },
-            { icon: <MapPin className="h-5 w-5 text-[#e91e63]" />, t: "Notre adresse", d: "SWIVV, 10 Rue Thureau Dangin, 75015 Paris, FRANCE" },
-            { icon: <Phone className="h-5 w-5 text-[#e91e63]" />, t: "Par téléphone", d: "(+33) 6 60 36 82 20" },
-            { icon: <MessageCircle className="h-5 w-5 text-[#e91e63]" />, t: "Live Chat", d: <>Une réponse immédiate ? <button type="button" onClick={() => setChatOpen((o) => !o)} className="font-medium text-white hover:underline">{chatOpen ? "Fermer" : "Discuter"}</button>.</> },
+            { icon: <CircleHelp className="h-5 w-5 text-[#e60050]" />, t: "Question simple ?", d: <>{t("La réponse est sûrement dans la")}{" "}<Link to="/faq" className="font-medium text-white underline">{t("FAQ")}</Link>.</> },
+            { icon: <ShieldAlert className="h-5 w-5 text-[#e60050]" />, t: "Urgence sécurité ?", d: "Choisis « Signaler un abus » ci-dessous." },
+            { icon: <Mail className="h-5 w-5 text-[#e60050]" />, t: "Par e-mail", d: <a className="font-medium text-white underline" href={`mailto:${MODERATION_EMAIL}`}>{MODERATION_EMAIL}</a> },
+            { icon: <MapPin className="h-5 w-5 text-[#e60050]" />, t: "Notre adresse", d: "SWIVV, 10 Rue Thureau Dangin, 75015 Paris, FRANCE" },
+            { icon: <Phone className="h-5 w-5 text-[#e60050]" />, t: "Par téléphone", d: "(+33) 6 60 36 82 20" },
+            { icon: <MessageCircle className="h-5 w-5 text-[#e60050]" />, t: "Live Chat", d: <>{t("Une réponse immédiate ?")}{" "}<button type="button" onClick={() => setChatOpen((o) => !o)} className="font-medium text-white hover:underline">{chatOpen ? t("Fermer") : t("Discuter")}</button>.</> },
           ].map((c) => (
             <div key={c.t} className="rounded-2xl bg-neutral-800 p-4 shadow-sm transition-transform hover:-translate-y-0.5">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm [&>*]:text-black">
                 {c.icon}
               </span>
-              <p className="mt-2 font-medium text-white">{c.t}</p>
-              <p className="text-sm text-white/70">{c.d}</p>
+              <p className="mt-2 font-medium text-white">{t(c.t)}</p>
+              <p className="text-sm text-white/70">{typeof c.d === "string" ? t(c.d) : c.d}</p>
             </div>
           ))}
         </div>
@@ -253,19 +258,19 @@ function ContactPage() {
               <rect x="43" y="6" width="64" height="62" rx="10" fill="#22c55e" />
               <path d="M63 36 L73 46 L89 28" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <p className="mt-6 text-4xl font-bold text-[#111]">Merci !</p>
+            <p className="mt-6 text-4xl font-bold text-[#111]">{t("Merci !")}</p>
             <p className="mx-auto mt-3 max-w-md text-sm text-[#777]">
-              Ton message a bien été reçu, merci {name.trim()} ! L&apos;équipe SWIVV MATCH te répondra à {email.trim()} dans les plus brefs délais.
+              {t("Ton message a bien été reçu, merci {name} ! L'équipe SWIVV MATCH te répondra à {email} dans les plus brefs délais.", { name: name.trim(), email: email.trim() })}
             </p>
-            <p className="mt-8 text-sm text-[#777]">Cordialement,</p>
-            <p className="mt-1 text-sm text-[#777]">L&apos;équipe SWIVV MATCH</p>
+            <p className="mt-8 text-sm text-[#777]">{t("Cordialement,")}</p>
+            <p className="mt-1 text-sm text-[#777]">{t("L'équipe SWIVV MATCH")}</p>
             {/* ponytail: local reset only (clears the form for a new subject) — router reload if a clean URL state ever matters */}
             <button
               type="button"
               onClick={() => { setSent(false); setName(""); setEmail(""); setMessage(""); setFiles([]); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-              className="mt-8 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white hover:bg-[#c2185b]"
+              className="mt-8 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white hover:bg-[#c2185b]"
             >
-              Contacte-nous pour un autre sujet
+              {t("Contacte-nous pour un autre sujet")}
             </button>
           </div>
         ) : (
@@ -277,7 +282,7 @@ function ContactPage() {
                   subject === ABUSE_SUBJECT ? "text-red-600" : "text-[#333]"
                 }`}
               >
-                Sujet
+                {t("Sujet")}
               </label>
               <select
                 id="subject"
@@ -286,12 +291,12 @@ function ContactPage() {
                 className={`w-full rounded-md border px-3 py-2.5 focus:outline-none focus:ring-2 ${
                   subject === ABUSE_SUBJECT
                     ? "border-red-500 bg-red-50 font-medium text-red-700 focus:ring-red-400"
-                    : "border-border focus:ring-[#e91e63]"
+                    : "border-border focus:ring-[#e60050]"
                 }`}
               >
                 {SUBJECTS.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {t(s)}
                   </option>
                 ))}
               </select>
@@ -299,19 +304,19 @@ function ContactPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-[#333]">
-                  Ton prénom
+                  {t("Ton prénom")}
                 </label>
                 <input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Jane"
-                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                 />
               </div>
               <div>
                 <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-[#333]">
-                  Ton e-mail
+                  {t("Ton e-mail")}
                 </label>
                 <input
                   id="email"
@@ -319,13 +324,13 @@ function ContactPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@example.com"
-                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                 />
               </div>
             </div>
             <div>
               <label htmlFor="message" className="mb-1.5 block text-sm font-medium text-[#333]">
-                Ton message
+                {t("Ton message")}
               </label>
               <textarea
                 id="message"
@@ -333,14 +338,14 @@ function ContactPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 rows={5}
                 maxLength={2000}
-                placeholder="Décris ta demande le plus précisément possible…"
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                placeholder={t("Décris ta demande le plus précisément possible…")}
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
             {/* ponytail: files stay client-side (names ride in the ticket, staff reclaims them by e-mail) — real upload to storage when attachments need to travel with the ticket */}
             <div>
               <label htmlFor="docs" className="mb-1.5 block text-sm font-medium text-[#333]">
-                Documents (3 maximum)
+                {t("Documents (3 maximum)")}
               </label>
               <input
                 id="docs"
@@ -353,7 +358,7 @@ function ContactPage() {
                   if (!picked.length) return;
                   setFiles((prev) => [...prev, ...picked.filter((p) => !prev.some((x) => x.name === p.name && x.size === p.size))].slice(0, 3));
                 }}
-                className="w-full rounded-md border border-border px-3 py-2.5 text-sm text-[#555] file:mr-3 file:rounded-md file:border-0 file:bg-[#e91e63]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#e91e63]"
+                className="w-full rounded-md border border-border px-3 py-2.5 text-sm text-[#555] file:mr-3 file:rounded-md file:border-0 file:bg-[#e60050]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#e60050]"
               />
               {!!files.length && (
                 <ul className="mt-2 space-y-1">
@@ -362,9 +367,9 @@ function ContactPage() {
                       <span className="truncate">{f.name}</span>
                       <button
                         type="button"
-                        aria-label={`Retirer ${f.name}`}
+                        aria-label={t("Retirer {name}", { name: f.name })}
                         onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                        className="font-medium text-[#e91e63] hover:underline"
+                        className="font-medium text-[#e60050] hover:underline"
                       >
                         ×
                       </button>
@@ -376,17 +381,17 @@ function ContactPage() {
             <button
               type="submit"
               disabled={!name.trim() || !email.trim() || !message.trim() || sending}
-              className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white disabled:opacity-40"
+              className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-40"
             >
-              {sending ? "Envoi…" : "Envoyer"}
+              {sending ? t("Envoi…") : t("Envoyer")}
             </button>
             {failed && (
               <p role="alert" className="text-center text-sm font-medium text-red-600">
-                Envoi impossible pour le moment — vérifie ta connexion et réessaie.
+                {t("Envoi impossible pour le moment — vérifie ta connexion et réessaie.")}
               </p>
             )}
             <p className="text-center text-xs text-[#999]">
-              En cas d'urgence (menace, chantage), contacte aussi les autorités locales.
+              {t("En cas d'urgence (menace, chantage), contacte aussi les autorités locales.")}
             </p>
           </form>
         )}

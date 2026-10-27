@@ -144,7 +144,7 @@ function AdminContent() {
                 {r.data?._mod?.approved_at && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Approuvé</span>}
                 {repBadge(r.user_id)}
                 <span className="text-xs text-[#999]">soumis le {fmt(r.updated_at)}</span>
-                <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="ml-auto text-xs text-[#e91e63] underline">Fiche complète</Link>
+                <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche complète</Link>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 {((r.data?.photos ?? []) as string[]).map((p: string) => (
@@ -180,7 +180,7 @@ function AdminContent() {
                 {r.data?._mod?.approved_at && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Approuvé</span>}
                 {repBadge(r.user_id)}
                 <span className="text-xs text-[#999]">soumis le {fmt(r.updated_at)}</span>
-                <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="ml-auto text-xs text-[#e91e63] underline">Fiche complète</Link>
+                <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche complète</Link>
               </div>
               {r.data?.tagline && <p className="mt-1 text-sm italic text-[#777]">« {r.data.tagline} »</p>}
               {r.data?.bio && <p className="mt-1 text-sm text-[#555]">{r.data.bio}</p>}
@@ -207,7 +207,7 @@ function AdminContent() {
                 <p className="text-xs text-[#999]">{b.category} · {b.author} · publié le {b.date} · {b.readTime} · {b.content.length} paragraphes{b.testimonials ? ` · ${b.testimonials.length} témoignage(s)` : ""}</p>
               </div>
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Publié</span>
-              <Link to="/blog/$slug" params={{ slug: b.slug }} className="text-xs text-[#e91e63] underline">Aperçu</Link>
+              <Link to="/blog/$slug" params={{ slug: b.slug }} className="text-xs text-[#e60050] underline">Aperçu</Link>
             </article>
           ))}
         </div>
@@ -220,7 +220,7 @@ function AdminContent() {
             <div key={to} className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm shadow-sm">
               <p className="flex-1 font-medium text-[#333]">{label}</p>
               <span className="font-mono text-xs text-[#999]">{to}</span>
-              <Link to={to as any} className="text-xs text-[#e91e63] underline">Voir</Link>
+              <Link to={to as any} className="text-xs text-[#e60050] underline">Voir</Link>
             </div>
           ))}
         </div>
@@ -239,7 +239,7 @@ function AdminContent() {
             <h2 className="font-medium text-[#333]">Comptes sanctionnés ({sanctions.length})</h2>
             {sanctions.map((x: any) => (
               <p key={x.user_id} className="mt-1 text-xs text-[#555]">
-                <Link to="/admin/users/$userId" params={{ userId: x.user_id }} className="text-[#e91e63] underline">{nm(x.user_id)}</Link>
+                <Link to="/admin/users/$userId" params={{ userId: x.user_id }} className="text-[#e60050] underline">{nm(x.user_id)}</Link>
                 {" "}· {x.status}{x.until ? ` jusqu'au ${fmt(x.until)}` : ""}
               </p>
             ))}

@@ -204,7 +204,7 @@ function AdminEngage() {
           <p className="text-xs text-[#999]">20 profils les moins complétés — aide à l'onboarding, jamais un score public.</p>
           {(d.incomplets ?? []).map((x: any) => (
             <div key={x.id} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
-              <Link to="/admin/users/$userId" params={{ userId: x.id }} className="font-medium text-[#e91e63] hover:underline">{x.name}</Link>
+              <Link to="/admin/users/$userId" params={{ userId: x.id }} className="font-medium text-[#e60050] hover:underline">{x.name}</Link>
               <span className="ml-auto text-xs text-[#777]">{x.pct} %</span>
             </div>
           ))}
@@ -228,7 +228,7 @@ function AdminEngage() {
             <div key={r.title} className="rounded-xl bg-white p-3 text-sm shadow-sm">
               <p className="font-medium text-[#333]">{r.title}</p>
               <p className="text-xs text-[#777]">Pourquoi : {r.why}</p>
-              <p className="mt-1"><Link to={r.to as any} className="text-xs text-[#e91e63] underline">{r.action}</Link></p>
+              <p className="mt-1"><Link to={r.to as any} className="text-xs text-[#e60050] underline">{r.action}</Link></p>
             </div>
           ))}
         </div>
@@ -248,7 +248,7 @@ function AdminEngage() {
                   <option value="inactive">Inactifs</option>
                 </select>
                 <input value={fMetrics} onChange={(e) => setFMetrics(e.target.value)} placeholder="Métriques (virgules)" aria-label="Métriques" className="min-w-0 flex-1 rounded-md border border-border px-3 py-2 text-sm" />
-                <button type="submit" className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white">Enregistrer</button>
+                <button type="submit" className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white">Enregistrer</button>
               </div>
             </form>
           )}

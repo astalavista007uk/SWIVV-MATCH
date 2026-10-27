@@ -134,9 +134,9 @@ function AdminAudit() {
                   {link && (
                     <p className="mt-1">
                       {r.target_kind === "user" ? (
-                        <a href={`/admin/users/${r.target_id}`} className="text-[#e91e63] underline">Ouvrir la fiche membre</a>
+                        <a href={`/admin/users/${r.target_id}`} className="text-[#e60050] underline">Ouvrir la fiche membre</a>
                       ) : (
-                        <Link to={link.to as any} search={link.search as any} className="text-[#e91e63] underline">Ouvrir {r.target_kind}</Link>
+                        <Link to={link.to as any} search={link.search as any} className="text-[#e60050] underline">Ouvrir {r.target_kind}</Link>
                       )}
                     </p>
                   )}

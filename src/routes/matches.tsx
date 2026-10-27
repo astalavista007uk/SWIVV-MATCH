@@ -11,6 +11,7 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { PhotoCountBadge } from "@/components/photo-count-badge";
+import { useT } from "@/lib/i18n";
 // ponytail: option lists reused from signup (single source) — tolerant matchers below because seed values are free text
 import {
   BODY,
@@ -126,7 +127,7 @@ const GROUP_META: Record<string, typeof User> = {
   "Origines & valeurs": Globe,
 };
 const fieldCls =
-  "w-full rounded-xl border border-border bg-[#fafafa] px-3 py-2.5 text-sm transition-colors placeholder:text-[#999] focus:border-[#e91e63] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e91e63]/30";
+  "w-full rounded-xl border border-border bg-[#fafafa] px-3 py-2.5 text-sm transition-colors placeholder:text-[#999] focus:border-[#e60050] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e60050]/30";
 
 // ponytail: static grouping, no dnd — virtualize if criteria ever pass ~100
 const GROUPS: { name: string; items: Crit[] }[] = [];
@@ -140,6 +141,7 @@ const PAIR_SKIP = new Set(["heightMax", "weightMin", "weightMax"]);
 
 // ponytail: edit = criteria editor (Mes Matches, saves), search = results viewer (Recherche Avancée, live filters) — split files if the layouts ever diverge
 export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: string; mode?: "edit" | "search" }) {
+  const t = useT();
   const { user, loading } = useAuth();
   const [form, setForm] = useState<Record<string, string>>(load);
   const [hUnit, setHUnit] = useState("cm");
@@ -152,7 +154,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
     if (hUnit === "cm") {
       return (
         <input type="number" value={raw} min={130} max={220} placeholder={placeholder}
-          aria-label={key === "heightMin" ? "Taille min en centimètres" : "Taille max en centimètres"}
+          aria-label={key === "heightMin" ? t("Taille min en centimètres") : t("Taille max en centimètres")}
           onChange={(e) => setForm({ ...form, [key]: e.target.value })} className={cls} />
       );
     }
@@ -160,10 +162,10 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
     return (
       <span className="flex min-w-0 flex-1 gap-1">
         <input value={ft} inputMode="numeric" placeholder={key === "heightMin" ? "4" : "7"}
-          aria-label={key === "heightMin" ? "Taille min en pieds" : "Taille max en pieds"}
+          aria-label={key === "heightMin" ? t("Taille min en pieds") : t("Taille max en pieds")}
           onChange={(e) => setForm({ ...form, [key]: ftInToCm(e.target.value, inch) })} className={cls} />
         <input value={inch} inputMode="numeric" placeholder="″"
-          aria-label={key === "heightMin" ? "Taille min en pouces" : "Taille max en pouces"}
+          aria-label={key === "heightMin" ? t("Taille min en pouces") : t("Taille max en pouces")}
           onChange={(e) => setForm({ ...form, [key]: ftInToCm(ft, e.target.value) })} className={cls} />
       </span>
     );
@@ -175,7 +177,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
     return (
       <input type={wUnit === "kg" ? "number" : "text"} value={shown} min={30} max={200} placeholder={placeholder}
         inputMode="decimal"
-        aria-label={key === "weightMin" ? "Poids min" : "Poids max"}
+        aria-label={key === "weightMin" ? t("Poids min") : t("Poids max")}
         onChange={(e) => setForm({ ...form, [key]: wUnit === "kg" ? e.target.value : stToKg(e.target.value) })}
         className="w-full min-w-0 max-w-20 rounded-xl border border-border px-2 py-2.5 text-sm placeholder:text-[#999]" />
     );
@@ -216,7 +218,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
         // ponytail: height above weight on all screens — side-by-side again if horizontal space ever allows it
         <div className="grid gap-3">
           <div>
-            <span id="m-taille" className="mb-1 block text-sm font-medium text-[#333]">Taille min – max</span>
+            <span id="m-taille" className="mb-1 block text-sm font-medium text-[#333]">{t("Taille min – max")}</span>
             <div className="flex items-center gap-1" role="group" aria-labelledby="m-taille">
               {heightInput("heightMin", "130")}
               <span className="text-[#999]">–</span>
@@ -227,7 +229,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
             </div>
           </div>
           <div>
-            <span id="m-poids" className="mb-1 block text-sm font-medium text-[#333]">Poids min – max</span>
+            <span id="m-poids" className="mb-1 block text-sm font-medium text-[#333]">{t("Poids min – max")}</span>
             <div className="flex items-center gap-1" role="group" aria-labelledby="m-poids">
               {weightInput("weightMin", "30")}
               <span className="text-[#999]">–</span>
@@ -243,14 +245,14 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
     return (
       <>
         <label htmlFor={`m-${c.key}`} className="mb-1 block text-sm font-medium text-[#333]">
-          {c.label}
+          {t(c.label)}
         </label>
         {c.kind === "multi" ? (
           <details className="relative rounded-xl border border-border bg-white">
             <summary className="cursor-pointer list-none px-3 py-2.5 text-sm text-[#333] [&::-webkit-details-marker]:hidden">
               {(() => {
                 const sel = (form[c.key] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-                return sel.length === 0 ? (c.placeholder ?? "Choisir…") : sel.join(", ");
+                return sel.length === 0 ? t(c.placeholder ?? "Choisir…") : sel.join(", ");
               })()}
             </summary>
             <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-xl border border-border bg-white p-1 shadow-lg">
@@ -262,7 +264,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                       type="checkbox"
                       checked={sel.includes(l)}
                       onChange={() => setForm({ ...form, [c.key]: sel.includes(l) ? sel.filter((x) => x !== l).join(", ") : [...sel, l].join(", ") })}
-                      className="h-4 w-4 accent-[#e91e63]"
+                      className="h-4 w-4 accent-[#e60050]"
                     />
                     {l}
                   </label>
@@ -277,7 +279,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
             onChange={(e) => setForm({ ...form, [c.key]: e.target.value })}
             className="w-full rounded-xl border border-border bg-white px-3 py-2.5 text-sm"
           >
-            <option value="">Indifférent</option>
+            <option value="">{t("Indifférent")}</option>
             {opts.map((o) => (
               <option key={o} value={o}>{o}</option>
             ))}
@@ -289,7 +291,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
               type={c.kind === "number" ? "number" : "text"}
               value={form[c.key] ?? ""}
               onChange={(e) => setForm({ ...form, [c.key]: e.target.value })}
-              placeholder={c.placeholder}
+              placeholder={c.placeholder ? t(c.placeholder) : undefined}
               list={c.list}
               min={c.min}
               max={c.max}
@@ -313,17 +315,17 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-background">
+        <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">Connecte-toi pour découvrir tes matches.</p>
-          <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white">
-            Se connecter / S&apos;inscrire
+          <p className="text-sm text-[#777]">{t("Connecte-toi pour découvrir tes matches.")}</p>
+          <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white">
+            {t("Se connecter / S'inscrire")}
           </button>
         </main>
         <SwivvFooter />
@@ -352,25 +354,25 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
 
       <main className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="text-2xl font-medium text-[#333]">{title}</h1>
+        <h1 className="text-2xl font-medium text-[#333]">{t(title)}</h1>
         <div className="mt-1 flex flex-wrap items-center gap-3">
-          <p className="min-w-0 flex-1 text-sm text-[#777]">{mode === "edit" ? "Sélectionne tes critères puis sauvegarde : ils définissent ton % de compatibilité partout sur le site, et les profils correspondants s'affichent ci-dessous, meilleurs en premier." : "Dis-nous qui tu cherches, on te montre les meilleurs profils en premier. Tes critères enregistrés dans Mes Matches sont chargés par défaut."}</p>
+          <p className="min-w-0 flex-1 text-sm text-[#777]">{mode === "edit" ? t("Sélectionne tes critères puis sauvegarde : ils définissent ton % de compatibilité partout sur le site, et les profils correspondants s'affichent ci-dessous, meilleurs en premier.") : t("Dis-nous qui tu cherches, on te montre les meilleurs profils en premier. Tes critères enregistrés dans Mes Matches sont chargés par défaut.")}</p>
           {mode === "search" && (
             <button
               type="button"
               onClick={resetForm}
-              className="shrink-0 rounded-xl bg-[#e91e63] px-4 py-2 text-sm font-medium text-white shadow-sm"
+              className="shrink-0 rounded-xl bg-[#e60050] px-4 py-2 text-sm font-medium text-white shadow-sm"
             >
-              Réinitialiser
+              {t("Réinitialiser")}
             </button>
           )}
         </div>
@@ -402,12 +404,12 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
             return (
               <section key={g.name} aria-label={g.name} className="rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
                 <h2 className="mb-3 flex items-center gap-2 font-medium text-[#333]">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e91e63]/10">
-                    <Icon className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#e60050]/10">
+                    <Icon className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
                   </span>
-                  {g.name}
+                  {t(g.name)}
                   {set > 0 && (
-                    <span className="max-w-full whitespace-normal break-words rounded-2xl bg-[#e91e63] px-3 py-1 text-center text-xs font-medium leading-snug text-white">{set} critère{set > 1 ? "s" : ""} rempli{set > 1 ? "s" : ""} dans cette section</span>
+                    <span className="max-w-full whitespace-normal break-words rounded-2xl bg-[#e60050] px-3 py-1 text-center text-xs font-medium leading-snug text-white">{set === 1 ? t("1 critère rempli dans cette section") : t("{n} critères remplis dans cette section", { n: set })}</span>
                   )}
                 </h2>
                 {/* ponytail: 2-up on phones to shorten the scroll, height/weight keeps its full-width pair slot — 3-up if fields ever shrink */}
@@ -428,39 +430,39 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
           <div className={mode === "search" ? "sticky bottom-0 -mx-4 border-t border-border bg-white/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6" : "border-t border-border py-3"}>
             <div className="flex flex-col gap-2 sm:flex-row">
             {mode === "edit" ? (
-              <button type="submit" className="w-full rounded-xl bg-[#e91e63] px-4 py-3 font-medium text-white shadow-sm sm:w-auto sm:px-8">
-                Sauvegarder mes critères
+              <button type="submit" className="w-full rounded-xl bg-[#e60050] px-4 py-3 font-medium text-white shadow-sm sm:w-auto sm:px-8">
+                {t("Sauvegarder mes critères")}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={resetForm}
-                className="w-full rounded-xl bg-[#e91e63] px-4 py-3 font-medium text-white shadow-sm"
+                className="w-full rounded-xl bg-[#e60050] px-4 py-3 font-medium text-white shadow-sm"
               >
-                Réinitialiser
+                {t("Réinitialiser")}
               </button>
             )}
             {savedFlash && (
-              <p role="status" className="self-center text-sm font-medium text-green-700">Critères sauvegardés ✓</p>
+              <p role="status" className="self-center text-sm font-medium text-green-700">{t("Critères sauvegardés ✓")}</p>
             )}
             </div>
           </div>
         </form>
 
         {results && (
-          <section ref={resultsRef} aria-label="Résultats" className={mode === "search" ? "mt-8 scroll-mt-4 lg:mt-0" : "mt-8"}>
+          <section ref={resultsRef} aria-label={t("Résultats")} className={mode === "search" ? "mt-8 scroll-mt-4 lg:mt-0" : "mt-8"}>
             <h2 className="font-medium text-[#333]">
-              {results.length} profil{results.length > 1 ? "s" : ""}, meilleur match en premier
+              {results.length === 1 ? t("1 profil, meilleur match en premier") : t("{n} profils, meilleur match en premier", { n: results.length })}
             </h2>
             {results.length === 0 ? (
-              <p className="mt-2 text-sm text-[#777]">Aucun profil avec ces critères. Élargis ta recherche.</p>
+              <p className="mt-2 text-sm text-[#777]">{t("Aucun profil avec ces critères. Élargis ta recherche.")}</p>
             ) : (
               <div className={mode === "search" ? "mt-4 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4" : "mt-4 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5"}>
                 {results.map(({ p, km }) => (
                   <article key={p.id} className="overflow-hidden rounded-lg bg-white">
                     <div className="relative">
                       <Link to="/member/$id" params={{ id: p.id }}>
-                        <img src={p.photo} alt={`Photo de ${p.name}`} loading="lazy" className="aspect-[4/5] w-full object-cover" />
+                        <img src={p.photo} alt={t("Photo de {name}", { name: p.name })} loading="lazy" className="aspect-[4/5] w-full object-cover" />
                       </Link>
                       <PhotoCountBadge n={p.photos.length} />
                       {/* ponytail: same like-toggle as /browse (auth-gated, rerender via force) — extract a <LikeHeart> if a third grid needs it */}
@@ -472,7 +474,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                             force((x) => x + 1);
                           })
                         }
-                        aria-label={getLikes().includes(p.id) ? `Retirer le like de ${p.name}` : `Liker ${p.name}`}
+                        aria-label={getLikes().includes(p.id) ? t("Retirer le like de {name}", { name: p.name }) : t("Liker {name}", { name: p.name })}
                         aria-pressed={getLikes().includes(p.id)}
                         className="absolute right-2 top-2 rounded-full bg-white/90 p-2 shadow-sm"
                       >
@@ -482,7 +484,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                       <span className="absolute left-2 top-2">
                         <MatchTooltip
                           badge={
-                            <span className="block rounded-full bg-[#e91e63] px-2 py-0.5 text-[11px] font-bold text-white">
+                            <span className="block rounded-full bg-[#e60050] px-2 py-0.5 text-[11px] font-bold text-white">
                               {displayPct(p, form)}%
                             </span>
                           }
@@ -506,7 +508,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                 onClick={loadMore}
                 className="mx-auto mt-6 block rounded-md border border-border bg-white px-6 py-2.5 text-sm font-medium text-[#555]"
               >
-                Voir plus de profils
+                {t("Voir plus de profils")}
               </button>
             )}
           </section>

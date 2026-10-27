@@ -241,9 +241,9 @@ function AdminAlerts() {
                   {a.ack_by && <p className="mt-1">Prise en compte par {nm(a.ack_by)}{a.ack_at ? ` le ${frDate.format(new Date(a.ack_at))}` : ""}</p>}
                   <div className="mt-1 flex flex-wrap gap-2">
                     {link && (a.refKind === "user" && a.refId ? (
-                      <a href={`/admin/users/${a.refId}`} className="text-[#e91e63] underline">{link.label}</a>
+                      <a href={`/admin/users/${a.refId}`} className="text-[#e60050] underline">{link.label}</a>
                     ) : (
-                      <Link to={link.to as any} className="text-[#e91e63] underline">{link.label}</Link>
+                      <Link to={link.to as any} className="text-[#e60050] underline">{link.label}</Link>
                     ))}
                   </div>
                   {live && (
@@ -278,7 +278,7 @@ function AdminAlerts() {
             </article>
           );
         })}
-        {shown.length === 0 && <p className="text-sm text-[#777]">Aucune alerte avec ces filtres. Lancez « Tout évaluer » pour balayer les 7 sources.</p>}
+        {shown.length === 0 && <p className="text-sm text-[#777]">Aucune alerte avec ces filtres. Lance « Tout évaluer » pour balayer les 7 sources.</p>}
       </div>
     </div>
   );

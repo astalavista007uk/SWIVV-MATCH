@@ -339,7 +339,7 @@ function AdminAnalytics() {
           <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
             <p className="text-sm font-medium text-[#333]">Profils actifs / jour ({rangeLabel}, proxy updated_at)</p>
             <p className="text-xs text-[#999]">{src}</p>
-            {chart(d.actSeries ?? [], [{ k: "n", c: "#e91e63" }])}
+            {chart(d.actSeries ?? [], [{ k: "n", c: "#e60050" }])}
           </div>
         </div>
       )}
@@ -355,7 +355,7 @@ function AdminAnalytics() {
           <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
             <p className="text-sm font-medium text-[#333]">Matchs / jour ({rangeLabel})</p>
             <p className="text-xs text-[#999]">{src}</p>
-            {chart(d.matchTrend ?? [], [{ k: "n", c: "#e91e63" }])}
+            {chart(d.matchTrend ?? [], [{ k: "n", c: "#e60050" }])}
           </div>
         </div>
       )}
@@ -411,7 +411,7 @@ function AdminAnalytics() {
                   { label: "50-79 %", n: (d.qDist ?? [0, 0, 0])[1] },
                   { label: "≥ 80 %", n: (d.qDist ?? [0, 0, 0])[2] },
                 ],
-                "#e91e63",
+                "#e60050",
               )}
             </div>
             <div className="rounded-xl bg-white p-4 shadow-sm">

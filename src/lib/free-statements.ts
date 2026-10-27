@@ -11,9 +11,6 @@ export interface FreeStatement {
   fileName: string;
 }
 
-const MONTH_FMT = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" });
-const DATE_FMT = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-
 // ponytail: FNV-1a 32-bit for a stable per-member suffix — crypto hash if refs ever become adversarial
 function shortHash(s: string): string {
   let h = 0x811c9dc5;
@@ -52,9 +49,10 @@ export function freeStatements(createdAtIso: string, uid: string, now = new Date
   return out;
 }
 
-export const statementMonthLabel = (s: FreeStatement) =>
-  MONTH_FMT.format(new Date(s.year, s.month - 1, 1));
-export const formatFrDate = (iso: string) => DATE_FMT.format(new Date(iso + "T12:00:00"));
+export const statementMonthLabel = (s: FreeStatement, locale = "fr-FR") =>
+  new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(s.year, s.month - 1, 1));
+export const formatFrDate = (iso: string, locale = "fr-FR") =>
+  new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(iso + "T12:00:00"));
 
 // ponytail: first-name-only addressing (never a raw email) — profile name wins, else a prettified
 // email local-part, else generic; full identity resolution if statements ever need legal names
@@ -121,7 +119,7 @@ export function buildFreeStatementPdf(s: FreeStatement, memberName: string, memb
   // wordmark draw fine everywhere, so they stay). Re-add a band only as layered art with a vector base.
   // DE+MEMBRE+DATE header block / pink rules / totals / footer wordmark tight above the line —
   // no payment/tax/company blocks (inventing those would be fraud-adjacent).
-  const G = "0.9137 0.1176 0.3882"; // heart pink #e91e63 — matches the logo heart
+  const G = "0.9137 0.1176 0.3882"; // heart pink #e60050 — matches the logo heart
   const L: string[] = [];
   const T = (x: number, yy: number, size: number, bold: boolean, color: string, text: string) => {
     L.push(`BT /F${bold ? "B" : "R"} ${size} Tf ${color} rg ${x} ${yy} Td (${pdfText(text)}) Tj ET`);

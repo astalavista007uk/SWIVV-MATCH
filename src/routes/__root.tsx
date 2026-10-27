@@ -16,24 +16,24 @@ import { catchUpNotifs } from "@/lib/notify.functions";
 import { signOutSwivv, isEmailConfirmed } from "@/lib/swivv-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { LangProvider, readLang, useDateLocale, useT } from "@/lib/i18n";
 
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
+  const t = useT();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page introuvable</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Cette page n'existe pas ou a été déplacée.
-        </p>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t("Page introuvable")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t("Cette page n'existe pas ou a été déplacée.")}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
           >
-            Retour à l'accueil
+            {t("Retour à l'accueil")}
           </Link>
         </div>
       </div>
@@ -52,7 +52,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "SWIVV MATCH, site de rencontres gratuit et sans carte bancaire : profils, likes, matchs, messages, vocaux et photos.",
       },
-      { name: "theme-color", content: "#e91e63" },
+      { name: "theme-color", content: "#e60050" },
       { property: "og:site_name", content: "SWIVV MATCH" },
       { property: "og:locale", content: "fr_FR" },
       { property: "og:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
@@ -79,13 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const lang = readLang();
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <LangProvider lang={lang}>{children}</LangProvider>
         <Scripts />
       </body>
     </html>
@@ -95,6 +96,7 @@ function RootShell({ children }: { children: ReactNode }) {
 // ponytail: single global banner instead of per-page copies — shown while the e-mail is unverified (session or fresh-signup stash), hidden otherwise
 // ponytail: re-checked per navigation, not just on auth change — the root never remounts on SPA nav, so a banner keyed on [loading, user] alone missed signups that keep the visitor logged out (the exact first-signup case); a storage event if same-tab writes ever need instant pickup
 function VerifyBanner() {
+  const t = useT();
   const { user, loading } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [show, setShow] = useState(false);
@@ -113,33 +115,39 @@ function VerifyBanner() {
   if (!show) return null;
   return (
     <p className="bg-amber-100 px-4 py-2.5 text-center text-sm font-medium text-amber-900">
-      📩 Ton e-mail est en attente de confirmation — clique sur le lien reçu par e-mail pour activer
-      ton compte.
+      ⚠️{" "}
+      {t("Ton e-mail est en attente de confirmation — clique sur le lien reçu par e-mail pour activer ton compte.")}
     </p>
   );
 }
 
 function GatedOutlet() {
+  const t = useT();
+  const dateLocale = useDateLocale();
   const { restriction, loading, signOut } = useAuth();
   if (loading || !restriction) return <Outlet />;
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
         <h1 className="text-xl font-medium text-[#333]">
-          {restriction.status === "banned" ? "Compte banni" : "Compte suspendu"}
+          {restriction.status === "banned" ? t("Compte banni") : t("Compte suspendu")}
         </h1>
         <p className="mt-1 text-sm text-[#777]">
           {restriction.status === "banned"
-            ? "Ton compte a été définitivement fermé pour non-respect du règlement."
-            : `Ton compte est suspendu${restriction.until ? ` jusqu'au ${new Date(restriction.until).toLocaleString("fr-FR")}` : ""}.`}
-          {" "}Tu peux contester via la page contact.
+            ? t("Ton compte a été définitivement fermé pour non-respect du règlement.")
+            : restriction.until
+              ? t("Ton compte est suspendu jusqu'au {date}.", {
+                  date: new Date(restriction.until).toLocaleString(dateLocale),
+                })
+              : t("Ton compte est suspendu.")}{" "}
+          {t("Tu peux contester via la page contact.")}
         </p>
         <button
           type="button"
           onClick={() => signOut()}
-          className="mt-4 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+          className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
         >
-          Se déconnecter
+          {t("Se déconnecter")}
         </button>
       </div>
     </div>

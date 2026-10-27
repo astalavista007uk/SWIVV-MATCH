@@ -216,7 +216,7 @@ function AdminModeration() {
               </div>
               {c.reason && <p className="mt-1 text-sm text-[#555]">{c.reason}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                {c.subject_user_id && <Link to="/admin/users/$userId" params={{ userId: c.subject_user_id }} className="text-[#e91e63] underline">Profil concerné ({nm(c.subject_user_id)})</Link>}
+                {c.subject_user_id && <Link to="/admin/users/$userId" params={{ userId: c.subject_user_id }} className="text-[#e60050] underline">Profil concerné ({nm(c.subject_user_id)})</Link>}
                 <select value={c.status} onChange={(e) => updateCase(c.id, { status: e.target.value }, "admin.case.status")} aria-label="Statut" className="rounded border border-border px-2 py-1">
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -258,7 +258,7 @@ function AdminModeration() {
                       audit("admin.note.add", "case", c.id);
                       load();
                     }}
-                    className="rounded bg-[#e91e63] px-3 py-1 text-xs font-medium text-white"
+                    className="rounded bg-[#e60050] px-3 py-1 text-xs font-medium text-white"
                   >
                     Noter
                   </button>
@@ -288,7 +288,7 @@ function AdminModeration() {
                     </span>
                   ))}
                   {decBadge("text", ref)}
-                  <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="ml-auto text-xs text-[#e91e63] underline">Fiche membre</Link>
+                  <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche membre</Link>
                 </div>
                 {p.data?.tagline && <p className="mt-1 italic text-[#777]">« {p.data.tagline} »</p>}
                 {p.data?.bio && <p className="mt-1 text-[#555]">{p.data.bio}</p>}
@@ -322,7 +322,7 @@ function AdminModeration() {
                   <p className="font-medium text-[#333]">{p.data?.name ?? p.user_id.slice(0, 8)} <span className="text-xs font-normal text-[#999]">· {p.data.photos.length} photo(s)</span></p>
                   <div className="mt-1">{decBadge("photo", ref)}</div>
                   <div className="mt-1 flex flex-wrap gap-2 text-xs">
-                    <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="text-[#e91e63] underline">Fiche membre</Link>
+                    <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="text-[#e60050] underline">Fiche membre</Link>
                     {canDecide && <button type="button" onClick={() => decide("photo", ref, "approve")} className={btn}>Approuver</button>}
                     {canEnforce && <button type="button" onClick={() => removePhoto(p.user_id, src)} className={`${btn} text-red-700`}>Retirer</button>}
                     {canDecide && <button type="button" onClick={() => decide("photo", ref, "dismiss", "Faux positif")} className={btn}>Faux positif</button>}
@@ -347,7 +347,7 @@ function AdminModeration() {
                   <strong className="text-[#333]">{p.data?.name ?? p.user_id.slice(0, 8)}</strong>
                   {flags.map((f) => <span key={f} className="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">{f}</span>)}
                   {decBadge("text", `${p.user_id}:bio`)}
-                  <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="ml-auto text-xs text-[#e91e63] underline">Fiche membre</Link>
+                  <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche membre</Link>
                 </div>
                 {p.data?.tagline && <p className="mt-1 italic text-[#777]">« {p.data.tagline} »</p>}
                 {p.data?.bio && <p className="mt-1 text-[#555]">{p.data.bio}</p>}
@@ -379,9 +379,9 @@ function AdminModeration() {
                 <span className="ml-auto text-xs text-[#999]">{new Date(r.created_at).toLocaleString("fr-FR")}</span>
               </div>
               {r.description && <p className="mt-1 text-[#555]">« {r.description} »</p>}
-              {r.evidence_url && <a href={r.evidence_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[#e91e63] underline">Voir le contenu signalé</a>}
+              {r.evidence_url && <a href={r.evidence_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[#e60050] underline">Voir le contenu signalé</a>}
               <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                {r.reported_user_id && <Link to="/admin/users/$userId" params={{ userId: r.reported_user_id }} className="text-[#e91e63] underline">Fiche membre</Link>}
+                {r.reported_user_id && <Link to="/admin/users/$userId" params={{ userId: r.reported_user_id }} className="text-[#e60050] underline">Fiche membre</Link>}
                 {canDecide && <button type="button" onClick={() => decide("message", r.id, "approve")} className={btn}>Approuver</button>}
                 {canDecide && <button type="button" onClick={() => decide("message", r.id, "remove", "Contenu retiré — voir fiche membre")} className={btn}>Retirer</button>}
                 {canDecide && <button type="button" onClick={() => decide("message", r.id, "dismiss", "Faux positif")} className={btn}>Faux positif</button>}

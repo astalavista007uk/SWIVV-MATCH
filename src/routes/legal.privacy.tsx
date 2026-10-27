@@ -14,7 +14,7 @@ function LegalPrivacyRedirect() {
     <main className="mx-auto max-w-xl px-4 py-16 text-center">
       <p className="text-sm text-[#555]">
         Notre politique a déménagé :{" "}
-        <Link to="/privacy-centre" className="font-medium text-[#e91e63] hover:underline">
+        <Link to="/privacy-centre" className="font-medium text-[#e60050] hover:underline">
           ouvrir le centre de confidentialité
         </Link>
         .

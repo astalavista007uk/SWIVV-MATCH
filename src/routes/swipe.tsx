@@ -128,9 +128,9 @@ function SwipePage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-background">
+        <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -148,9 +148,9 @@ function SwipePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -158,7 +158,7 @@ function SwipePage() {
 
       <main className="mx-auto max-w-md px-4 py-6">
         <h1 className="flex items-center justify-center gap-2 text-center text-2xl font-medium text-[#333]">
-          <Zap className="h-6 w-6 text-[#e91e63]" aria-hidden="true" />
+          <Zap className="h-6 w-6 text-[#e60050]" aria-hidden="true" />
           SWIVV SWIPE
         </h1>
         {!p ? (
@@ -221,7 +221,7 @@ function SwipePage() {
                   )}
                   {dx > 40 && (
                     <span
-                      className="absolute left-1/2 top-1/3 -translate-x-1/2 rounded-full bg-[#e91e63] p-4 shadow-sm"
+                      className="absolute left-1/2 top-1/3 -translate-x-1/2 rounded-full bg-[#e60050] p-4 shadow-sm"
                       style={{ opacity: Math.min(1, dx / 80) }}
                     >
                       <Heart className="h-7 w-7 fill-white text-white" />
@@ -245,13 +245,13 @@ function SwipePage() {
                   aria-pressed={getLikes().includes(p.id)}
                   className="rounded-full border border-border bg-white p-4 shadow-sm hover:bg-[#f2f2f2]"
                 >
-                  <Heart className={`h-7 w-7 ${getLikes().includes(p.id) ? "fill-[#e91e63] text-[#e91e63]" : "text-black"}`} />
+                  <Heart className={`h-7 w-7 ${getLikes().includes(p.id) ? "fill-[#e60050] text-[#e60050]" : "text-black"}`} />
                 </button>
                 <button
                   type="button"
                   onClick={like}
                   aria-label={`Liker ${p.name}`}
-                  className="rounded-full bg-[#e91e63] p-4 shadow-sm hover:brightness-110"
+                  className="rounded-full bg-[#e60050] p-4 shadow-sm hover:brightness-110"
                 >
                   <Heart className="h-7 w-7 fill-white text-white" />
                 </button>
@@ -288,7 +288,7 @@ function SwipePage() {
               setMatch(null);
               nav({ to: "/messagerie" });
             }}
-            className="w-full rounded-full bg-gradient-to-r from-[#ff5722] to-[#e91e63] px-6 py-3 font-bold uppercase tracking-wide text-white hover:brightness-110"
+            className="w-full rounded-full bg-gradient-to-r from-[#ff5722] to-[#e60050] px-6 py-3 font-bold uppercase tracking-wide text-white hover:brightness-110"
           >
             Envoyer un message
           </button>

@@ -13,16 +13,17 @@ export const MODERATION_EMAIL = "akram.benchikh@yahoo.com";
 // ponytail: relative logo in dev so /emails preview loads it same-origin — absolute prod URL in sent mail; real CDN if clients ever block it
 // ponytail: EMAIL_LOGO_URL wins when set (public https logo for real inboxes — relative paths never resolve in email clients); Supabase public bucket if no CDN exists yet
 const ENV_LOGO = typeof process !== "undefined" ? process.env.EMAIL_LOGO_URL : "";
-const LOGO_URL = ENV_LOGO || (import.meta.env.DEV ? "/swivv-match-logo.jpg" : `${SITE}/swivv-match-logo.jpg`);
-// ponytail: footer needs the transparent PNG (email clients ignore mix-blend-mode, so the JPG's white box shows on grey) — same bucket, EMAIL_LOGO_FOOTER_URL, falls back to the header logo
-const ENV_FOOTER_LOGO = typeof process !== "undefined" ? process.env.EMAIL_LOGO_FOOTER_URL : "";
-const LOGO_FOOTER_URL = ENV_FOOTER_LOGO || LOGO_URL;
-const PRIMARY = "#e91e63";
-const ACCENT_RED = "#dc2626";
-const BG_OUTER = "#f7f8fb";
-const CARD_BORDER = "#eef0f6";
-const TEXT_DARK = "#333333";
-const TEXT_MUTED = "#6b7280";
+const LOGO_URL =
+  ENV_LOGO || (import.meta.env.DEV ? "/swivv-match-logo-transparent.png" : `${SITE}/swivv-match-logo-transparent.png`);
+const PRIMARY = "#e60050";
+const ACCENT_RED = "#e60050";
+const BG_OUTER = "#070b12";
+const CARD_BG = "#0d1626";
+const PANEL_BG = "#13233a";
+const PANEL_BORDER = "#1e2a3d";
+const TEXT_DARK = "#ffffff";
+const TEXT_BODY = "#c9d1dc";
+const TEXT_MUTED = "#8a93a3";
 const FONT = "'Nunito','Helvetica Neue',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif";
 
 function escapeHtml(t: string): string {
@@ -48,34 +49,32 @@ export function buildSwivvEmailHtml({
 <style>@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');</style>
 </head><body style="margin:0;padding:0;background:${BG_OUTER};font-family:${FONT};-webkit-font-smoothing:antialiased;">
 ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>` : ""}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_OUTER};padding:28px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG_OUTER};padding:32px 16px;">
 <tr><td align="center">
 
-<table role="presentation" cellpadding="0" cellspacing="0" style="width:592px;max-width:592px;background:#ffffff;border:1px solid ${CARD_BORDER};border-collapse:separate;border-spacing:0;">
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:592px;max-width:592px;background:${CARD_BG};border:1px solid ${PRIMARY};border-radius:24px;border-collapse:separate;border-spacing:0;">
 
-<tr><td style="background:${PRIMARY};padding:6px 36px;text-align:center;border-radius:28px 28px 0 0;">
-<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td align="center" style="background:#ffffff;border-radius:8px;padding:2px 12px;">
-<img src="${LOGO_URL}" alt="SWIVV MATCH" width="130" style="display:block;width:130px;max-width:100%;height:auto;border:0;font-size:22px;font-weight:900;color:#e91e63;letter-spacing:-0.5px;" />
-</td></tr></table>
+<tr><td style="background:#ffffff;padding:22px 32px;border-radius:23px 23px 0 0;">
+<img src="${LOGO_URL}" alt="SWIVV MATCH" width="120" style="display:block;width:120px;max-width:100%;height:auto;border:0;font-size:20px;font-weight:900;color:${PRIMARY};letter-spacing:-0.5px;" />
 </td></tr>
 
-<tr><td style="background:#ffffff;padding:36px 36px 28px;border-top:1px solid #f2f3f8;">
+<tr><td style="background:${CARD_BG};padding:24px 36px 32px;">
 ${bodyHtml}
 </td></tr>
 
-<tr><td style="background:${PRIMARY};padding:22px 36px 24px;border-radius:0 0 28px 28px;">
-<div style="text-align:center;font-size:18px;font-weight:800;color:#fff;line-height:1.4;margin-bottom:6px;">Your Match. Your Story.</div>
-<div style="text-align:center;font-size:13px;color:rgba(255,255,255,0.75);line-height:1.6;margin-bottom:16px;">Des profils vérifiés près de chez toi, des matches qui te ressemblent.</div>
-<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="border-radius:50px;background:#ffffff;">
-<a href="${SITE}/browse" style="display:inline-block;padding:12px 32px;font-size:14px;font-weight:800;color:${PRIMARY};text-decoration:none;border-radius:50px;font-family:${FONT};">Voir les profils</a>
+<tr><td style="background:#0b1420;padding:26px 36px 30px;border-top:1px solid ${PANEL_BORDER};border-radius:0 0 24px 24px;">
+<div style="text-align:center;font-size:20px;font-weight:900;color:#ffffff;line-height:1.3;margin-bottom:6px;">Your Match. Your Story.</div>
+<div style="text-align:center;font-size:13px;color:${TEXT_MUTED};line-height:1.6;margin-bottom:18px;">Des profils vérifiés près de chez toi, des matches qui te ressemblent.</div>
+<table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr><td style="border-radius:50px;background:${PRIMARY};">
+<a href="${SITE}/browse" style="display:inline-block;padding:13px 34px;font-size:14px;font-weight:800;color:#ffffff;text-decoration:none;border-radius:50px;font-family:${FONT};">Voir les profils &rarr;</a>
 </td></tr></table>
 </td></tr>
 
 </table>
 
-<table role="presentation" cellpadding="0" cellspacing="0" style="width:592px;max-width:592px;margin-top:4px;">
-<tr><td style="text-align:center;padding:12px 0;">
-<img src="${LOGO_FOOTER_URL}" alt="SWIVV MATCH" width="120" style="display:inline-block;width:120px;max-width:100%;height:auto;border:0;font-size:14px;font-weight:900;color:#333333;vertical-align:middle;" />
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:592px;max-width:592px;margin-top:8px;">
+<tr><td style="text-align:center;padding:10px 0 2px;">
+<span style="font-size:13px;font-weight:900;color:#ffffff;">SWIVV <span style="color:${PRIMARY};">MATCH</span></span>
 <span style="display:inline-block;margin-left:10px;">
 ${legalLinks.map((l, i) => `<a href="${legalUrls[i]}" style="color:${TEXT_MUTED};text-decoration:none;font-size:11px;font-weight:600;margin:0 3px;">${l}</a>`).join("")}
 </span>
@@ -93,12 +92,12 @@ Tu reçois cet e-mail car tu as un compte SWIVV. <a href="${SITE}/notifications"
 
 /** Greeting headline. */
 function hi(name: string, line: string): string {
-  return `<div style="font-size:22px;font-weight:800;color:${TEXT_DARK};line-height:1.3;margin-bottom:12px;">Salut ${escapeHtml(name)}, ${line}</div>`;
+  return `<div style="font-size:26px;font-weight:900;color:${TEXT_DARK};line-height:1.2;margin-bottom:14px;">Salut ${escapeHtml(name)}, ${line}</div>`;
 }
 
 /** Body paragraph. */
 function p(text: string): string {
-  return `<div style="font-size:15px;color:${TEXT_DARK};line-height:1.7;margin-bottom:12px;">${text}</div>`;
+  return `<div style="font-size:15px;color:${TEXT_BODY};line-height:1.7;margin-bottom:12px;">${text}</div>`;
 }
 
 /** Muted small print. */
@@ -106,18 +105,50 @@ function small(text: string): string {
   return `<div style="font-size:12px;color:${TEXT_MUTED};line-height:1.6;margin-top:16px;">${text}</div>`;
 }
 
-/** CTA button — pill-shaped, teal (red for likes). */
+/** CTA button — pill-shaped, brand pink. */
 function btn(text: string, url: string, color = PRIMARY): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td style="border-radius:50px;background:${color};text-align:center;">
-<a href="${escapeHtml(url)}" style="display:inline-block;padding:13px 36px;font-size:15px;font-weight:800;color:#fff;text-decoration:none;border-radius:50px;font-family:${FONT};">${escapeHtml(text)}</a>
+<a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:800;color:#fff;text-decoration:none;border-radius:50px;font-family:${FONT};">${escapeHtml(text)} &rarr;</a>
 </td></tr></table>`;
 }
 
-/** Highlight stat card (count + label). */
+/** Highlight stat panel (count + label). */
 function stat(count: number | string, label: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px auto;background:#f2f8f8;border-radius:14px;"><tr><td style="padding:16px 32px;text-align:center;">
-<div style="font-size:32px;font-weight:900;color:${PRIMARY};line-height:1;">${escapeHtml(String(count))}</div>
-<div style="font-size:13px;font-weight:700;color:${TEXT_MUTED};margin-top:4px;">${escapeHtml(label)}</div>
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px auto;background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:18px;"><tr><td style="padding:18px 36px;text-align:center;">
+<div style="font-size:34px;font-weight:900;color:${PRIMARY};line-height:1;">${escapeHtml(String(count))}</div>
+<div style="font-size:13px;font-weight:700;color:${TEXT_MUTED};margin-top:6px;">${escapeHtml(label)}</div>
+</td></tr></table>`;
+}
+
+/** Diagram: labelled progress bar (email-safe table). */
+function progress(label: string, pct: number): string {
+  const w = Math.max(0, Math.min(100, Math.round(pct)));
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:16px;margin:20px 0;"><tr><td style="padding:16px 18px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+<td style="font-size:13px;font-weight:700;color:${TEXT_BODY};">${escapeHtml(label)}</td>
+<td align="right" style="font-size:13px;font-weight:800;color:#fff;">${w} %</td>
+</tr></table>
+<div style="height:8px;background:${PANEL_BORDER};border-radius:50px;margin-top:10px;"><div style="height:8px;width:${w}%;background:${PRIMARY};border-radius:50px;font-size:0;line-height:0;">&nbsp;</div></div>
+</td></tr></table>`;
+}
+
+/** Diagram: bar chart (2+ values). */
+function chartBars(values: { label: string; value: number }[]): string {
+  const max = Math.max(...values.map((v) => v.value), 1);
+  const bars = values
+    .map((v) => {
+      const h = Math.max(14, Math.round((v.value / max) * 110));
+      return `<td valign="bottom" align="center" style="padding:0 10px;">
+<div style="width:72px;margin:0 auto;">
+<div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:6px;">${v.value}</div>
+<div style="height:${h}px;background:${PRIMARY};border-radius:8px 8px 0 0;font-size:0;line-height:0;">&nbsp;</div>
+<div style="font-size:11px;color:${TEXT_MUTED};margin-top:8px;">${escapeHtml(v.label)}</div>
+</div>
+</td>`;
+    })
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:18px;margin:20px 0;"><tr><td style="padding:18px 16px 14px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr style="height:150px;">${bars}</tr></table>
 </td></tr></table>`;
 }
 
@@ -165,7 +196,7 @@ export function swivvProfileIncomplete({ name, percent }: { name: string; percen
       preheader: `Plus que ${100 - percent} % avant un profil qui attire.`,
       bodyHtml:
         hi(name, "ton profil mérite mieux.") +
-        stat(`${percent} %`, "profil complété") +
+        progress("Profil complété", percent) +
         p("Ajoute des photos, tes centres d'intérêt et ta description : chaque section remplie augmente tes chances de match.") +
         btn("Terminer mon profil", `${SITE}/mon-profil`),
     }),
@@ -218,7 +249,7 @@ export function swivvNewMessage({ name, senderName, senderPhoto, preview }: { na
 ${senderPhoto ? `<td style="padding-right:12px;vertical-align:middle;"><img src="${escapeHtml(senderPhoto)}" alt="${escapeHtml(senderName)}" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:50%;object-fit:cover;border:0;" /></td>` : ""}
 <td style="vertical-align:middle;font-size:15px;color:${TEXT_DARK};line-height:1.6;"><strong>${escapeHtml(senderName)}</strong> t'a écrit :</td>
 </tr></table>` +
-        `<div style="background:#f2f8f8;border-radius:14px;padding:16px 20px;font-size:15px;font-style:italic;color:${TEXT_DARK};line-height:1.6;margin-bottom:12px;">« ${escapeHtml(clean)} »</div>` +
+        `<div style="background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:14px;padding:16px 20px;font-size:15px;font-style:italic;color:${TEXT_DARK};line-height:1.6;margin-bottom:12px;">« ${escapeHtml(clean)} »</div>` +
         btn("Lire et répondre", `${SITE}/messagerie`) +
         small("Astuce : répondre vite garde la conversation en vie."),
     }),
@@ -234,7 +265,7 @@ export function swivvActivityDigest({ name, likes, messages }: { name: string; l
       preheader: "Ne laisse pas tes admirateurs sans réponse.",
       bodyHtml:
         hi(name, "on parle de toi !") +
-        stat(likes, likes > 1 ? "nouveaux likes" : "nouveau like") +
+        chartBars([{ label: "Likes", value: likes }, { label: "Messages", value: messages }]) +
         p(`Tu as aussi <strong>${messages} message${messages > 1 ? "s" : ""} non lu${messages > 1 ? "s" : ""}</strong>. Fais un tour avant que tes matches ne refroidissent.`) +
         btn("Voir mon activité", `${SITE}/browse`, ACCENT_RED),
     }),
@@ -275,7 +306,7 @@ export function swivvTestimonialInvite({ name }: { name: string }): SwivvEmail {
 /** 10 — Conseils de sécurité avant une rencontre IRL. */
 export function swivvSafetyTips({ name }: { name: string }): SwivvEmail {
   const tips = [
-      "Retrouve-toi toujours dans un lieu public pour les premiers rendez-vous.",
+    "Choisis toujours un lieu public pour les premiers rendez-vous.",
     "Préviens un proche : où tu vas, avec qui, et quand tu rentres.",
     "Garde un moyen de transport indépendant pour partir quand tu veux.",
     "Ne communique jamais ton adresse, tes codes ou de l'argent.",
@@ -405,23 +436,26 @@ export function picksFor(seeking: "man" | "woman" | undefined, n: number): Match
   return pool.slice(0, n);
 }
 
-/** Profile-card grid (email-safe nested tables, photo + name/age + city + % pill). */
+/** Inclined profile cards — clients that ignore CSS transform fall back to a plain row. */
+// ponytail: transform:rotate is stripped by Gmail/Outlook — pre-rotated image assets if the tilt must survive every client
 function matchGrid(matches: MatchPick[], cols: 2 | 3): string {
   const pct = (n: number) =>
-    `<span style="display:inline-block;background:${PRIMARY};color:#fff;font-size:12px;font-weight:800;border-radius:50px;padding:3px 10px;">${n} %</span>`;
-  const card = (m: MatchPick) =>
-    `<td valign="top" style="padding:6px;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#f7f8fb;border-radius:14px;"><tr><td style="padding:0;">` +
-    `<a href="${SITE}/matches"><img src="${m.photo}" alt="${escapeHtml(m.name)}" width="220" style="display:block;width:100%;max-width:220px;height:auto;border:0;border-radius:14px 14px 0 0;" /></a>` +
-    `<div style="padding:10px 12px 12px;text-align:center;">` +
+    `<span style="display:inline-block;background:${PRIMARY};color:#fff;font-size:11px;font-weight:800;border-radius:50px;padding:3px 9px;">${n} %</span>`;
+  const width = cols === 3 ? 148 : 208;
+  const rotations = cols === 3 ? [-6, 0, 6] : [-5, 5];
+  const card = (m: MatchPick, i: number) =>
+    `<td align="center" valign="bottom" style="padding:8px 6px;">` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:${width}px;background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:18px;overflow:hidden;transform:rotate(${rotations[i % rotations.length]}deg);">` +
+    `<tr><td style="padding:0;"><a href="${SITE}/matches"><img src="${m.photo}" alt="${escapeHtml(m.name)}" width="${width}" style="display:block;width:100%;height:auto;border:0;border-radius:16px 16px 0 0;" /></a></td></tr>` +
+    `<tr><td style="padding:10px 12px 12px;text-align:left;">` +
     `<div style="font-size:14px;font-weight:800;color:${TEXT_DARK};">${escapeHtml(m.name)}, ${m.age}</div>` +
     `<div style="font-size:12px;color:${TEXT_MUTED};margin:2px 0 8px;">${escapeHtml(m.city)}</div>${pct(m.pct)}` +
-    `</div></td></tr></table></td>`;
+    `</td></tr></table></td>`;
   const rows: string[] = [];
   for (let i = 0; i < matches.length; i += cols) {
-    const cells = matches.slice(i, i + cols).map(card).join("");
-    rows.push(`<tr>${cells}</tr>`);
+    rows.push(`<tr>${matches.slice(i, i + cols).map(card).join("")}</tr>`);
   }
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:8px -6px 4px;"><tbody>${rows.join("")}</tbody></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0 8px;">${rows.join("")}</table>`;
 }
 
 export function swivvDailyMatches({ name, matches }: { name: string; matches: MatchPick[] }): SwivvEmail {
@@ -690,13 +724,13 @@ export function swivvAppAvailable({ name }: { name: string }): SwivvEmail {
   // ponytail: QR hotlink via api.qrserver.com (zero dep, zero binary asset) — self-host a generated PNG if uptime/branding ever matters
   // ponytail: store cards link SITE until native apps ship — swap hrefs for real App Store / Google Play URLs
   // ponytail: official multicolor Play arrow PNG (inline SVG never loads in Gmail/Outlook) — grey monochrome exists nowhere trustworthy; re-tint if palette ever beats real artwork
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&color=ffffff&bgcolor=1b1b1e&data=${encodeURIComponent("https://www.swivvmatch.com")}`;
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&color=ffffff&bgcolor=13233a&data=${encodeURIComponent("https://www.swivvmatch.com")}`;
   const apple = "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Apple_logo_grey.svg/250px-Apple_logo_grey.svg.png";
   const play = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Google_Play_Arrow_logo.svg/250px-Google_Play_Arrow_logo.svg.png";
   const card = (icon: string, alt: string, l1: string, l2: string) =>
-    `<td valign="top" width="33%" style="padding:0 5px;"><a href="${SITE}" style="text-decoration:none;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#1b1b1e;border-radius:22px;"><tr><td style="padding:26px 20px 24px;text-align:left;">` +
+    `<td valign="top" width="33%" style="padding:0 5px;"><a href="${SITE}" style="text-decoration:none;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:22px;"><tr><td style="padding:26px 20px 24px;text-align:left;">` +
     `<div style="height:108px;">${icon}</div>` +
-    `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:400;color:#cfcfd4;line-height:1.4;">${l1}<br/>${l2}</div>` +
+    `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:400;color:${TEXT_BODY};line-height:1.4;">${l1}<br/>${l2}</div>` +
     `</td></tr></table></a></td>`;
   const appIcons =
     `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:24px -5px 8px;"><tr>` +
@@ -711,7 +745,7 @@ export function swivvAppAvailable({ name }: { name: string }): SwivvEmail {
       preheader: "Tes matches partout avec toi.",
       bodyHtml:
         hi(name, "bonne nouvelle !") +
-        `<div style="font-size:30px;font-weight:900;color:#111111;line-height:1.15;margin:4px 0 10px;">Change ta vie<br/>avec SWIVV MATCH</div>` +
+        `<div style="font-size:30px;font-weight:900;color:#ffffff;line-height:1.15;margin:4px 0 10px;">Change ta vie<br/>avec SWIVV MATCH</div>` +
         p("L'application SWIVV MATCH arrive sur ton téléphone : tes matches, messages et notifications partout avec toi.") +
         appIcons +
         // ponytail: trust icons are grey PNGs via wsrv mod=0.6 (phones ignore U+FE0E, SVG shows dots) - self-host if wsrv ever fails
@@ -852,7 +886,7 @@ export function swivvContactReceived({ name, subject, message, fileNames }: { na
         hi(name, "merci de nous écrire.") +
         p("Ton message a bien été reçu par notre équipe support. On te répond en général sous 1 à 2 jours ouvrés.") +
         (subject ? p(`<strong>Objet :</strong> ${escapeHtml(subject)}`) : "") +
-        (message ? `<div style="background:${BG_OUTER};border-radius:14px;padding:20px;font-size:14px;color:${TEXT_DARK};line-height:1.7;white-space:pre-wrap;margin-bottom:24px;">${escapeHtml(message)}</div>` : "") +
+        (message ? `<div style="background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:14px;padding:20px;font-size:14px;color:${TEXT_BODY};line-height:1.7;white-space:pre-wrap;margin-bottom:24px;">${escapeHtml(message)}</div>` : "") +
         (fileNames?.length ? p(`<strong>Pièces jointes (${fileNames.length}) :</strong><br/>${fileNames.map((f, i) => `${i + 1}- ${escapeHtml(f)}`).join("<br/>")}`) : "") +
         small("En cas d'urgence liée à ta sécurité, contacte directement les autorités compétentes."),
     }),

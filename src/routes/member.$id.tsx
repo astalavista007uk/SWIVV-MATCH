@@ -19,6 +19,7 @@ import { PhotoReact } from "./browse";
 import { isMemberUuid, preloadMyReactions, subscribeReactions, togglePhotoReaction, type ReactionId } from "@/lib/swivv-reactions";
 import { realDistance, useMyCity } from "@/lib/location-distance";
 import { supabase } from "@/integrations/supabase/client";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/member/$id")({
   head: ({ params }) => ({
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/member/$id")({
 });
 
 function MemberPage() {
+  const t = useT();
   const { id } = Route.useParams();
   const { user, loading: authLoading } = useAuth();
   const [, force] = useState(0);
@@ -117,7 +119,7 @@ function MemberPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <h1 className="text-2xl font-medium">Profil introuvable</h1>
-        <Link to="/browse" search={{ q: "", type: "", location: "" }} className="mt-4 inline-block text-[#e91e63] underline">
+        <Link to="/browse" search={{ q: "", type: "", location: "" }} className="mt-4 inline-block text-[#e60050] underline">
           Retour aux profils
         </Link>
       </div>
@@ -179,9 +181,9 @@ function MemberPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
@@ -208,8 +210,8 @@ function MemberPage() {
               <MatchTooltip
                 fem={profile.gender === "woman"}
                 badge={
-                  <p className="mt-2 inline-block rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63]">
-                    {displayPct(profile, criteria)}% compatible · {profile.lookingFor}
+                  <p className="mt-2 inline-block rounded-full bg-[#e60050]/10 px-3 py-1 text-sm font-medium text-[#e60050]">
+                    {t("{pct}% compatible", { pct: displayPct(profile, criteria) })} · {t(profile.lookingFor)}
                   </p>
                 }
                 criteria={criteria}
@@ -232,7 +234,7 @@ function MemberPage() {
                     })
                   }
                   aria-pressed={liked}
-                  className={`flex-1 rounded-md px-4 py-3 font-medium ${liked ? "bg-red-50 text-red-600 border border-red-200" : "bg-[#e91e63] text-white"}`}
+                  className={`flex-1 rounded-md px-4 py-3 font-medium ${liked ? "bg-red-50 text-red-600 border border-red-200" : "bg-[#e60050] text-white"}`}
                 >
                   <Heart className={`mr-2 inline h-4 w-4 ${liked ? "fill-red-500 text-red-500" : ""}`} />
                   {liked ? "Liké !" : "Liker"}
@@ -242,7 +244,7 @@ function MemberPage() {
                   onClick={() =>
                     requireSwivvAuth("message", () => setMsgOpen(true))
                   }
-                  className="flex flex-1 items-center justify-center rounded-md border border-[#e91e63] px-4 py-3 font-medium text-[#e91e63]"
+                  className="flex flex-1 items-center justify-center rounded-md border border-[#e60050] px-4 py-3 font-medium text-[#e60050]"
                 >
                   <MessageCircle className="mr-2 h-4 w-4" /> Message
                 </button>
@@ -259,7 +261,7 @@ function MemberPage() {
                   <button
                     type="button"
                     onClick={() => requireSwivvAuth("unblock", () => { toggleBlock(profile.id); force((x) => x + 1); })}
-                    className="mt-1 text-sm font-medium text-[#e91e63] hover:underline"
+                    className="mt-1 text-sm font-medium text-[#e60050] hover:underline"
                   >
                     Débloquer
                   </button>
@@ -419,7 +421,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
         <div className="min-h-[120px] flex-1 space-y-2 overflow-y-auto py-3" aria-live="polite">
           {chat.length === 0 && <p className="text-sm text-[#999]">Dis bonjour à {profile.name} !</p>}
           {chat.map((m) => (
-            <div key={m.id} className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.from === "me" ? "ml-auto bg-[#e91e63] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
+            <div key={m.id} className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.from === "me" ? "ml-auto bg-[#e60050] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
               {m.audio ? (
                 <>
                   <span className="flex items-center gap-1">
@@ -452,7 +454,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
             aria-label="Écris ton message"
             maxLength={500}
             autoFocus
-            className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+            className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e60050]"
           />
           {isMatch(profile.id) && (
             voice.recording ? (
@@ -466,18 +468,18 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
                 </button>
               </span>
             ) : (
-              <button type="button" disabled={sendingVoice} onClick={async () => setVoiceErr(await voice.start())} aria-label="Enregistrer un vocal" className="rounded-lg border border-border px-3 py-2 text-[#e91e63] disabled:opacity-40">
+              <button type="button" disabled={sendingVoice} onClick={async () => setVoiceErr(await voice.start())} aria-label="Enregistrer un vocal" className="rounded-lg border border-border px-3 py-2 text-[#e60050] disabled:opacity-40">
                 <Mic className="h-5 w-5" />
               </button>
             )
           )}
-          <button type="submit" disabled={!draft.trim()} className="rounded-lg bg-[#e91e63] px-5 py-2 font-medium text-white disabled:opacity-40">
+          <button type="submit" disabled={!draft.trim()} className="rounded-lg bg-[#e60050] px-5 py-2 font-medium text-white disabled:opacity-40">
             Envoyer
           </button>
         </form>
         {voiceErr && <p className="pt-1 text-xs text-red-600">{voiceErr}</p>}
         {sendingVoice && <p className="pt-1 text-xs text-[#777]">Envoi du vocal…</p>}
-        <Link to="/messagerie" onClick={() => { try { sessionStorage.setItem("swivv-active-chat", profile.id); } catch {} }} className="mt-2 text-center text-sm text-[#e91e63] hover:underline">
+        <Link to="/messagerie" onClick={() => { try { sessionStorage.setItem("swivv-active-chat", profile.id); } catch {} }} className="mt-2 text-center text-sm text-[#e60050] hover:underline">
           Tout l&apos;historique dans Messages
         </Link>
         {voiceReport !== null && (
@@ -508,7 +510,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
                     setVoiceReport(null);
                     setReportReason("");
                   }}
-                  className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white disabled:opacity-40"
+                  className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-40"
                 >
                   Envoyer le signalement
                 </button>

@@ -38,6 +38,7 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvSettingsTabs } from "@/components/swivv-settings-tabs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import type { SwivvProfile } from "@/lib/swivv-data";
 
@@ -85,6 +86,7 @@ const ordNum = (ord: number) =>
   ordDate(ord).toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" });
 
 function ProgressPage() {
+  const t = useT();
   const { user, loading } = useAuth();
   const { tab } = Route.useSearch();
   const nav = Route.useNavigate();
@@ -191,10 +193,10 @@ function ProgressPage() {
     if (prev.length > 0 && fresh.length > 0) {
       toast.success(
         fresh.length === 1
-          ? `Succès débloqué : ${fresh[0].name}`
-          : `${fresh.length} succès débloqués`,
+          ? t("Succès débloqué : {name}", { name: fresh[0].name })
+          : t("{n} succès débloqués", { n: fresh.length }),
         {
-          description: "Retrouve-les dans l'onglet Succès.",
+          description: t("Retrouve-les dans l'onglet Succès."),
         },
       );
     }
@@ -212,13 +214,13 @@ function ProgressPage() {
     return (
       <Shell>
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">Connecte-toi pour voir ta progression.</p>
+          <p className="text-sm text-[#777]">{t("Connecte-toi pour voir ta progression.")}</p>
           <button
             type="button"
             onClick={() => openAuthModal("account", "signin")}
-            className="mt-4 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white"
+            className="mt-4 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white"
           >
-            Se connecter / S&apos;inscrire
+            {t("Se connecter / S'inscrire")}
           </button>
         </main>
       </Shell>
@@ -246,14 +248,14 @@ function ProgressPage() {
           <div className="rounded-[22px] bg-white p-5 sm:p-7">
             <header className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e91e63]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#e60050]">
                   SWIVV Progress
                 </p>
                 <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[#1b1b1e]">
-                  Ta progression
+                  {t("Ta progression")}
                 </h1>
                 <p className="mt-1 max-w-xl text-sm text-[#777]">
-                  Des repères pour avancer à ton rythme, sans pression ni classement.
+                  {t("Des repères pour avancer à ton rythme, sans pression ni classement.")}
                 </p>
               </div>
             </header>
@@ -263,18 +265,18 @@ function ProgressPage() {
                 role="alert"
                 className="mt-5 rounded-xl border border-border bg-white p-4 text-sm text-[#555]"
               >
-                Certaines données n&apos;ont pas pu être chargées.{" "}
+                {t("Certaines données n'ont pas pu être chargées.")}{" "}
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="font-medium text-[#e91e63] hover:underline"
+                  className="font-medium text-[#e60050] hover:underline"
                 >
                   Réessayer
                 </button>
               </div>
             )}
             {!data && !failed && (
-              <p className="mt-6 text-sm text-[#777]">Chargement de ta progression…</p>
+              <p className="mt-6 text-sm text-[#777]">{t("Chargement de ta progression…")}</p>
             )}
 
             {data && (
@@ -284,20 +286,20 @@ function ProgressPage() {
                 className="mt-6"
               >
                 <TabsList
-                  aria-label="Sections de SWIVV Progress"
+                  aria-label={t("Sections de SWIVV Progress")}
                   className="flex h-auto gap-1 overflow-x-auto rounded-full bg-[#f1f2f4] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {[
                     { id: "progress", label: "Progression" },
                     { id: "achievements", label: "Succès" },
                     { id: "stats", label: "Statistiques" },
-                  ].map((t) => (
+                  ].map((tab) => (
                     <TabsTrigger
-                      key={t.id}
-                      value={t.id}
+                      key={tab.id}
+                      value={tab.id}
                       className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-[#555] shadow-none data-[state=active]:bg-[#1b1b1e] data-[state=active]:text-white data-[state=active]:shadow-none"
                     >
-                      {t.label}
+                      {t(tab.label)}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -309,24 +311,24 @@ function ProgressPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h2 className="flex items-center gap-2 text-sm font-semibold text-[#1b1b1e]">
-                            <Flame className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
-                            Série de connexion
+                            <Flame className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
+                            {t("Série de connexion")}
                           </h2>
                           <p className="mt-2 text-3xl font-semibold text-[#1b1b1e]">
                             {run.current}{" "}
                             <span className="text-base font-normal text-[#777]">
-                              jour{run.current > 1 ? "s" : ""} d&apos;affilée
+                              {run.current > 1 ? t("jours d'affilée") : t("jour d'affilée")}
                             </span>
                           </p>
                         </div>
                         <span className="rounded-full bg-[#fce4ec] px-3 py-1 text-xs font-medium text-[#c2185b]">
-                          Record : {run.best} j
+                          {t("Record : {n} j", { n: run.best })}
                         </span>
                       </div>
 
                       <ol
                         className="mt-4 grid grid-cols-7 gap-1.5"
-                        aria-label="Activité des 7 derniers jours"
+                        aria-label={t("Activité des 7 derniers jours")}
                       >
                         {week.map((ord) => {
                           const active = days.has(ord);
@@ -339,9 +341,9 @@ function ProgressPage() {
                               <span
                                 className={`group relative flex h-8 w-full items-center justify-center rounded-lg border text-[11px] font-medium ${
                                   active
-                                    ? "border-[#e91e63] bg-[#e91e63] text-white"
+                                    ? "border-[#e60050] bg-[#e60050] text-white"
                                     : "border-dashed border-[#d8d8db] bg-white text-[#bbb]"
-                                } ${isToday ? "ring-2 ring-[#e91e63]/30 ring-offset-1" : ""}`}
+                                } ${isToday ? "ring-2 ring-[#e60050]/30 ring-offset-1" : ""}`}
                               >
                                 {active ? (
                                   <Heart
@@ -362,8 +364,8 @@ function ProgressPage() {
                                 </span>
                                 <span className="sr-only">
                                   {ordNum(ord)} :{" "}
-                                  {active ? "activité qualifiante" : "aucune activité qualifiante"}
-                                  {isToday ? " (aujourd'hui)" : ""}
+                                  {active ? t("activité qualifiante") : t("aucune activité qualifiante")}
+                                  {isToday ? ` ${t("(aujourd'hui)")}` : ""}
                                 </span>
                               </span>
                             </li>
@@ -373,24 +375,24 @@ function ProgressPage() {
 
                       <p className="mt-3 text-sm text-[#555]">
                         {run.current === 0
-                          ? "Un like réciproque ou une vraie conversation suffit à démarrer ta série. Aucune obligation de revenir chaque jour."
-                          : "Tu construis ton parcours vers des rencontres sincères, un échange à la fois."}
+                          ? t("Un like réciproque ou une vraie conversation suffit à démarrer ta série. Aucune obligation de revenir chaque jour.")
+                          : t("Tu construis ton parcours vers des rencontres sincères, un échange à la fois.")}
                       </p>
                     </Card>
 
                     {/* --- profile completion --- */}
                     <Card>
-                      <h2 className="text-sm font-semibold text-[#1b1b1e]">Complétude du profil</h2>
+                      <h2 className="text-sm font-semibold text-[#1b1b1e]">{t("Complétude du profil")}</h2>
                       <div className="mt-3 flex items-center gap-4">
-                        <p className="text-3xl font-semibold text-[#e91e63]">{completion}&nbsp;%</p>
+                        <p className="text-3xl font-semibold text-[#e60050]">{completion}&nbsp;%</p>
                         <div className="min-w-0 flex-1">
                           <Progress
                             value={completion}
-                            aria-label={`Profil complété à ${completion} %`}
-                            className="h-2.5 bg-[#f1f2f4] [&>div]:bg-[#e91e63]"
+                            aria-label={t("Profil complété à {pct} %", { pct: completion })}
+                            className="h-2.5 bg-[#f1f2f4] [&>div]:bg-[#e60050]"
                           />
                           <p className="mt-2 text-xs text-[#777]">
-                            Ce score mesure la complétude, pas ton attractivité.
+                            {t("Ce score mesure la complétude, pas ton attractivité.")}
                           </p>
                         </div>
                       </div>
@@ -398,21 +400,20 @@ function ProgressPage() {
                         {step ? (
                           <>
                             <p className="text-xs font-semibold uppercase tracking-wide text-[#777]">
-                              Prochaine étape
+                              {t("Prochaine étape")}
                             </p>
-                            <p className="mt-1 text-sm text-[#333]">Compléter « {step.label} »</p>
+                            <p className="mt-1 text-sm text-[#333]">{t("Compléter « {label} »", { label: t(step.label) })}</p>
                             {/* ponytail: plain anchor like the Mon profil tips — the profile flow reads ?revoir= from the URL on load */}
                             <a
                               href={step.to}
-                              className="mt-2 inline-block rounded-full bg-[#e91e63] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]"
+                              className="mt-2 inline-block rounded-full bg-[#e60050] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]"
                             >
-                              Compléter mon profil
+                              {t("Compléter mon profil")}
                             </a>
                           </>
                         ) : (
                           <p className="flex items-center gap-2 text-sm font-medium text-[#16A34A]">
-                            <BadgeCheck className="h-4 w-4" aria-hidden="true" /> Profil complet,
-                            bravo.
+                            <BadgeCheck className="h-4 w-4" aria-hidden="true" /> {t("Profil complet, bravo.")}
                           </p>
                         )}
                       </div>
@@ -421,49 +422,49 @@ function ProgressPage() {
                     {/* --- weekly goal --- */}
                     <Card>
                       <h2 className="flex items-center gap-2 text-sm font-semibold text-[#1b1b1e]">
-                        <Target className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
-                        Objectif de la semaine
+                        <Target className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
+                        {t("Objectif de la semaine")}
                       </h2>
                       <p className="mt-2 text-sm text-[#555]">
-                        Répondre à au moins une conversation entamée par l&apos;autre personne.
+                        {t("Répondre à au moins une conversation entamée par l'autre personne.")}
                       </p>
                       <div className="mt-3">
                         <Progress
                           value={replies > 0 ? 100 : 0}
-                          aria-label={replies > 0 ? "Objectif atteint" : "Objectif non atteint"}
-                          className="h-2.5 bg-[#f1f2f4] [&>div]:bg-[#e91e63]"
+                          aria-label={replies > 0 ? t("Objectif atteint") : t("Objectif non atteint")}
+                          className="h-2.5 bg-[#f1f2f4] [&>div]:bg-[#e60050]"
                         />
                         <p className="mt-2 text-xs text-[#777]">
                           {replies > 0
-                            ? `Objectif atteint : ${replies} conversation${replies > 1 ? "s" : ""} relancée${replies > 1 ? "s" : ""} cette semaine.`
-                            : "0 pour l'instant — une seule réponse suffit, sans envoi massif."}
+                            ? t("Objectif atteint : {n} conversations relancées cette semaine.", { n: replies })
+                            : t("0 pour l'instant — une seule réponse suffit, sans envoi massif.")}
                         </p>
                       </div>
                       <Link
                         to="/messagerie"
-                        className="mt-3 inline-block rounded-full border border-[#e91e63] px-4 py-1.5 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/10"
+                        className="mt-3 inline-block rounded-full border border-[#e60050] px-4 py-1.5 text-sm font-medium text-[#e60050] hover:bg-[#e60050]/10"
                       >
-                        Ouvrir mes messages
+                        {t("Ouvrir mes messages")}
                       </Link>
                     </Card>
 
                     {/* --- compact summary --- */}
                     <Card>
                       <h2 className="text-sm font-semibold text-[#1b1b1e]">
-                        En un coup d&apos;œil
+                        {t("En un coup d'œil")}
                       </h2>
                       <ul className="mt-3 space-y-2 text-sm text-[#333]">
                         <li className="flex items-center justify-between gap-3">
                           <span className="flex items-center gap-2">
-                            <Heart className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
-                            Matches mutuels
+                            <Heart className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
+                            {t("Matches mutuels")}
                           </span>
                           <span className="font-semibold">{data.matches.length}</span>
                         </li>
                         <li className="flex items-center justify-between gap-3">
                           <span className="flex items-center gap-2">
-                            <MessagesSquare className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
-                            Conversations suivies
+                            <MessagesSquare className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
+                            {t("Conversations suivies")}
                           </span>
                           <span className="font-semibold">
                             {new Set(data.chats.map((c) => c.peer)).size}
@@ -471,8 +472,8 @@ function ProgressPage() {
                         </li>
                         <li className="flex items-center justify-between gap-3">
                           <span className="flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
-                            Succès débloqués
+                            <Sparkles className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
+                            {t("Succès débloqués")}
                           </span>
                           <span className="font-semibold">
                             {unlocked.length} / {badges.filter((b) => b.available).length}
@@ -489,15 +490,13 @@ function ProgressPage() {
                 <TabsContent value="achievements" className="mt-6 focus-visible:outline-none">
                   <div className="flex flex-wrap items-end justify-between gap-2">
                     <div>
-                      <h2 className="text-lg font-semibold text-[#1b1b1e]">Succès</h2>
+                      <h2 className="text-lg font-semibold text-[#1b1b1e]">{t("Succès")}</h2>
                       <p className="text-sm text-[#777]">
-                        {unlocked.length} débloqué{unlocked.length > 1 ? "s" : ""} sur{" "}
-                        {badges.filter((b) => b.available).length}. Chaque succès ne se débloque
-                        qu&apos;une fois.
+                        {t("{n} débloqués sur {total}. Chaque succès ne se débloque qu'une fois.", { n: unlocked.length, total: badges.filter((b) => b.available).length })}
                       </p>
                     </div>
                     <span className="rounded-full bg-[#fce4ec] px-3 py-1 text-xs font-medium text-[#c2185b]">
-                      Privé par défaut
+                      {t("Privé par défaut")}
                     </span>
                   </div>
                   <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -506,12 +505,12 @@ function ProgressPage() {
                       return (
                         <li
                           key={b.id}
-                          aria-label={`${b.name} — ${b.unlocked ? "débloqué" : b.available ? "verrouillé" : "bientôt disponible"}`}
+                          aria-label={t("{name} — {state}", { name: t(b.name), state: b.unlocked ? t("débloqué") : b.available ? t("verrouillé") : t("bientôt disponible") })}
                           className={`rounded-[20px] border p-4 ${b.unlocked ? "border-[#f5c2d6] bg-white" : "border-dashed border-[#dcdcdf] bg-[#fafafa]"}`}
                         >
                           <div className="flex items-start gap-3">
                             <span
-                              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${b.unlocked ? "bg-[#e91e63] text-white" : "bg-[#efeff1] text-[#9a9aa0]"}`}
+                              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${b.unlocked ? "bg-[#e60050] text-white" : "bg-[#efeff1] text-[#9a9aa0]"}`}
                             >
                               <Icon className="h-5 w-5" aria-hidden="true" />
                             </span>
@@ -519,26 +518,26 @@ function ProgressPage() {
                               <p
                                 className={`flex items-center gap-1.5 font-semibold ${b.unlocked ? "text-[#1b1b1e]" : "text-[#6b6b70]"}`}
                               >
-                                {b.name}
+                                {t(b.name)}
                                 {!b.unlocked && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
                               </p>
-                              <p className="mt-1 text-xs text-[#777]">{b.description}</p>
+                              <p className="mt-1 text-xs text-[#777]">{t(b.description)}</p>
                             </div>
                           </div>
                           <p className="mt-3 text-xs text-[#555]">
-                            <span className="font-medium">Condition : </span>
-                            {b.condition}
+                            <span className="font-medium">{t("Condition :")}</span>{" "}
+                            {t(b.condition)}
                           </p>
                           <p
                             className={`mt-2 text-xs font-medium ${b.unlocked ? "text-[#16A34A]" : "text-[#999]"}`}
                           >
                             {b.unlocked && b.at
-                              ? `Débloqué le ${fmtDay(b.at)}`
+                              ? t("Débloqué le {date}", { date: fmtDay(b.at) })
                               : b.unlocked
-                                ? "Débloqué"
+                                ? t("Débloqué")
                                 : b.available
-                                  ? "Pas encore débloqué"
-                                  : "Bientôt disponible"}
+                                  ? t("Pas encore débloqué")
+                                  : t("Bientôt disponible")}
                           </p>
                         </li>
                       );
@@ -549,14 +548,14 @@ function ProgressPage() {
                 <TabsContent value="stats" className="mt-6 focus-visible:outline-none">
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
-                      <h2 className="text-lg font-semibold text-[#1b1b1e]">Statistiques privées</h2>
+                      <h2 className="text-lg font-semibold text-[#1b1b1e]">{t("Statistiques privées")}</h2>
                       <p className="text-sm text-[#777]">
-                        Calculées sur tes propres données, jamais sur celles des autres membres.
+                        {t("Calculées sur tes propres données, jamais sur celles des autres membres.")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       <label htmlFor="progress-period" className="text-sm text-[#555]">
-                        Période :
+                        {t("Période :")}
                       </label>
                       <select
                         id="progress-period"
@@ -566,7 +565,7 @@ function ProgressPage() {
                       >
                         {PERIODS.map((p) => (
                           <option key={p.days} value={p.days}>
-                            {p.label}
+                            {t(p.label)}
                           </option>
                         ))}
                       </select>
@@ -631,14 +630,11 @@ function ProgressPage() {
                     stats.activeDays ===
                     0 && (
                     <div className="mt-4 rounded-2xl border border-dashed border-[#dcdcdf] bg-[#fafafa] p-4 text-sm text-[#777]">
-                      Aucune activité sur cette période. Un profil complété et un échange sincère
-                      suffisent à faire vivre ces chiffres — le volume n&apos;est pas un objectif.
+                      {t("Aucune activité sur cette période. Un profil complété et un échange sincère suffisent à faire vivre ces chiffres — le volume n'est pas un objectif.")}
                     </div>
                   )}
                   <p className="mt-4 text-xs text-[#999]">
-                    Les jours sont comptés en heure locale, du lundi au dimanche. Les visites de
-                    profil ne sont affichées que lorsqu&apos;elles sont enregistrées par SWIVV
-                    MATCH.
+                    {t("Les jours sont comptés en heure locale, du lundi au dimanche. Les visites de profil ne sont affichées que lorsqu'elles sont enregistrées par SWIVV MATCH.")}
                   </p>
                 </TabsContent>
               </Tabs>
@@ -653,10 +649,10 @@ function ProgressPage() {
 function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home">
-            <SwivvLogo />
+            <SwivvLogo dark />
           </Link>
           <SwivvAuthButtons />
         </div>
@@ -683,18 +679,19 @@ function Tile({
   value: number | string;
   hint: string;
 }) {
+  const t = useT();
   return (
     <div className="rounded-[18px] border border-[#ececee] bg-white p-4">
       {/* ponytail: CSS-only black hint mirroring MatchTooltip — hover only, tap users get the sr-only text; popover API if touch needs it */}
       <p className="group relative flex items-center gap-2 text-xs font-medium text-[#777]">
-        <Icon className="h-4 w-4 text-[#e91e63]" aria-hidden="true" />
-        {label}
+        <Icon className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
+        {t(label)}
         <span className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden w-48 rounded-lg bg-black p-2.5 text-left text-[11px] font-normal leading-snug text-white shadow-lg group-hover:block">
-          {hint}
+          {t(hint)}
         </span>
       </p>
       <p className="mt-2 text-2xl font-semibold text-[#1b1b1e]">{value}</p>
-      <span className="sr-only">{hint}</span>
+      <span className="sr-only">{t(hint)}</span>
     </div>
   );
 }

@@ -181,7 +181,7 @@ function AdminAi() {
           <div className={card}><p className="text-3xl font-bold text-[#333]">{prov.configured ? "branché" : "non configuré"}</p><p className="mt-1 text-[#777]">Fournisseur IA ({prov.provider})</p></div>
           <div className={card}><p className="text-3xl font-bold text-[#333]">{rules.filter((r) => r.enabled).length}/{rules.length}</p><p className="mt-1 text-[#777]">Règles actives</p></div>
           <div className={card}><p className="text-3xl font-bold text-[#333]">{doneRuns}</p><p className="mt-1 text-[#777]">Exécutions OK · {failedRuns} en échec</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#e91e63]">{pendingReview.length}</p><p className="mt-1 text-[#777]">À relire (urgences + classements)</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#e60050]">{pendingReview.length}</p><p className="mt-1 text-[#777]">À relire (urgences + classements)</p></div>
         </div>
       )}
 
@@ -237,7 +237,7 @@ function AdminAi() {
                   ) : (
                     <span className="text-[#999]">{r.enabled ? "active" : "coupée"} · dry-run {r.dry_run ? "oui" : "non"}</span>
                   )}
-                  <button type="button" onClick={() => execute(r.key)} disabled={busy === r.key || !r.enabled} className="rounded bg-[#e91e63] px-3 py-1 font-medium text-white disabled:opacity-50">
+                  <button type="button" onClick={() => execute(r.key)} disabled={busy === r.key || !r.enabled} className="rounded bg-[#e60050] px-3 py-1 font-medium text-white disabled:opacity-50">
                     {busy === r.key ? "…" : "Exécuter"}
                   </button>
                 </span>

@@ -100,7 +100,7 @@ function AdminSettings() {
             <select value={role} onChange={(e) => setRole(e.target.value as StaffRole)} aria-label="Rôle" className="rounded-md border border-border bg-white px-3 py-2 text-sm">
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
-            <button type="submit" className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white">Attribuer</button>
+            <button type="submit" className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white">Attribuer</button>
           </form>
           <div className="mt-4 space-y-1">
             {rows.map((r: any, i: number) => (
@@ -143,7 +143,7 @@ function AdminSettings() {
           {policies.map((p: any) => <p key={p.name} className="mt-1 text-[#555]">{p.name} <span className="text-[#999]">→ {p.severity} / {p.action}{p.auto_apply ? " (AUTO)" : ""}</span></p>)}
           {!policies.length && <p className="mt-1 text-[#777]">Table non chargée (migration 20261013000000).</p>}
           {li("Approbations", "ban/suppression : humain 80+, double confirmation ; IA ne décide jamais")}
-          <p className="mt-2"><Link to="/admin/moderation" className="text-xs text-[#e91e63] underline">Ouvrir la modération</Link></p>
+          <p className="mt-2"><Link to="/admin/moderation" className="text-xs text-[#e60050] underline">Ouvrir la modération</Link></p>
         </div>
       )}
 
@@ -186,7 +186,7 @@ function AdminSettings() {
           {li("Profils/messages", "conservés tant que le compte existe")}
           {li("Audit", "append-only, purge service_role uniquement si exigée")}
           {li("Demandes d'accès/suppression", "via fiche membre (export JSON, marquage deleted)")}
-          <p className="mt-2"><Link to="/admin/users" className="text-xs text-[#e91e63] underline">Ouvrir les utilisateurs</Link></p>
+          <p className="mt-2"><Link to="/admin/users" className="text-xs text-[#e60050] underline">Ouvrir les utilisateurs</Link></p>
         </div>
       )}
 
@@ -195,7 +195,7 @@ function AdminSettings() {
           <p className="font-medium text-[#333]">Audit append-only (lecture + ajout, aucune édition).</p>
           {li("Rétention", "illimitée en base — purge manuelle service_role si politique l'exige")}
           {li("Charges utiles", "jamais de mots de passe, tokens ni corps de messages privés")}
-          <p className="mt-2"><Link to="/admin/audit" className="text-xs text-[#e91e63] underline">Ouvrir l'audit (+ export CSV)</Link></p>
+          <p className="mt-2"><Link to="/admin/audit" className="text-xs text-[#e60050] underline">Ouvrir l'audit (+ export CSV)</Link></p>
         </div>
       )}
     </div>

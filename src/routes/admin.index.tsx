@@ -255,7 +255,7 @@ function AdminDashboard() {
                 <XAxis dataKey="day" tick={{ fontSize: 11 }} interval={3} />
                 <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
-                <Bar dataKey="n" fill="#e91e63" />
+                <Bar dataKey="n" fill="#e60050" />
               </BarChart>
             </ResponsiveContainer>
           </div>

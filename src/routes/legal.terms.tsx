@@ -14,7 +14,7 @@ function LegalTermsRedirect() {
     <main className="mx-auto max-w-xl px-4 py-16 text-center">
       <p className="text-sm text-[#555]">
         Nos conditions ont déménagé :{" "}
-        <Link to="/terms-and-conditions" className="font-medium text-[#e91e63] hover:underline">
+        <Link to="/terms-and-conditions" className="font-medium text-[#e60050] hover:underline">
           lire les conditions d'utilisation
         </Link>
         .

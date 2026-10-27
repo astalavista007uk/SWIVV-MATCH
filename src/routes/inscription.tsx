@@ -25,12 +25,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from "sonner";
 import {   Brain, Dumbbell, Eye, Fingerprint, Footprints, Gem, Heart, Mail, Palette, PersonStanding, Ruler, Scissors, ShieldCheck, Shirt, Smile, Sparkles, UtensilsCrossed, Zap, type LucideIcon } from "lucide-react";
 import { pageHead } from "@/lib/seo";
+import { readLang, translate, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/inscription")({
   head: () =>
     pageHead(
-      "Créer mon profil gratuit — SWIVV MATCH",
-      "Crée ton profil gratuit sur SWIVV MATCH en 2 minutes, sans carte bancaire. Rencontres sérieuses, mariage ou belle histoire.",
+      translate(readLang(), "Créer mon profil gratuit — SWIVV MATCH"),
+      translate(
+        readLang(),
+        "Crée ton profil gratuit sur SWIVV MATCH en 2 minutes. Rencontres sérieuses, mariage ou belle histoire.",
+      ),
       "/inscription",
     ),
   component: SignupPage,
@@ -387,6 +391,10 @@ export const ATOUTS: AtoutCat[] = [
   { name: "Bras et autres atouts", icon: Dumbbell, bg: "bg-stone-200 text-stone-600", items: ["Mes bras", "Mes biceps", "Mes épaules", "Mon dos", "Ma peau", "Ma silhouette athlétique", "Mes formes généreuses", "Ma musculature"] },
 ];
 // ponytail: static French country list — regenerate from CLDR if it drifts
+// ponytail: signup copy (questions, chrome, short option sets) is translated through lib/i18n —
+// the long reference lists below (countries, jobs, income, religions, origins, languages, interests,
+// atouts) stay French until someone needs them: add the strings to locales/{en,es}.ts and they render
+// translated with no code change (Sel/Seg run every option through t()).
 export const PAYS = ["Afghanistan", "Afrique du Sud", "Albanie", "Algérie", "Allemagne", "Andorre", "Angola", "Antigua-et-Barbuda", "Arabie saoudite", "Argentine", "Arménie", "Australie", "Autriche", "Azerbaïdjan", "Bahamas", "Bahreïn", "Bangladesh", "Barbade", "Belgique", "Belize", "Bénin", "Bhoutan", "Biélorussie", "Birmanie", "Bolivie", "Bosnie-Herzégovine", "Botswana", "Brésil", "Brunei", "Bulgarie", "Burkina Faso", "Burundi", "Cambodge", "Cameroun", "Canada", "Cap-Vert", "Chili", "Chine", "Chypre", "Colombie", "Comores", "Congo", "Corée du Nord", "Corée du Sud", "Costa Rica", "Côte d'Ivoire", "Croatie", "Cuba", "Danemark", "Djibouti", "Dominique", "Égypte", "Émirats arabes unis", "Équateur", "Érythrée", "Espagne", "Eswatini", "Estonie", "États-Unis", "Éthiopie", "Fidji", "Finlande", "France", "Gabon", "Gambie", "Géorgie", "Ghana", "Grèce", "Grenade", "Guatemala", "Guinée", "Guinée équatoriale", "Guinée-Bissau", "Guyana", "Haïti", "Honduras", "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande", "Islande", "Israël", "Italie", "Jamaïque", "Japon", "Jordanie", "Kazakhstan", "Kenya", "Kirghizistan", "Kiribati", "Kosovo", "Koweït", "Laos", "Lesotho", "Lettonie", "Liban", "Liberia", "Libye", "Liechtenstein", "Lituanie", "Luxembourg", "Macédoine du Nord", "Madagascar", "Malaisie", "Malawi", "Maldives", "Mali", "Malte", "Maroc", "Maurice", "Mauritanie", "Mexique", "Micronésie", "Moldavie", "Monaco", "Mongolie", "Monténégro", "Mozambique", "Myanmar", "Namibie", "Nauru", "Népal", "Nicaragua", "Niger", "Nigeria", "Norvège", "Nouvelle-Zélande", "Oman", "Ouganda", "Ouzbékistan", "Pakistan", "Palaos", "Palestine", "Panama", "Papouasie-Nouvelle-Guinée", "Paraguay", "Pays-Bas", "Pérou", "Philippines", "Pologne", "Portugal", "Qatar", "République centrafricaine", "République démocratique du Congo", "République dominicaine", "République tchèque", "Roumanie", "Royaume-Uni", "Russie", "Rwanda", "Saint-Christophe-et-Niévès", "Sainte-Lucie", "Saint-Marin", "Saint-Vincent-et-les-Grenadines", "Salomon", "Salvador", "Samoa", "Sao Tomé-et-Principe", "Sénégal", "Serbie", "Seychelles", "Sierra Leone", "Singapour", "Slovaquie", "Slovénie", "Somalie", "Soudan", "Soudan du Sud", "Sri Lanka", "Suède", "Suisse", "Suriname", "Syrie", "Tadjikistan", "Taïwan", "Tanzanie", "Tchad", "Thaïlande", "Timor oriental", "Togo", "Tonga", "Trinité-et-Tobago", "Tunisie", "Turkménistan", "Turquie", "Tuvalu", "Ukraine", "Uruguay", "Vanuatu", "Vatican", "Venezuela", "Viêt Nam", "Yémen", "Zambie", "Zimbabwe"];
 // ponytail: flat list ported from swoov regions (single source for dating side) —
 // department-level granularity if users ask for it
@@ -441,7 +449,7 @@ const DRAFT_KEY = "swivv-signup-draft";
 type SignupDraft = { f?: Record<string, string>; photos?: string[]; customPhotos?: string[]; step?: number; phase?: "pre" | "post"; qi?: number };
 
 const inputCls =
-  "w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]";
+  "w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]";
 
 function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
   return (
@@ -450,7 +458,7 @@ function Label({ children, optional }: { children: React.ReactNode; optional?: b
       {optional ? (
         <span className="font-normal text-[#999]">(optionnel)</span>
       ) : (
-        <span className="text-[#e91e63]">*</span>
+        <span className="text-[#e60050]">*</span>
       )}
     </span>
   );
@@ -467,12 +475,13 @@ function Sel({
   options: readonly string[];
   placeholder: string;
 }) {
+  const t = useT();
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
-      <option value="">{placeholder}</option>
+      <option value="">{t(placeholder)}</option>
       {options.map((o) => (
         <option key={o} value={o}>
-          {o}
+          {t(o)}
         </option>
       ))}
     </select>
@@ -488,6 +497,7 @@ export function Seg({
   onChange: (v: string) => void;
   options: readonly string[];
 }) {
+  const t = useT();
   return (
     <div className="grid grid-cols-3 gap-1 rounded-md bg-[#f2f2f2] p-1" role="radiogroup">
       {options.map((o) => (
@@ -498,10 +508,10 @@ export function Seg({
           aria-checked={value === o}
           onClick={() => onChange(o)}
           className={`rounded px-2 py-2 text-sm font-medium ${
-            value === o ? "bg-white text-[#e91e63] shadow-sm" : "text-[#777]"
+            value === o ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"
           }`}
         >
-          {o}
+          {t(o)}
         </button>
       ))}
     </div>
@@ -539,6 +549,7 @@ function ageFromBirthdate(iso: string): number {
 
 function SignupPage() {
   const nav = useNavigate();
+  const t = useT();
   const { user: authUser, loading: authLoading } = useAuth();
   const [doneProfile, setDoneProfile] = useState<SwivvProfile | null | undefined>(undefined);
   // ponytail: leave-save reads the latest form via ref (unmount/pagehide closures are stale) — merge-save makes partial answers safe
@@ -632,7 +643,7 @@ function SignupPage() {
   // ponytail: shared field blocks (signup question flow + edit steps render the same JSX) — split into a fields file if a third consumer appears
   const genderOnly = () => (
     <div>
-      <Label>Tu es</Label>
+      <Label>{t("Tu es")}</Label>
       <div className="grid grid-cols-2 gap-1 rounded-md bg-[#f2f2f2] p-1" role="radiogroup" aria-label="Genre">
         {(
           [
@@ -652,9 +663,9 @@ function SignupPage() {
                 localStorage.setItem("swivv-signup-gender", v);
               } catch {}
             }}
-            className={`rounded px-3 py-2 text-sm font-medium ${f.gender === v ? "bg-white text-[#e91e63] shadow-sm" : "text-[#777]"}`}
+            className={`rounded px-3 py-2 text-sm font-medium ${f.gender === v ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"}`}
           >
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -662,7 +673,7 @@ function SignupPage() {
   );
   const seekingOnly = () => (
     <div>
-      <Label>Tu veux rencontrer</Label>
+      <Label>{t("Tu veux rencontrer")}</Label>
       <div className="grid grid-cols-2 gap-1 rounded-md bg-[#f2f2f2] p-1" role="radiogroup" aria-label="Genre recherché">
         {(
           [
@@ -676,9 +687,9 @@ function SignupPage() {
             role="radio"
             aria-checked={f.seeking === v}
             onClick={() => upd("seeking", v)}
-            className={`rounded px-3 py-2 text-sm font-medium ${f.seeking === v ? "bg-white text-[#e91e63] shadow-sm" : "text-[#777]"}`}
+            className={`rounded px-3 py-2 text-sm font-medium ${f.seeking === v ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"}`}
           >
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
@@ -698,7 +709,7 @@ function SignupPage() {
     return (
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label>Ton mot de passe (8 caractères min)</Label>
+          <Label>{t("Ton mot de passe (8 caractères min)")}</Label>
           <input type="password" value={f.password} onChange={(e) => upd("password", e.target.value)} placeholder="••••••••" autoComplete="new-password" className={inputCls} />
           <div className="mt-1.5 min-h-[2.5rem]" aria-live="polite">
             <div className="flex gap-1" role="progressbar" aria-valuemin={0} aria-valuemax={3} aria-valuenow={Math.max(level, 0)} aria-label="Force du mot de passe">
@@ -714,7 +725,7 @@ function SignupPage() {
           </div>
         </div>
         <div>
-          <Label>Confirme ton mot de passe</Label>
+          <Label>{t("Confirme ton mot de passe")}</Label>
           <input type="password" value={f.confirm} onChange={(e) => upd("confirm", e.target.value)} placeholder="••••••••" autoComplete="new-password" className={inputCls} />
           <div className="mt-1.5 min-h-[1.25rem]" aria-live="polite">
             {match ? (
@@ -722,11 +733,11 @@ function SignupPage() {
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                Passwords match
+                {t("Les mots de passe correspondent.")}
               </p>
             ) : mismatch ? (
               <p className="text-sm" style={{ color: "#DC2626" }}>
-                Passwords do not match
+                {t("Les mots de passe ne correspondent pas.")}
               </p>
             ) : null}
           </div>
@@ -736,15 +747,15 @@ function SignupPage() {
   };
   const natFields = () => (
     <div>
-      <Label>Ta nationalité</Label>
+      <Label>{t("Ta nationalité")}</Label>
       <input value={f.nat1} onChange={(e) => upd("nat1", e.target.value)} placeholder="Française" autoComplete="off" maxLength={40} list="swivv-nats" className={inputCls} />
       {!showNat2 && !f.nat2 ? (
-        <button type="button" onClick={() => setShowNat2(true)} className="mt-1.5 text-sm font-medium text-[#e91e63] hover:underline">
-          + Ajouter une seconde nationalité
+        <button type="button" onClick={() => setShowNat2(true)} className="mt-1.5 text-sm font-medium text-[#e60050] hover:underline">
+          {t("+ Ajouter une seconde nationalité")}
         </button>
       ) : (
         <div className="mt-2">
-          <Label optional>Seconde nationalité</Label>
+          <Label optional>{t("Seconde nationalité")}</Label>
           <input value={f.nat2} onChange={(e) => upd("nat2", e.target.value)} placeholder="Marocaine" autoComplete="off" maxLength={40} list="swivv-nats" className={inputCls} />
         </div>
       )}
@@ -793,7 +804,7 @@ function SignupPage() {
   );
   const langsBlock = () => (
     <div>
-      <Label optional>Tes autres langues</Label>
+      <Label optional>{t("Tes autres langues")}</Label>
       {/* ponytail: native details dropdown, no outside-click close or search — custom popover if needed */}
       <details className="relative rounded-md border border-border bg-white">
         <summary className="cursor-pointer list-none px-3 py-2.5 text-[15px] text-[#333] [&::-webkit-details-marker]:hidden">
@@ -802,7 +813,7 @@ function SignupPage() {
         <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-white p-1 shadow-lg">
           {FIRSTLANGS.filter((l) => l !== f.firstLanguage.trim()).map((l) => (
             <label key={l} className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-[#333] hover:bg-[#f2f2f2]">
-              <input type="checkbox" checked={csv(f.otherLanguages).includes(l)} onChange={() => toggleLang(l)} className="h-4 w-4 accent-[#e91e63]" />
+              <input type="checkbox" checked={csv(f.otherLanguages).includes(l)} onChange={() => toggleLang(l)} className="h-4 w-4 accent-[#e60050]" />
               {l}
             </label>
           ))}
@@ -812,7 +823,7 @@ function SignupPage() {
   );
   const interestsBlock = () => (
     <div>
-      <Label>Tes centres d&apos;intérêt</Label>
+      <Label>{t("Tes centres d\'intérêt")}</Label>
       <details className="relative rounded-md border border-border bg-white">
         <summary className="cursor-pointer list-none px-3 py-2.5 text-[15px] text-[#333] [&::-webkit-details-marker]:hidden">
           {csv(f.interests).length === 0 ? "Choisir…" : csv(f.interests).join(", ")}
@@ -820,15 +831,15 @@ function SignupPage() {
         <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-white p-1 shadow-lg">
           {INTERESTS.map((l) => (
             <label key={l} className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-[#333] hover:bg-[#f2f2f2]">
-              <input type="checkbox" checked={csv(f.interests).includes(l)} onChange={() => toggleInterest(l)} className="h-4 w-4 accent-[#e91e63]" />
+              <input type="checkbox" checked={csv(f.interests).includes(l)} onChange={() => toggleInterest(l)} className="h-4 w-4 accent-[#e60050]" />
               {l}
             </label>
           ))}
         </div>
       </details>
       <div className="mt-2 flex gap-2">
-        <input value={customInterest} onChange={(e) => setCustomInterest(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomInterest(); } }} placeholder="Ajouter ton propre loisir…" maxLength={30} className={inputCls} />
-        <button type="button" onClick={addCustomInterest} className="shrink-0 rounded-md border border-[#e91e63] px-4 font-medium text-[#e91e63]">
+        <input value={customInterest} onChange={(e) => setCustomInterest(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomInterest(); } }} placeholder={t("Ajouter ton propre loisir…")} maxLength={30} className={inputCls} />
+        <button type="button" onClick={addCustomInterest} className="shrink-0 rounded-md border border-[#e60050] px-4 font-medium text-[#e60050]">
           +
         </button>
       </div>
@@ -836,7 +847,7 @@ function SignupPage() {
   );
   const photosBlock = () => (
     <div>
-      <Label>Tes photos (1 à 5, 2,5 Mo max)</Label>
+      <Label>{t("Tes photos (1 à 5, 2,5 Mo max)")}</Label>
       {/* ponytail: union rendered inline (photos = saved, customPhotos = this-session uploads) — extract if a third source appears */}
       {[...photos, ...customPhotos.filter((c) => !photos.includes(c))].length === 0 ? (
         <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">⚠️ Sans photo, ton profil reste invisible — ajoute-en une pour apparaître.</p>
@@ -851,11 +862,11 @@ function SignupPage() {
                   onClick={() => togglePhoto(src)}
                   aria-pressed={selected}
                   aria-label={selected ? "Retirer cette photo" : "Choisir cette photo"}
-                  className={`relative block w-full overflow-hidden rounded-md ${selected ? "ring-2 ring-[#e91e63]" : "opacity-80"}`}
+                  className={`relative block w-full overflow-hidden rounded-md ${selected ? "ring-2 ring-[#e60050]" : "opacity-80"}`}
                 >
                   <img src={src} alt="" loading="lazy" className="aspect-square w-full object-cover" />
                   {selected && (
-                    <span className="absolute right-1 top-1 rounded-full bg-[#e91e63] px-1.5 text-xs font-medium text-white">
+                    <span className="absolute right-1 top-1 rounded-full bg-[#e60050] px-1.5 text-xs font-medium text-white">
                       {photos.indexOf(src) + 1}
                     </span>
                   )}
@@ -873,8 +884,8 @@ function SignupPage() {
           })}
         </div>
       )}
-      <label className="mt-2 inline-block cursor-pointer rounded-md border border-[#e91e63] px-4 py-2 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/5">
-        + Ajouter mes photos
+      <label className="mt-2 inline-block cursor-pointer rounded-md border border-[#e60050] px-4 py-2 text-sm font-medium text-[#e60050] hover:bg-[#e60050]/5">
+        {t("+ Ajouter mes photos")}
         <input type="file" accept="image/*" multiple hidden onChange={(e) => { addUploads(e.target.files); e.target.value = ""; }} />
       </label>
       <p className="mt-1 text-xs text-[#999]">{photos.length}/5 photo(s) — encore {5 - photos.length} possible(s).</p>
@@ -884,9 +895,9 @@ function SignupPage() {
     <>
       <div className="rounded-md border border-border p-3 text-sm">
         <p className="text-[#333]">
-          {cguAccepted ? "✓ CGU détaillées acceptées." : "Lis et accepte les CGU détaillées pour continuer."}{" "}
-          <button type="button" onClick={() => setCguOpen(true)} className="font-medium text-[#e91e63] hover:underline">
-            {cguAccepted ? "Relire" : "Ouvrir les CGU détaillées"}
+          {cguAccepted ? t("✓ CGU détaillées acceptées.") : t("Lis et accepte les CGU détaillées pour continuer.")}{" "}
+          <button type="button" onClick={() => setCguOpen(true)} className="font-medium text-[#e60050] hover:underline">
+            {cguAccepted ? t("Relire") : t("Ouvrir les CGU détaillées")}
           </button>
         </p>
       </div>
@@ -896,13 +907,13 @@ function SignupPage() {
           type="checkbox"
           checked={consent.age}
           onChange={(e) => setConsent({ ...consent, age: e.target.checked })}
-          className="mt-1 accent-[#e91e63]"
+          className="mt-1 accent-[#e60050]"
         />
         <span>
-          Je certifie avoir 18 ans ou plus et accepter les{" "}
-          <Link to="/legal/terms" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e91e63] hover:underline">CGU détaillées</Link>,{" "}
-          les <Link to="/cgv" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e91e63] hover:underline">Conditions Générales de Vente (CGV)</Link>{" "}
-          et l&apos;utilisation des <Link to="/cookies" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e91e63] hover:underline">cookies</Link>.
+          {t("Je certifie avoir 18 ans ou plus et accepter les")}{" "}
+          <Link to="/legal/terms" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">CGU détaillées</Link>,{" "}
+          les <Link to="/cgv" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">Conditions Générales de Vente (CGV)</Link>{" "}
+          et l&apos;utilisation des <Link to="/cookies" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">cookies</Link>.
         </span>
       </label>
       <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border p-3 text-sm text-[#333]">
@@ -910,10 +921,10 @@ function SignupPage() {
           type="checkbox"
           checked={consent.sensitive}
           onChange={(e) => setConsent({ ...consent, sensitive: e.target.checked })}
-          className="mt-1 accent-[#e91e63]"
+          className="mt-1 accent-[#e60050]"
         />
         <span>
-          Je consens, lorsque cela est nécessaire et conformément à la réglementation applicable, au traitement de mes données personnelles sensibles ainsi qu&apos;à l&apos;utilisation de systèmes de filtrage et de sécurité des messages par SWIVV, aux fins de fournir, sécuriser et améliorer ses services.
+          {t("Je consens, lorsque cela est nécessaire et conformément à la réglementation applicable, au traitement de mes données personnelles sensibles ainsi qu'à l'utilisation de systèmes de filtrage et de sécurité des messages par SWIVV, aux fins de fournir, sécuriser et améliorer ses services.")}
         </span>
       </label>
     </>
@@ -965,11 +976,11 @@ function SignupPage() {
       render: () => (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label>Âge min</Label>
+            <Label>{t("Âge min")}</Label>
             <input type="number" value={f.ageMin} onChange={(e) => upd("ageMin", e.target.value)} min={18} max={99} className={inputCls} />
           </div>
           <div>
-            <Label>Âge max</Label>
+            <Label>{t("Âge max")}</Label>
             <input type="number" value={f.ageMax} onChange={(e) => upd("ageMax", e.target.value)} min={18} max={99} className={inputCls} />
           </div>
         </div>
@@ -1046,7 +1057,7 @@ function SignupPage() {
     { key: "bodyStyle", title: "Ta silhouette", pre: false, render: () => selQ("bodyStyle", () => forGender(BODY, f.gender)), validate: () => (!f.bodyStyle ? "Ta silhouette est obligatoire." : null) },
     { key: "ethnicity", title: "Tes origines", sub: "Donnée sensible, traitée uniquement pour le service.", pre: false, render: () => selQ("ethnicity", () => forGender(ETHNI, f.gender)), validate: () => (!f.ethnicity ? "Ton origine est obligatoire." : null) },
     { key: "selfAppearance", title: "Ton style", pre: false, render: () => selQ("selfAppearance", () => forGender(STYLE, f.gender)), validate: () => (!req(f.selfAppearance) ? "Ton style est obligatoire." : null) },
-    { key: "bestFeature", title: "Mes plus beaux atouts", sub: "Sélectionnez jusqu'à 5 qualités qui vous correspondent.", pre: false, render: () => atoutsBlock(), validate: () => (selAtouts().length === 0 ? "Choisis au moins un atout (5 maximum)." : null) },
+    { key: "bestFeature", title: "Mes plus beaux atouts", sub: "Sélectionne jusqu'à 5 qualités qui te correspondent.", pre: false, render: () => atoutsBlock(), validate: () => (selAtouts().length === 0 ? "Choisis au moins un atout (5 maximum)." : null) },
     { key: "occupation", title: "Ton métier", pre: false, render: () => selQ("occupation", () => forGender(METIERS, f.gender)), validate: () => (!req(f.occupation) ? "Ton métier est obligatoire." : null) },
     { key: "education", title: "Tes études", pre: false, render: () => selQ("education", () => EDUC), validate: () => (!f.education ? "Tes études sont obligatoires." : null) },
     { key: "drink", title: "Alcool ?", pre: false, render: () => selQ("drink", () => DRINK), validate: () => (!f.drink ? "Le champ alcool est obligatoire." : null) },
@@ -1388,26 +1399,26 @@ function SignupPage() {
     return (
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
         <DialogContent className="max-w-sm text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e91e63]/10">
-            <Mail className="h-7 w-7 text-[#e91e63]" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e60050]/10">
+            <Mail className="h-7 w-7 text-[#e60050]" />
           </div>
           <DialogHeader>
-            <DialogTitle>Merci pour ton inscription !</DialogTitle>
+            <DialogTitle>{t("Merci pour ton inscription !")}</DialogTitle>
             <DialogDescription>
-              On t&apos;a envoyé un e-mail à <span className="font-medium text-[#e91e63]">{(f.email ?? "").trim()}</span> : clique sur son lien pour confirmer ton adresse et activer ton compte.
+              {t("On t'a envoyé un e-mail à")}{" "}<span className="font-medium text-[#e60050]">{(f.email ?? "").trim()}</span> : {t("clique sur son lien pour confirmer ton adresse et activer ton compte.")}
             </DialogDescription>
           </DialogHeader>
           <button
             type="button"
             onClick={() => nav({ to: "/mon-profil" })}
-            className="w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+            className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
           >
             OK
           </button>
           <div className="border-t border-border pt-3 text-sm text-[#777]">
-            Pas reçu ? Vérifie tes spams, ou{" "}
-            <button type="button" onClick={resendConfirm} className="font-medium text-[#e91e63] hover:underline">
-              Renvoyer l&apos;e-mail de confirmation
+            {t("Pas reçu ? Vérifie tes spams, ou")}{" "}
+            <button type="button" onClick={resendConfirm} className="font-medium text-[#e60050] hover:underline">
+              {t("Renvoyer l'e-mail de confirmation")}
             </button>
             {resendMsg && <p className="mt-2 text-sm text-[#333]">{resendMsg}</p>}
           </div>
@@ -1644,17 +1655,17 @@ function SignupPage() {
     const sel = selAtouts();
     return (
       <div className="space-y-3">
-        <p className="text-sm text-[#555]">Sélectionnez jusqu&apos;à 5 qualités qui vous correspondent. Vous pouvez aussi ajouter un atout personnel.</p>
+        <p className="text-sm text-[#555]">Sélectionne jusqu&apos;à 5 qualités qui te correspondent. Tu peux aussi ajouter un atout personnel.</p>
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-[#333]">Mes atouts sélectionnés</p>
-          <p className="text-sm font-medium tabular-nums text-[#e91e63]" aria-live="polite">{sel.length}/{ATOUT_MAX}</p>
+          <p className="text-sm font-medium tabular-nums text-[#e60050]" aria-live="polite">{sel.length}/{ATOUT_MAX}</p>
         </div>
         {sel.length === 0 ? (
-          <p className="rounded-md border border-border bg-[#f7f7f7] px-3 py-2.5 text-sm text-[#999]">Vos choix apparaîtront ici.</p>
+          <p className="rounded-md border border-border bg-[#f7f7f7] px-3 py-2.5 text-sm text-[#999]">Tes choix apparaîtront ici.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {sel.map((a) => (
-              <button key={a} type="button" onClick={() => toggleAtout(a)} aria-label={`Retirer ${a}`} className="rounded-full bg-[#e91e63]/10 px-3 py-1 text-sm font-medium text-[#e91e63] hover:bg-[#e91e63]/20">
+              <button key={a} type="button" onClick={() => toggleAtout(a)} aria-label={`Retirer ${a}`} className="rounded-full bg-[#e60050]/10 px-3 py-1 text-sm font-medium text-[#e60050] hover:bg-[#e60050]/20">
                 {a} ×
               </button>
             ))}
@@ -1671,12 +1682,12 @@ function SignupPage() {
                     <Icon className="h-4 w-4" />
                   </span>
                   <span className="text-[15px] font-medium text-[#333]">{c.name}</span>
-                  {n > 0 && <span className="ml-auto rounded-full bg-[#e91e63]/10 px-2 py-0.5 text-xs font-medium text-[#e91e63]">{n}</span>}
+                  {n > 0 && <span className="ml-auto rounded-full bg-[#e60050]/10 px-2 py-0.5 text-xs font-medium text-[#e60050]">{n}</span>}
                 </summary>
                 <div className="max-h-56 overflow-y-auto border-t border-border p-1">
                   {c.items.map((l) => (
                     <label key={l} className="flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm text-[#333] hover:bg-[#f2f2f2]">
-                      <input type="checkbox" checked={sel.includes(l)} onChange={() => toggleAtout(l)} className="h-4 w-4 accent-[#e91e63]" />
+                      <input type="checkbox" checked={sel.includes(l)} onChange={() => toggleAtout(l)} className="h-4 w-4 accent-[#e60050]" />
                       {l}
                     </label>
                   ))}
@@ -1689,7 +1700,7 @@ function SignupPage() {
           <Label optional>Un autre atout à ajouter ?</Label>
           <div className="flex gap-2">
             <input value={customAtout} onChange={(e) => setCustomAtout(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustomAtout(); } }} placeholder="Ton atout personnel…" maxLength={40} className={inputCls} />
-            <button type="button" onClick={addCustomAtout} className="shrink-0 rounded-md border border-[#e91e63] px-4 font-medium text-[#e91e63]">
+            <button type="button" onClick={addCustomAtout} className="shrink-0 rounded-md border border-[#e60050] px-4 font-medium text-[#e60050]">
               +
             </button>
           </div>
@@ -1749,7 +1760,7 @@ function SignupPage() {
       return false;
     }
     // ponytail: one shared suffix, not 20 edited strings — Continuer speaks, Ignorer stays the silent bypass
-    setErr(phase === "post" ? `${e} Ou clique sur Ignorer pour passer.` : e);
+    setErr(phase === "post" ? `${e} ${t("Ou clique sur Ignorer pour passer.")}` : e);
     window.scrollTo({ top: 0, behavior: "smooth" });
     return true;
   }
@@ -1878,7 +1889,7 @@ function SignupPage() {
   if (doneProfile === undefined) {
     return (
       <div className="min-h-screen bg-background">
-        <main className="mx-auto max-w-md px-4 py-16 text-center text-[#777]">Chargement…</main>
+        <main className="mx-auto max-w-md px-4 py-16 text-center text-[#777]">{t("Chargement…")}</main>
       </div>
     );
   }
@@ -1889,45 +1900,45 @@ function SignupPage() {
     const lastPost = phase === "post" && qi >= postQs.length - 1;
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-background">
+        <header className="border-b border-border bg-black text-white">
           <div className="flex w-full flex-wrap items-center gap-3 px-4 py-3">
-            <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-            <span className="ml-auto text-sm font-medium tabular-nums text-[#333]">
-              {phase === "pre" ? `Question ${qi + 1}/${preQs.length}` : `${pct} %`}
+            <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
+            <span className="ml-auto text-sm font-medium tabular-nums text-white">
+              {phase === "pre" ? t("Question {n}/{total}", { n: qi + 1, total: preQs.length }) : `${pct} %`}
             </span>
             <SwivvAuthButtons />
           </div>
           <div className="w-full px-4 pb-3">
             <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Progression de l'inscription" className="h-1.5 overflow-hidden rounded-full bg-[#e5e5e5]">
-              <div className="h-full rounded-full bg-[#e91e63] transition-all" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-[#e60050] transition-all" style={{ width: `${pct}%` }} />
             </div>
           </div>
         </header>
         <main className="mx-auto flex min-h-[78vh] w-full max-w-2xl flex-col justify-center px-4 py-12">
           {phase === "post" && qi === 0 && req(f.name) && (
-            <p className="text-sm text-[#777]">Très bien {f.name.trim()}, parle-nous de toi.</p>
+            <p className="text-sm text-[#777]">{t("Très bien {name}, parle-nous de toi.", { name: f.name.trim() })}</p>
           )}
-          <h1 className="mt-1 text-2xl font-medium text-[#333]">{flowQ.title}</h1>
-          {flowQ.sub && <p className="mt-1 text-sm text-[#777]">{flowQ.sub}</p>}
+          <h1 className="mt-1 text-2xl font-medium text-[#333]">{t(flowQ.title)}</h1>
+          {flowQ.sub && <p className="mt-1 text-sm text-[#777]">{t(flowQ.sub)}</p>}
           <div className="mt-4 rounded-2xl bg-white p-5">{flowQ.render()}</div>
           {err && (
             <p role="alert" className="mb-4 mt-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-700">
-              {err}
+              {t(err)}
             </p>
           )}
           <div className="mt-4 flex gap-2">
             {!(phase === "pre" && qi === 0) && (
-              <button type="button" onClick={backQ} className="rounded-md border border-[#e91e63] px-6 py-3 font-medium text-[#e91e63]">
-                ← Retour
+              <button type="button" onClick={backQ} className="rounded-md border border-[#e60050] px-6 py-3 font-medium text-[#e60050]">
+                {t("← Retour")}
               </button>
             )}
             {phase === "post" && (
               <button type="button" onClick={skipQ} className="rounded-md border border-border px-6 py-3 font-medium text-[#555]">
-                Ignorer
+                {t("Ignorer")}
               </button>
             )}
-            <button type="button" onClick={nextQ} disabled={busy} className="flex-1 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white disabled:opacity-60">
-              {busy ? "Un instant…" : lastPre ? "Créer mon compte" : lastPost ? "Terminer" : "Sauvegarder et continuer"}
+            <button type="button" onClick={nextQ} disabled={busy} className="flex-1 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white disabled:opacity-60">
+              {busy ? t("Un instant…") : lastPre ? t("Créer mon compte") : lastPost ? t("Terminer") : t("Sauvegarder et continuer")}
             </button>
           </div>
           {editing && missOnly && (
@@ -1941,9 +1952,9 @@ function SignupPage() {
                 try { window.history.replaceState(null, "", "/inscription"); } catch {}
                 window.scrollTo({ top: 0 });
               }}
-              className="mt-3 w-full text-center text-sm font-medium text-[#e91e63] hover:underline"
+              className="mt-3 w-full text-center text-sm font-medium text-[#e60050] hover:underline"
             >
-              Revoir tout mon profil
+              {t("Revoir tout mon profil")}
             </button>
           )}
         </main>
@@ -1965,33 +1976,33 @@ function SignupPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-3xl items-center gap-3 px-4 py-3">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <span className="ml-auto text-sm text-[#777]">
-            Étape {step + 1}/{STEPS.length}
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
+          <span className="ml-auto text-sm text-white/70">
+            {t("Étape {n}/{total}", { n: step + 1, total: STEPS.length })}
           </span>
           <SwivvAuthButtons />
         </div>
         <div className="mx-auto max-w-3xl px-4 pb-3">
           <div className="flex gap-1" aria-hidden="true">
             {STEPS.map((_, i) => (
-              <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-[#e91e63]" : "bg-[#e5e5e5]"}`} />
+              <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-[#e60050]" : "bg-[#e5e5e5]"}`} />
             ))}
           </div>
-          <p className="mt-1 text-sm font-medium text-[#333]">{STEPS[step]}</p>
+          <p className="mt-1 text-sm font-medium text-white">{t(STEPS[step])}</p>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6">
         <p className="mb-4 text-sm text-[#777]">
-          Tous les champs marqués <span className="text-[#e91e63]">*</span> sont obligatoires, mais tu peux passer
+          Tous les champs marqués <span className="text-[#e60050]">*</span> sont obligatoires, mais tu peux passer
           chaque question avec « Ignorer » et y revenir plus tard. Seules la 2e nationalité, les autres langues
           et les détails sans objet (enfants, animaux) peuvent rester vides définitivement.
         </p>
         {err && (
           <p role="alert" className="mb-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-700">
-            {err}
+            {t(err)}
           </p>
         )}
 
@@ -2245,7 +2256,7 @@ function SignupPage() {
                 setStep((s) => s - 1);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="rounded-md border border-[#e91e63] px-6 py-3 font-medium text-[#e91e63]"
+              className="rounded-md border border-[#e60050] px-6 py-3 font-medium text-[#e60050]"
             >
               ← Retour
             </button>
@@ -2256,15 +2267,15 @@ function SignupPage() {
                 type="button"
                 onClick={saveStep}
                 disabled={busy}
-                className="flex-1 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white disabled:opacity-60"
+                className="flex-1 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white disabled:opacity-60"
               >
-                {busy ? "Enregistrement…" : "Enregistrer cette étape"}
+                {busy ? t("Enregistrement…") : t("Enregistrer cette étape")}
               </button>
               {step < STEPS.length - 1 && (
                 <button
                   type="button"
                   onClick={next}
-                  className="rounded-md border border-[#e91e63] px-6 py-3 font-medium text-[#e91e63]"
+                  className="rounded-md border border-[#e60050] px-6 py-3 font-medium text-[#e60050]"
                 >
                   Continuer →
                 </button>
@@ -2274,7 +2285,7 @@ function SignupPage() {
             <button
               type="button"
               onClick={next}
-              className="flex-1 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white"
+              className="flex-1 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white"
             >
               Continuer →
             </button>
@@ -2283,9 +2294,9 @@ function SignupPage() {
               type="button"
               onClick={submit}
               disabled={busy}
-              className="flex-1 rounded-md bg-[#e91e63] px-6 py-3 font-medium text-white disabled:opacity-60"
+              className="flex-1 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white disabled:opacity-60"
             >
-              {busy ? "Création…" : "Créer mon profil"}
+              {busy ? t("Création…") : t("Créer mon profil")}
             </button>
           )}
         </div>
@@ -2295,7 +2306,7 @@ function SignupPage() {
             onClick={() => nav({ to: "/mon-profil" })}
             className="mt-2 w-full text-center text-sm text-[#777] hover:text-[#333] hover:underline"
           >
-            Annuler et retour au profil
+            {t("Annuler et retour au profil")}
           </button>
         )}
       </main>

@@ -10,6 +10,8 @@ import { SwivvSettingsTabs } from "@/components/swivv-settings-tabs";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { SwivvLogo } from "@/components/swivv-logo";
+import { SwivvLangSwitch } from "@/components/swivv-lang-switch";
+import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/parametres")({
@@ -52,6 +54,7 @@ function SettingsPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [hidden, setHidden] = useState(() => isProfileHidden());
+  const t = useT();
   const [lang, setLang] = useState(getAppLang);
   const [editingName, setEditingName] = useState(false);
   const [confirmHide, setConfirmHide] = useState(false);
@@ -63,40 +66,40 @@ function SettingsPage() {
   async function saveName(): Promise<boolean> {
     const clean = name.trim();
     if (!clean) {
-      setMsg("Entre un prénom.");
+      setMsg(t("Entre un prénom."));
       return false;
     }
     // ponytail: autofill drops e-mails into name fields — refuse, don't persist
     if (clean.includes("@")) {
-      setMsg("Ton prénom ne peut pas être une adresse e-mail.");
+      setMsg(t("Ton prénom ne peut pas être une adresse e-mail."));
       return false;
     }
     // ponytail: digits-only check — full username policing if moderation ever needs it
     if (/\d/.test(clean)) {
-      setMsg("Ton prénom ne peut pas contenir de chiffres.");
+      setMsg(t("Ton prénom ne peut pas contenir de chiffres."));
       return false;
     }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ data: { name: clean } });
     setBusy(false);
-    setMsg(error ? "Sauvegarde impossible. Réessaie." : "Prénom mis à jour.");
+    setMsg(error ? t("Sauvegarde impossible. Réessaie.") : t("Prénom mis à jour."));
     return !error;
   }
 
   async function saveEmail(): Promise<boolean> {
     if (!/.+@.+\..+/.test(newEmail.trim())) {
-      setMsg("Entre une adresse e-mail valide.");
+      setMsg(t("Entre une adresse e-mail valide."));
       return false;
     }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ email: newEmail.trim().toLowerCase() });
     setBusy(false);
     if (error) {
-      setMsg("Changement impossible. Réessaie.");
+      setMsg(t("Changement impossible. Réessaie."));
       return false;
     }
     setNewEmail("");
-    setMsg("Vérifie ta nouvelle adresse e-mail pour confirmer le changement.");
+    setMsg(t("Vérifie ta nouvelle adresse e-mail pour confirmer le changement."));
     void onSecurityEvent("Ton adresse e-mail a été modifiée.");
     void sendSecurityEmail({ data: { label: "Ton adresse e-mail a été modifiée." } }).catch(() => {});
     return true;
@@ -105,34 +108,34 @@ function SettingsPage() {
   async function savePassword(): Promise<boolean> {
     // ponytail: old-password check via re-sign-in (no verify API client-side) — server-side check if this ever needs hardening
     if (pw.length < 8) {
-      setMsg("Mot de passe : 8 caractères minimum.");
+      setMsg(t("Mot de passe : 8 caractères minimum."));
       return false;
     }
     if (pw !== pw2) {
-      setMsg("Les deux mots de passe ne correspondent pas.");
+      setMsg(t("Les deux mots de passe ne correspondent pas."));
       return false;
     }
     if (!user) {
-      setMsg("Connecte-toi pour changer de mot de passe.");
+      setMsg(t("Connecte-toi pour changer de mot de passe."));
       return false;
     }
     setBusy(true);
     const { error: signErr } = await supabase.auth.signInWithPassword({ email: user.email, password: oldPw });
     if (signErr) {
       setBusy(false);
-      setMsg("Ancien mot de passe incorrect.");
+      setMsg(t("Ancien mot de passe incorrect."));
       return false;
     }
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
     if (error) {
-      setMsg("Changement impossible. Réessaie.");
+      setMsg(t("Changement impossible. Réessaie."));
       return false;
     }
     setOldPw("");
     setPw("");
     setPw2("");
-    setMsg("Mot de passe mis à jour.");
+    setMsg(t("Mot de passe mis à jour."));
     void onSecurityEvent("Ton mot de passe a été modifié.");
     void sendSecurityEmail({ data: { label: "Ton mot de passe a été modifié." } }).catch(() => {});
     return true;
@@ -169,7 +172,7 @@ function SettingsPage() {
       await signOutSwivv();
       nav({ to: "/" });
     } catch {
-      setDeleteError("La suppression a échoué, réessaie dans un instant.");
+      setDeleteError(t("La suppression a échoué, réessaie dans un instant."));
     } finally {
       setBusy(false);
     }
@@ -177,37 +180,36 @@ function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
-          <Link to="/mon-profil" className="text-sm text-[#555]">← Mon profil</Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
 
       <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-2xl font-medium text-[#333]">Paramètres</h1>
+        <h1 className="text-2xl font-medium text-[#333]">{t("Paramètres")}</h1>
         <SwivvSettingsTabs />
 
         {loading ? null : !user ? (
           <div className="mt-6 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-sm text-[#777]">Connecte-toi pour gérer tes paramètres.</p>
+            <p className="text-sm text-[#777]">{t("Connecte-toi pour gérer tes paramètres.")}</p>
             <button
               type="button"
               onClick={() => openAuthModal("account", "signin")}
-              className="mt-4 w-full rounded-md bg-[#e91e63] px-4 py-3 font-medium text-white"
+              className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
             >
-              Se connecter / S&apos;inscrire
+              {t("Se connecter / S'inscrire")}
             </button>
           </div>
         ) : (
           <>
-            <section id="compte" aria-label="Compte" className="mt-6 scroll-mt-4">
-              <h2 className="font-medium text-[#333]">Compte</h2>
+            <section id="compte" aria-label={t("Compte")} className="mt-6 scroll-mt-4">
+              <h2 className="font-medium text-[#333]">{t("Compte")}</h2>
               <div className="mt-2 space-y-3 rounded-2xl bg-white p-4 shadow-sm">
                 <div id="email">
-                  <span className="mb-1 block text-sm font-medium text-[#333]">Ton adresse e-mail</span>
+                  <span className="mb-1 block text-sm font-medium text-[#333]">{t("Ton adresse e-mail")}</span>
                   <p className="text-sm text-[#777]">{user.email}</p>
                   {editingEmail ? (
                     <div className="mt-2 space-y-2">
@@ -219,7 +221,7 @@ function SettingsPage() {
                         placeholder="nouvelle@adresse.fr"
                         autoComplete="off"
                         autoFocus
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <div className="flex gap-2">
                         <button
@@ -231,7 +233,7 @@ function SettingsPage() {
                             }
                           }}
                           disabled={busy}
-                          className="rounded-md bg-[#e91e63] px-4 py-2 font-medium text-white disabled:opacity-60"
+                          className="rounded-md bg-[#e60050] px-4 py-2 font-medium text-white disabled:opacity-60"
                         >
                           OK
                         </button>
@@ -243,7 +245,7 @@ function SettingsPage() {
                           }}
                           className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
                         >
-                          Annuler
+                          {t("Annuler")}
                         </button>
                       </div>
                     </div>
@@ -253,7 +255,7 @@ function SettingsPage() {
                       onClick={() => setEditingEmail(true)}
                       className="mt-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
                     >
-                      Changer d&apos;adresse e-mail
+                      {t("Changer d'adresse e-mail")}
                     </button>
                   )}
                 </div>
@@ -269,7 +271,7 @@ function SettingsPage() {
                         maxLength={40}
                         autoComplete="given-name"
                         autoFocus
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <button
                         type="button"
@@ -277,7 +279,7 @@ function SettingsPage() {
                           if (await saveName()) setEditingName(false);
                         }}
                         disabled={busy}
-                        className="shrink-0 rounded-md bg-[#e91e63] px-4 font-medium text-white disabled:opacity-60"
+                        className="shrink-0 rounded-md bg-[#e60050] px-4 font-medium text-white disabled:opacity-60"
                       >
                         OK
                       </button>
@@ -293,24 +295,24 @@ function SettingsPage() {
                         }}
                         className="shrink-0 rounded-md border border-border px-4 py-2.5 text-sm font-medium text-[#555]"
                       >
-                        Modifier
+                        {t("Modifier")}
                       </button>
                     </div>
                   )}
                 </div>
                 <div>
-                  <label htmlFor={`npw-${fieldUid}`} className="mb-1 block text-sm font-medium text-[#333]">Nouveau mot de passe</label>
+                  <label htmlFor={`npw-${fieldUid}`} className="mb-1 block text-sm font-medium text-[#333]">{t("Nouveau mot de passe")}</label>
                   {editingPw ? (
                     <div className="space-y-2" onPointerDownCapture={() => setPwUnlocked(true)}>
                       <input
                         type="text" inputMode="text" style={maskStyle}
                         value={oldPw}
                         onChange={(e) => setOldPw(e.target.value)}
-                        placeholder="Mot de passe actuel"
+                        placeholder={t("Mot de passe actuel")}
                         autoComplete="current-password"
                         autoFocus
                         disabled={!pwUnlocked}
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <input
                         id={`npw-${fieldUid}`}
@@ -318,20 +320,20 @@ function SettingsPage() {
                         type="text" inputMode="text" style={maskStyle}
                         value={pw}
                         onChange={(e) => setPw(e.target.value)}
-                        placeholder="Nouveau mot de passe (8 caractères min)"
+                        placeholder={t("Nouveau mot de passe (8 caractères min)")}
                         autoComplete="off"
                         disabled={!pwUnlocked}
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <input
                         type="text" inputMode="text" style={maskStyle}
                         name={`npw2-${fieldUid}`}
                         value={pw2}
                         onChange={(e) => setPw2(e.target.value)}
-                        placeholder="Confirme le nouveau mot de passe"
+                        placeholder={t("Confirme le nouveau mot de passe")}
                         autoComplete="off"
                         disabled={!pwUnlocked}
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <div className="flex gap-2">
                         <button
@@ -343,7 +345,7 @@ function SettingsPage() {
                             }
                           }}
                           disabled={busy}
-                          className="rounded-md bg-[#e91e63] px-4 py-2 font-medium text-white disabled:opacity-60"
+                          className="rounded-md bg-[#e60050] px-4 py-2 font-medium text-white disabled:opacity-60"
                         >
                           OK
                         </button>
@@ -358,7 +360,7 @@ function SettingsPage() {
                           }}
                           className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
                         >
-                          Annuler
+                          {t("Annuler")}
                         </button>
                       </div>
                     </div>
@@ -374,7 +376,7 @@ function SettingsPage() {
                       }}
                       className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
                     >
-                      Changer de mot de passe
+                      {t("Changer de mot de passe")}
                     </button>
                   )}
                 </div>
@@ -383,7 +385,7 @@ function SettingsPage() {
                   to="/inscription"
                   className="block w-full rounded-md border border-border px-4 py-2.5 text-center font-medium text-[#555]"
                 >
-                  Modifier mon profil complet
+                  {t("Modifier mon profil complet")}
                 </Link>
                 <button
                   type="button"
@@ -391,24 +393,26 @@ function SettingsPage() {
                     await signOutSwivv();
                     nav({ to: "/" });
                   }}
-                  className="w-full rounded-md border border-[#e91e63] px-4 py-2.5 font-medium text-[#e91e63]"
+                  className="w-full rounded-md border border-[#e60050] px-4 py-2.5 font-medium text-[#e60050]"
                 >
-                  Déconnexion
+                  {t("Déconnexion")}
                 </button>
               </div>
             </section>
 
             <section id="langue" aria-label="Langue" className="mt-8 scroll-mt-4">
-              <h2 className="font-medium text-[#333]">Langue</h2>
+              <h2 className="font-medium text-[#333]">{t("Langue")}</h2>
               <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm">
-                {/* ponytail: picks the message-translation target only (UI stays French) — full i18n if a 2nd locale ships */}
+                <p className="mb-2 text-sm font-medium text-[#333]">{t("Langue de l'interface")}</p>
+                <SwivvLangSwitch className="mb-5" />
+                {/* ponytail: second setting — target language for message/profile translation, independent of the UI language above */}
                 <select
                   value={lang}
                   onChange={(e) => {
                     setLang(e.target.value);
                     setAppLang(e.target.value);
                   }}
-                  aria-label="Langue de traduction des messages"
+                  aria-label={t("Langue de traduction des messages")}
                   className="w-full rounded-md border border-border bg-white px-3 py-2.5 text-[15px] text-[#333]"
                 >
                   <option value="fr">Français</option>
@@ -419,25 +423,25 @@ function SettingsPage() {
                   <option value="pt">Português</option>
                 </select>
                 <p className="mt-2 text-sm text-[#777]">
-                  Les messages reçus pourront être traduits vers cette langue.
+                  {t("Les messages de la messagerie et certains textes de profil peuvent être traduits vers cette langue.")}
                 </p>
               </div>
             </section>
 
-            <section aria-label="Zone dangereuse" className="mt-8">
-              <h2 className="font-medium text-red-700">Zone dangereuse</h2>
+            <section aria-label={t("Zone dangereuse")} className="mt-8">
+              <h2 className="font-medium text-red-700">{t("Zone dangereuse")}</h2>
               <div className="mt-2 rounded-2xl border border-red-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm text-[#333]">
-                    <span className="block font-medium">Masquer mon profil</span>
-                    <span className="text-[#777]">Invisible des autres utilisateurs jusqu'à réactivation.</span>
+                    <span className="block font-medium">{t("Masquer mon profil")}</span>
+                    <span className="text-[#777]">{t("Invisible des autres utilisateurs jusqu'à réactivation.")}</span>
                   </span>
                   {/* ponytail: hand-rolled switch, no toggle lib — headless UI if switches ever need animations */}
                   <button
                     type="button"
                     role="switch"
                     aria-checked={hidden}
-                    aria-label="Masquer mon profil"
+                    aria-label={t("Masquer mon profil")}
                     onClick={() => {
                       if (hidden) {
                         setHidden(false);
@@ -446,14 +450,14 @@ function SettingsPage() {
                         setConfirmHide(true);
                       }
                     }}
-                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${hidden ? "bg-[#e91e63]" : "bg-[#d4d4d4]"}`}
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${hidden ? "bg-[#e60050]" : "bg-[#d4d4d4]"}`}
                   >
                     <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${hidden ? "left-[22px]" : "left-0.5"}`} />
                   </button>
                 </div>
                 {confirmHide && !hidden && (
                   <div className="mt-3 rounded-lg bg-[#f7f7f7] p-3">
-                    <p className="text-sm text-[#333]">Ton profil ne sera plus visible par les autres utilisateurs. Continuer ?</p>
+                    <p className="text-sm text-[#333]">{t("Ton profil ne sera plus visible par les autres utilisateurs. Continuer ?")}</p>
                     <div className="mt-2 flex gap-2">
                       <button
                         type="button"
@@ -462,9 +466,9 @@ function SettingsPage() {
                           void setProfileHidden(true);
                           setConfirmHide(false);
                         }}
-                        className="rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white"
+                        className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white"
                       >
-                        Oui, masquer
+                        {t("Oui, masquer")}
                       </button>
                       <button
                         type="button"
@@ -477,7 +481,7 @@ function SettingsPage() {
                   </div>
                 )}
                 <p className="mt-4 text-sm text-[#555]">
-                  Supprime ton profil, tes likes, tes matchs et tes messages. Irréversible.
+                  {t("Supprime ton profil, tes likes, tes matchs et tes messages. Irréversible.")}
                 </p>
                 <button
                   type="button"
@@ -485,7 +489,7 @@ function SettingsPage() {
                   disabled={busy}
                   className="mt-3 w-full rounded-md bg-red-600 px-4 py-2.5 font-medium text-white disabled:opacity-60"
                 >
-                  {busy ? "Suppression…" : "Supprimer mon compte"}
+                  {busy ? t("Suppression…") : t("Supprimer mon compte")}
                 </button>
               </div>
             </section>
@@ -496,7 +500,7 @@ function SettingsPage() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Confirmer la suppression du compte"
+          aria-label={t("Confirmer la suppression du compte")}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
           onClick={() => setConfirming(false)}
         >
@@ -505,12 +509,12 @@ function SettingsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <SwivvLogo />
-            <h2 className="mt-2 text-xl font-medium text-[#333]">Swivv Out ?</h2>
+            <h2 className="mt-2 text-xl font-medium text-[#333]">{t("Swivv Out ?")}</h2>
             <p className="mt-1 text-sm text-[#777]">
-              Tu es sûr de vouloir partir ? Ton profil, tes likes, tes matchs et tes messages seront effacés. Irréversible.
+              {t("Tu es sûr de vouloir partir ? Ton profil, tes likes, tes matchs et tes messages seront effacés. Irréversible.")}
             </p>
-            <p className="mt-4 text-sm font-medium text-[#333]">Pourquoi nous quittes-tu ?</p>
-            <div className="mt-2 space-y-2" role="radiogroup" aria-label="Motif de suppression">
+            <p className="mt-4 text-sm font-medium text-[#333]">{t("Pourquoi nous quittes-tu ?")}</p>
+            <div className="mt-2 space-y-2" role="radiogroup" aria-label={t("Motif de suppression")}>
               {DELETE_REASONS.map((r) => (
                 <label key={r} className="flex cursor-pointer items-center gap-2 text-sm text-[#555]">
                   <input
@@ -519,9 +523,9 @@ function SettingsPage() {
                     value={r}
                     checked={deleteReason === r}
                     onChange={() => setDeleteReason(r)}
-                    className="accent-[#e91e63]"
+                    className="accent-[#e60050]"
                   />
-                  {r}
+                  {t(r)}
                 </label>
               ))}
             </div>
@@ -529,10 +533,10 @@ function SettingsPage() {
               <textarea
                 value={otherReason}
                 onChange={(e) => setOtherReason(e.target.value)}
-                placeholder="Dis-nous en plus…"
+                placeholder={t("Dis-nous en plus…")}
                 rows={3}
                 maxLength={500}
-                className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e91e63]"
+                className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             )}
             <div className="mt-4 flex gap-2">
@@ -541,7 +545,7 @@ function SettingsPage() {
                 onClick={() => setConfirming(false)}
                 className="flex-1 rounded-md border border-border px-4 py-2.5 font-medium text-[#555]"
               >
-                Rester
+                {t("Rester")}
               </button>
               <button
                 type="button"
@@ -549,7 +553,7 @@ function SettingsPage() {
                 disabled={!deleteReason || busy}
                 className="flex-1 rounded-md bg-red-600 px-4 py-2.5 font-medium text-white disabled:opacity-60"
               >
-                {busy ? "Suppression…" : "Swivv Out"}
+                {busy ? t("Suppression…") : t("Swivv Out")}
               </button>
             </div>
             {deleteError && <p className="mt-2 text-sm font-medium text-red-600">{deleteError}</p>}

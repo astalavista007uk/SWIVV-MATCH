@@ -7,7 +7,9 @@ import {
   Heart,
   MapPin,
   Mic,
+  ScanFace,
   ShieldAlert,
+  Smile,
   Sparkles,
   UserPlus,
   type LucideIcon,
@@ -17,6 +19,7 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
+import { useT } from "@/lib/i18n";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/comment-ca-marche")({
@@ -104,7 +107,7 @@ const SECTIONS: {
   {
     title: "6. Comment fonctionne le matching",
     icon: Heart,
-    tint: "bg-pink-100 text-[#e91e63]",
+    tint: "bg-pink-100 text-[#e60050]",
     intro:
       "Swipe, découvre, like : tu parcours des profils sélectionnés, tu likes ceux qui te plaisent, et certains deviennent des matchs.",
     points: [
@@ -171,16 +174,46 @@ const SECTIONS: {
       "Un like réciproque ou une vraie conversation suffit à faire vivre ta série : revenir tous les jours n'est pas obligatoire.",
     ],
   },
+  {
+    title: "11. Réagir aux photos avec un émoticône",
+    icon: Smile,
+    tint: "bg-fuchsia-100 text-fuchsia-600",
+    intro:
+      "Sur les photos des profils, tu peux réagir en un geste avec un émoticône. C'est plus léger qu'un message et ça dit tout de suite ce qui te plaît.",
+    points: [
+      "6 réactions : 😍 Craquant(e), ❤️ J'adore, 😊 Charmant(e), 🔥 Canon, 😉 Petit clin d'œil et ✨ Original(e).",
+      "Une seule réaction par photo : touche le même émoticône pour l'enlever, ou un autre pour le remplacer.",
+      "Réagir compte aussi comme un like : ton intérêt est transmis au membre. S'il te like ou réagit en retour, vous êtes en match et les vocaux et les photos se débloquent.",
+      "Les autres voient le nombre de réactions par photo, jamais qui a réagi. Toi, tu retrouves qui a réagi à tes photos dans Mes statistiques.",
+      "Tu ne peux pas réagir à tes propres photos, et les réactions sont limitées en fréquence pour éviter le spam.",
+    ],
+  },
+  {
+    title: "12. Vérifier tes photos avec un selfie",
+    icon: ScanFace,
+    tint: "bg-cyan-100 text-cyan-600",
+    intro:
+      "Le badge vérifié rassure les autres membres. La comparaison utilise un modèle de reconnaissance faciale directement dans ton navigateur : le selfie n'est ni envoyé ni stocké.",
+    points: [
+      "Ajoute au moins une photo à ton profil, puis touche « Vérifier avec un selfie » depuis Mon profil.",
+      "Prends un selfie avec ta caméra — ou choisis une image si elle n'est pas disponible : visage de face, bien éclairé, sans lunettes de soleil ni filtre.",
+      "Le selfie est comparé à chacune de tes photos : dès qu'une correspond, le badge vérifié s'affiche sur ton profil.",
+      "Si aucune photo ne correspond, reprends le selfie ou remplace ta photo principale par le selfie en un geste.",
+      "Aucune image n'est transmise au serveur pour la comparaison : seul le badge vérifié est enregistré.",
+      "Photos trop anciennes, floues ou retouchées : la comparaison peut échouer, même si c'est bien toi.",
+    ],
+  },
 ];
 
 function HowItWorksPage() {
   const { user } = useAuth();
+  const t = useT();
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
           <Link to="/" aria-label="SWIVV MATCH home">
-            <SwivvLogo />
+            <SwivvLogo dark />
           </Link>
           <SwivvAuthButtons />
         </div>
@@ -188,16 +221,15 @@ function HowItWorksPage() {
       <SwivvCategoryNav />
 
       <main className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="text-3xl font-medium text-[#333]">Découvrir comment ça marche</h1>
+        <h1 className="text-3xl font-medium text-[#333]">{t("Découvrir comment ça marche")}</h1>
         <p className="mt-2 text-[#777]">
-          Inscription, profil, photos, matching, sécurité et suivi de ta progression : tout ce qu'il
-          faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.
+          {t("Inscription, profil, photos, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.")}
         </p>
 
         {SECTIONS.map((s) => (
           <section
             key={s.title}
-            aria-label={s.title}
+            aria-label={t(s.title)}
             className="mt-8 rounded-2xl bg-white p-6 shadow-sm"
           >
             <div className="flex items-center gap-3">
@@ -207,12 +239,12 @@ function HowItWorksPage() {
               >
                 <s.icon className="h-5 w-5" />
               </span>
-              <h2 className="text-xl font-medium text-[#333]">{s.title}</h2>
+              <h2 className="text-xl font-medium text-[#333]">{t(s.title)}</h2>
             </div>
-            <p className="mt-2 leading-relaxed text-[#555]">{s.intro}</p>
+            <p className="mt-2 leading-relaxed text-[#555]">{t(s.intro)}</p>
             <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[#555]">
               {s.points.map((p) => (
-                <li key={p}>{p}</li>
+                <li key={p}>{t(p)}</li>
               ))}
             </ul>
           </section>
@@ -223,25 +255,27 @@ function HowItWorksPage() {
             <Link
               to="/browse"
               search={{ q: "", type: "", location: "" }}
-              className="flex-1 rounded-md bg-[#e91e63] px-4 py-3 text-center font-medium text-white"
+              className="flex-1 rounded-md bg-[#e60050] px-4 py-3 text-center font-medium text-white"
             >
-              Voir les profils
+              {t("Voir les profils")}
             </Link>
           ) : (
             <Link
               to="/inscription"
-              className="flex-1 rounded-md bg-[#e91e63] px-4 py-3 text-center font-medium text-white"
+              className="flex-1 rounded-md bg-[#e60050] px-4 py-3 text-center font-medium text-white"
             >
-              Créer mon profil gratuit
+              {t("Créer mon profil gratuit")}
             </Link>
           )}
-          <Link
-            to="/contact-us"
-            search={{ subject: "Signaler un abus ou un faux profil" }}
-            className="flex-1 rounded-md border border-[#e91e63] px-4 py-3 text-center font-medium text-[#e91e63]"
-          >
-            Signaler un abus
-          </Link>
+          {user && (
+            <Link
+              to="/contact-us"
+              search={{ subject: "Signaler un abus ou un faux profil" }}
+              className="flex-1 rounded-md border border-[#e60050] px-4 py-3 text-center font-medium text-[#e60050]"
+            >
+              {t("Signaler un abus")}
+            </Link>
+          )}
         </div>
       </main>
       <SwivvFooter />

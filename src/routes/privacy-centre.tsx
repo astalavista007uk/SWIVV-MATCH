@@ -7,6 +7,7 @@ import { getBlocked, getLikes, getMatches, getProfileViews } from "@/lib/swivv-s
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { shrinkDataUrl } from "@/routes/inscription";
+import { useLang, useT } from "@/lib/i18n";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacy-centre")({
@@ -32,6 +33,8 @@ const POLICY: [string, string][] = [
 ];
 
 function PrivacyCentrePage() {
+  const t = useT();
+  const lang = useLang();
   const [exported, setExported] = useState(false);
   const user = useSwivvUser();
 
@@ -88,16 +91,16 @@ function PrivacyCentrePage() {
     );
     const w = window.open("", "_blank", "width=800,height=900");
     if (!w) return;
-    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Mes données SWIVV</title>
-<style>body{font-family:Arial,sans-serif;color:#333;max-width:700px;margin:0 auto;padding:32px}.band{background:#0f1e33;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px}.band img{height:48px;filter:brightness(0) invert(1)}.band h1{font-size:20px;margin:0;color:#fff}.accent{height:3px;background:#e91e63;border-radius:2px;margin:6px 0 4px}h2{font-size:16px;color:#e91e63;margin:24px 0 8px}.meta{color:#777;font-size:12px}table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}td:first-child{color:#777;width:180px}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid img{width:100%;height:180px;object-fit:cover;border-radius:10px}.missing{display:flex;align-items:center;justify-content:center;height:180px;border:1px dashed #ccc;border-radius:10px;color:#999;font-size:12px}footer{margin-top:28px;border-top:3px solid #e91e63;padding-top:10px;text-align:center}footer img{height:140px}footer p{font-size:11px;color:#666;margin:4px 0}@media print{.pbreak{break-before:page}.tavoid{break-inside:avoid}table td{padding:5px 8px}.endpage{position:fixed;top:0;bottom:0;left:0;right:0;display:flex;flex-direction:column;justify-content:flex-end}}@page{size:A4;margin:10mm 10mm 16mm 10mm}</style></head><body>
-<div class="band"><img src="${logo}" alt="SWIVV"><h1>Mes données</h1></div><div class="accent"></div><p class="meta">Exporté le ${new Date().toLocaleDateString("fr-FR")}</p>
-<h2>Mon profil</h2><table class="tavoid">${facts.map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join("")}</table>
-<h2>Mon activité</h2><table class="tavoid">
-<tr><td>Likes envoyés</td><td>${getLikes().length}</td></tr>
-<tr><td>Matchs</td><td>${getMatches().length}</td></tr>
-<tr><td>Profils bloqués</td><td>${getBlocked().length}</td></tr>
-<tr><td>Visites reçues</td><td>${Object.values(getProfileViews()).reduce((a, b) => a + b, 0)}</td></tr></table>
-${photos.length ? `<h2 class="pbreak">Mes photos (${photos.length})</h2>${Array.from({ length: Math.ceil(photos.length / 9) }, (_, i) => photos.slice(i * 9, i * 9 + 9)).map((g, i) => `<div class="grid${i ? " pbreak" : ""}">${g.map((s, j) => `<img src="${s}" alt="Photo ${i * 9 + j + 1}" onerror="this.outerHTML='<div class=missing>Photo ${i * 9 + j + 1} illisible</div>'">`).join("")}</div>`).join("")}` : ""}
+    w.document.write(`<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${t("Mes données SWIVV")}</title>
+<style>body{font-family:Arial,sans-serif;color:#333;max-width:700px;margin:0 auto;padding:32px}.band{background:#0f1e33;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px}.band img{height:48px;filter:brightness(0) invert(1)}.band h1{font-size:20px;margin:0;color:#fff}.accent{height:3px;background:#e60050;border-radius:2px;margin:6px 0 4px}h2{font-size:16px;color:#e60050;margin:24px 0 8px}.meta{color:#777;font-size:12px}table{width:100%;border-collapse:collapse;font-size:14px}td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}td:first-child{color:#777;width:180px}.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.grid img{width:100%;height:180px;object-fit:cover;border-radius:10px}.missing{display:flex;align-items:center;justify-content:center;height:180px;border:1px dashed #ccc;border-radius:10px;color:#999;font-size:12px}footer{margin-top:28px;border-top:3px solid #e60050;padding-top:10px;text-align:center}footer img{height:140px}footer p{font-size:11px;color:#666;margin:4px 0}@media print{.pbreak{break-before:page}.tavoid{break-inside:avoid}table td{padding:5px 8px}.endpage{position:fixed;top:0;bottom:0;left:0;right:0;display:flex;flex-direction:column;justify-content:flex-end}}@page{size:A4;margin:10mm 10mm 16mm 10mm}</style></head><body>
+<div class="band"><img src="${logo}" alt="SWIVV"><h1>${t("Mes données")}</h1></div><div class="accent"></div><p class="meta">${t("Exporté le {date}", { date: new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-GB") })}</p>
+<h2>${t("Mon profil")}</h2><table class="tavoid">${facts.map(([k, v]) => `<tr><td>${t(k)}</td><td>${esc(v)}</td></tr>`).join("")}</table>
+<h2>${t("Mon activité")}</h2><table class="tavoid">
+<tr><td>${t("Likes envoyés")}</td><td>${getLikes().length}</td></tr>
+<tr><td>${t("Matchs")}</td><td>${getMatches().length}</td></tr>
+<tr><td>${t("Profils bloqués")}</td><td>${getBlocked().length}</td></tr>
+<tr><td>${t("Visites reçues")}</td><td>${Object.values(getProfileViews()).reduce((a, b) => a + b, 0)}</td></tr></table>
+${photos.length ? `<h2 class="pbreak">${t("Mes photos ({n})", { n: photos.length })}</h2>${Array.from({ length: Math.ceil(photos.length / 9) }, (_, i) => photos.slice(i * 9, i * 9 + 9)).map((g, i) => `<div class="grid${i ? " pbreak" : ""}">${g.map((s, j) => `<img src="${s}" alt="${t("Photo {n}", { n: i * 9 + j + 1 })}" onerror="this.outerHTML='<div class=missing>${t("Photo {n} illisible", { n: i * 9 + j + 1 })}</div>'">`).join("")}</div>`).join("")}` : ""}
 <!-- ponytail: photo pages hold max 3 rows (9 photos) so flowing rows can never reach the fixed footer zone — a break fires only mid-flow (Chrome drops it at a page top, so no blank pages); activity+profile print first on page 1 for the same reason -->
 <!-- ponytail: activity prints before the photos so dense photo pages never share a page with text that could slide under the fixed footer (grid rows are fixed-height and break cleanly); the photos section renders only when photos exist, else everything stays on one page (the generated-from-your-account note lives on the privacy page itself, not worth 40px of collision budget here) -->
 <!-- ponytail: fixed footer bottom-pinned to the @page content area on every page (16mm bottom margin ≈ footer height, so dense pages can't slide under it; Chrome anchors fixed boxes to the content area — measured screen→print spacers drift instead) — ceiling: a >600px profile table or a shrunk print dialog can strand an airy page; un-avoid the tables then -->
@@ -126,34 +129,34 @@ ${photos.length ? `<h2 class="pbreak">Mes photos (${photos.length})</h2>${Array.
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-background">
+      <header className="border-b border-border bg-black text-white">
         <div className="mx-auto flex flex-wrap max-w-6xl items-center gap-3 px-4 py-2 sm:py-1">
-          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo /></Link>
+          <Link to="/" aria-label="SWIVV MATCH home"><SwivvLogo dark /></Link>
           <SwivvAuthButtons />
         </div>
       </header>
       <SwivvCategoryNav />
 
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-3xl font-medium text-[#333]">Centre de confidentialité</h1>
+        <h1 className="text-3xl font-medium text-[#333]">{t("Centre de confidentialité")}</h1>
         <p className="mt-2 text-[#777]">
-          Tes données t'appartiennent. Voici ce que SWIVV collecte, pourquoi, et comment reprendre le contrôle.
+          {t("Tes données t'appartiennent. Voici ce que SWIVV collecte, pourquoi, et comment reprendre le contrôle.")}
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {[
             {
-              icon: <Eye className="h-5 w-5 text-[#e91e63]" />,
+              icon: <Eye className="h-5 w-5 text-[#e60050]" />,
               t: "Ce que voient les membres",
               d: "Tes photos, prénom, âge, ville, bio et centres d'intérêt. Ton e-mail et ta position exacte restent privés.",
             },
             {
-              icon: <Lock className="h-5 w-5 text-[#e91e63]" />,
+              icon: <Lock className="h-5 w-5 text-[#e60050]" />,
               t: "Ce que SWIVV utilise",
               d: "Tes préférences et tes likes servent uniquement à calculer tes scores de compatibilité. Jamais revendues, jamais partagées à des annonceurs.",
             },
             {
-              icon: <Download className="h-5 w-5 text-[#e91e63]" />,
+              icon: <Download className="h-5 w-5 text-[#e60050]" />,
               t: "Exporter mes données",
               d: "Reçois un document clair et illustré de tes données (profil, photos, activité).",
               action: (
@@ -162,10 +165,10 @@ ${photos.length ? `<h2 class="pbreak">Mes photos (${photos.length})</h2>${Array.
                     type="button"
                     // ponytail: logged-out taps open the login popup and auto-generate after sign-in (requireSwivvAuth queues the callback) — no redirect, user stays on this page
                     onClick={() => requireSwivvAuth("account", exportPdf)}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-[#e91e63] px-4 py-2 text-sm font-medium text-white"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white"
                   >
                     {exported ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-                    {exported ? "Généré !" : user ? "Télécharger en PDF" : "Connecte-toi pour télécharger tes données"}
+                    {exported ? t("Généré !") : user ? t("Télécharger en PDF") : t("Connecte-toi pour télécharger tes données")}
                   </button>
                   {user && (
                     <button
@@ -173,47 +176,47 @@ ${photos.length ? `<h2 class="pbreak">Mes photos (${photos.length})</h2>${Array.
                       onClick={exportData}
                       className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
                     >
-                      Format JSON
+                      {t("Format JSON")}
                     </button>
                   )}
                 </span>
               ),
             },
             {
-              icon: <Trash2 className="h-5 w-5 text-[#e91e63]" />,
+              icon: <Trash2 className="h-5 w-5 text-[#e60050]" />,
               t: "Tout supprimer",
               d: "Supprime ton compte en 1 clic depuis tes Paramètres. Tes photos et messages sont effacés.",
               action: (
                 <Link to="/parametres" className="mt-3 inline-block rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]">
-                  Aller aux Paramètres
+                  {t("Aller aux Paramètres")}
                 </Link>
               ),
             },
           ].map((c) => (
             <div key={c.t} className="rounded-xl bg-white p-5">
               {c.icon}
-              <p className="mt-2 font-medium text-[#333]">{c.t}</p>
-              <p className="mt-1 text-sm text-[#777]">{c.d}</p>
+              <p className="mt-2 font-medium text-[#333]">{t(c.t)}</p>
+              <p className="mt-1 text-sm text-[#777]">{t(c.d)}</p>
               {"action" in c && c.action}
             </div>
           ))}
         </div>
 
         <div className="mt-6 rounded-xl bg-white p-6 text-sm leading-relaxed text-[#555]">
-          <h2 className="font-medium text-[#333]">En résumé</h2>
+          <h2 className="font-medium text-[#333]">{t("En résumé")}</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Pas de publicité ciblée avec tes données de rencontres.</li>
-            <li>Pas de géolocalisation précise affichée (ville + distance en km uniquement).</li>
-            <li>Messages privés : visibles uniquement par toi et ton match.</li>
+            <li>{t("Pas de publicité ciblée avec tes données de rencontres.")}</li>
+            <li>{t("Pas de géolocalisation précise affichée (ville + distance en km uniquement).")}</li>
+            <li>{t("Messages privés : visibles uniquement par toi et ton match.")}</li>
           </ul>
         </div>
 
         <div className="mt-6 space-y-4">
-          <h2 className="font-medium text-[#333]">Politique de confidentialité détaillée</h2>
-          {POLICY.map(([t, d]) => (
-            <article key={t} className="rounded-xl bg-white p-5">
-              <h3 className="font-medium text-[#333]">{t}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-[#555]">{d}</p>
+          <h2 className="font-medium text-[#333]">{t("Politique de confidentialité détaillée")}</h2>
+          {POLICY.map(([title, d]) => (
+            <article key={title} className="rounded-xl bg-white p-5">
+              <h3 className="font-medium text-[#333]">{t(title)}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[#555]">{t(d)}</p>
             </article>
           ))}
         </div>
