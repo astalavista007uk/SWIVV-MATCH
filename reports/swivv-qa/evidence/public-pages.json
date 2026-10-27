@@ -1,0 +1,642 @@
+[
+  {
+    "viewport": "desktop",
+    "route": "home",
+    "url": "/",
+    "title": "SWIVV MATCH — Site de rencontres gratuit",
+    "lang": "fr",
+    "h1": [
+      "Fais de belles rencontres, gratuitement"
+    ],
+    "headingOutline": [
+      "H1:Fais de belles rencontres, gratuitement",
+      "H2:Rejoins SWIVV en 2 minutes",
+      "H2:À ton tour d'écrire ton histoire",
+      "H2:Femmes",
+      "H2:Hommes",
+      "H2:SWIVV MATCH dans ta poche",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 79,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 46,
+    "ctrlCount": 123,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Emma, 28 Paris Voyages Photo Liam, 31 Lyon Sport Trail Sophie, 26 Marseille Cuisine Danse Noah, 34 B",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-home.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "inscription",
+    "url": "/inscription",
+    "title": "Créer mon profil gratuit — SWIVV MATCH",
+    "lang": "fr",
+    "h1": [],
+    "headingOutline": [],
+    "imgCount": 0,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 0,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Chargement…",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-inscription.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "browse",
+    "url": "/browse?q=&type=&location=",
+    "title": "Parcourir les profils — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "23 profils"
+    ],
+    "headingOutline": [
+      "H1:23 profils",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 26,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 106,
+    "unnamedControls": 0,
+    "fieldCount": 5,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Tous Femmes Hommes En ligne Intention Toutes Mariage Relation sérieuse Relation amoureuse Belle hist",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-browse.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "swipe",
+    "url": "/swipe",
+    "title": "SWIVV SWIPE — SWIVV",
+    "lang": "fr",
+    "h1": [],
+    "headingOutline": [
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Connecte-toi pour swiper les profils. Se connecter / S'inscrire Your Match. Your Story. © 2026 SWIVV",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-swipe.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "matches",
+    "url": "/matches",
+    "title": "Mes Matches — SWIVV",
+    "lang": "fr",
+    "h1": [],
+    "headingOutline": [
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Connecte-toi pour découvrir tes matches. Se connecter / S'inscrire Your Match. Your Story. © 2026 SW",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-matches.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "messagerie",
+    "url": "/messagerie",
+    "title": "Messages — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "Conversations (0 · 0 non lu)"
+    ],
+    "headingOutline": [
+      "H2:Connexion requise",
+      "H1:Conversations (0 · 0 non lu)",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV",
+      "H2:Tes messages t'attendent"
+    ],
+    "imgCount": 4,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 40,
+    "unnamedControls": 0,
+    "fieldCount": 3,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Connexion requise Crée un compte ou connecte-toi pour envoyer un message. Créer un compte Se connecter Ton e-mail Ton mot de passe Rester connecté Se connecter Plus tard Recherche avancée Près de moi En ligne Mariage ",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-messagerie.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "parametres",
+    "url": "/parametres",
+    "title": "Paramètres — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "Paramètres"
+    ],
+    "headingOutline": [
+      "H1:Paramètres",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 41,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Paramètres Profil Mes statistiques SWIVV PROGRESS Relevés d'accès Notifications Aide Connecte-toi po",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-parametres.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "mon-profil",
+    "url": "/mon-profil",
+    "title": "Mon profil — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "Crée ton profil SWIVV"
+    ],
+    "headingOutline": [
+      "H1:Crée ton profil SWIVV",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 4,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Crée ton profil SWIVV Crée ton profil complet pour le voir ici. Se connecter / S'inscrire Your Match",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-mon-profil.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "comment-ca-marche",
+    "url": "/comment-ca-marche",
+    "title": "Comment fonctionne SWIVV MATCH — rencontres gratuites",
+    "lang": "fr",
+    "h1": [
+      "Découvrir comment ça marche"
+    ],
+    "headingOutline": [
+      "H1:Découvrir comment ça marche",
+      "H2:1. Compte en 2 minutes, profil à ton rythme",
+      "H2:2. Créer un profil qui donne envie",
+      "H2:3. Choisir de bonnes photos",
+      "H2:4. Être honnête avec les autres",
+      "H2:5. Reconnaître les faux profils et les arnaqu",
+      "H2:6. Comment fonctionne le matching",
+      "H2:7. Se rencontrer en toute sécurité",
+      "H2:8. Messages vocaux et envoi d'images",
+      "H2:9. Mes statistiques : comprendre ce qui march",
+      "H2:10. SWIVV PROGRESS : suivre ta progression",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Découvrir comment ça marche Inscription, profil, photos, matching, sécurité et suivi de ta progressi",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-comment-ca-marche.png"
+  },
+  {
+    "viewport": "desktop",
+    "route": "faq",
+    "url": "/faq",
+    "title": "FAQ — questions fréquentes sur SWIVV MATCH",
+    "lang": "fr",
+    "h1": [
+      "On répond à tout"
+    ],
+    "headingOutline": [
+      "H1:On répond à tout",
+      "H2:Inscription & compte",
+      "H2:Matching & messages",
+      "H2:Mariage & relations sérieuses",
+      "H2:Sécurité",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 49,
+    "unnamedControls": 0,
+    "fieldCount": 1,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "S'inscrire | Se connecter Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires On répond à tout Inscription, matching, mariage, sécurité : tout ce qu'il faut savoir sur SWIVV. Ins",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\desktop-faq.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "home",
+    "url": "/",
+    "title": "SWIVV MATCH — Site de rencontres gratuit",
+    "lang": "fr",
+    "h1": [
+      "Fais de belles rencontres, gratuitement"
+    ],
+    "headingOutline": [
+      "H1:Fais de belles rencontres, gratuitement",
+      "H2:Rejoins SWIVV en 2 minutes",
+      "H2:À ton tour d'écrire ton histoire",
+      "H2:Femmes",
+      "H2:Hommes",
+      "H2:SWIVV MATCH dans ta poche",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 79,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 46,
+    "ctrlCount": 123,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Emma, 28 Paris Voyages Photo Liam, 31 Lyon Sport Trail Sophie, 26 Marseille Cuisine Danse Noah, 34 Bordeaux Musique Concerts E",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-home.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "inscription",
+    "url": "/inscription",
+    "title": "Créer mon profil gratuit — SWIVV MATCH",
+    "lang": "fr",
+    "h1": [
+      "Quelle est ta date de naissance ?"
+    ],
+    "headingOutline": [
+      "H1:Quelle est ta date de naissance ?",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 27,
+    "unnamedControls": 0,
+    "fieldCount": 1,
+    "unlabeledFields": 1,
+    "overflowX": null,
+    "firstText": "Question 1/8 Créer mon profil Quelle est ta date de naissance ? SWIVV est réservé aux 18 ans et plus. Sauvegarder et continuer Your Match. Your Story. © 2026 SWIVV. Tous droits réservés. DÉCOUVRIR Découvrir comment ça marche Parcourir les profils En ligne main",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-inscription.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "browse",
+    "url": "/browse?q=&type=&location=",
+    "title": "Parcourir les profils — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "23 profils"
+    ],
+    "headingOutline": [
+      "H1:23 profils",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 26,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 106,
+    "unnamedControls": 0,
+    "fieldCount": 5,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Tous Femmes Hommes En ligne Intention Toutes Mariage Relation sérieuse Relation amoureuse Belle histoire Âge – Trier Compatibi",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-browse.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "swipe",
+    "url": "/swipe",
+    "title": "SWIVV SWIPE — SWIVV",
+    "lang": "fr",
+    "h1": [],
+    "headingOutline": [
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Connecte-toi pour swiper les profils. Se connecter / S'inscrire Your Match. Your Story. © 2026 SWIVV. Tous droits réservés. DÉ",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-swipe.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "matches",
+    "url": "/matches",
+    "title": "Mes Matches — SWIVV",
+    "lang": "fr",
+    "h1": [],
+    "headingOutline": [
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Connecte-toi pour découvrir tes matches. Se connecter / S'inscrire Your Match. Your Story. © 2026 SWIVV. Tous droits réservés.",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-matches.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "messagerie",
+    "url": "/messagerie",
+    "title": "Messages — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "Conversations (0 · 0 non lu)"
+    ],
+    "headingOutline": [
+      "H2:Connexion requise",
+      "H1:Conversations (0 · 0 non lu)",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV",
+      "H2:Tes messages t'attendent"
+    ],
+    "imgCount": 4,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 40,
+    "unnamedControls": 0,
+    "fieldCount": 3,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Connexion requise Crée un compte ou connecte-toi pour envoyer un message. Créer un compte Se connecter Ton e-mail Ton mot de passe Rester connecté Se connecter Plus tard Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-messagerie.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "parametres",
+    "url": "/parametres",
+    "title": "Paramètres — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "Paramètres"
+    ],
+    "headingOutline": [
+      "H1:Paramètres",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 41,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Paramètres Profil Mes statistiques SWIVV PROGRESS Relevés d'accès Notifications Aide Connecte-toi pour gérer tes paramètres. S",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-parametres.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "mon-profil",
+    "url": "/mon-profil",
+    "title": "Mon profil — SWIVV",
+    "lang": "fr",
+    "h1": [
+      "Crée ton profil SWIVV"
+    ],
+    "headingOutline": [
+      "H1:Crée ton profil SWIVV",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 4,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Crée ton profil SWIVV Crée ton profil complet pour le voir ici. Se connecter / S'inscrire Your Match. Your Story. © 2026 SWIVV",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-mon-profil.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "comment-ca-marche",
+    "url": "/comment-ca-marche",
+    "title": "Comment fonctionne SWIVV MATCH — rencontres gratuites",
+    "lang": "fr",
+    "h1": [
+      "Découvrir comment ça marche"
+    ],
+    "headingOutline": [
+      "H1:Découvrir comment ça marche",
+      "H2:1. Compte en 2 minutes, profil à ton rythme",
+      "H2:2. Créer un profil qui donne envie",
+      "H2:3. Choisir de bonnes photos",
+      "H2:4. Être honnête avec les autres",
+      "H2:5. Reconnaître les faux profils et les arnaqu",
+      "H2:6. Comment fonctionne le matching",
+      "H2:7. Se rencontrer en toute sécurité",
+      "H2:8. Messages vocaux et envoi d'images",
+      "H2:9. Mes statistiques : comprendre ce qui march",
+      "H2:10. SWIVV PROGRESS : suivre ta progression",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 35,
+    "unnamedControls": 0,
+    "fieldCount": 0,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires Découvrir comment ça marche Inscription, profil, photos, matching, sécurité et suivi de ta progression : tout ce qu'il faut sa",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-comment-ca-marche.png"
+  },
+  {
+    "viewport": "mobile",
+    "route": "faq",
+    "url": "/faq",
+    "title": "FAQ — questions fréquentes sur SWIVV MATCH",
+    "lang": "fr",
+    "h1": [
+      "On répond à tout"
+    ],
+    "headingOutline": [
+      "H1:On répond à tout",
+      "H2:Inscription & compte",
+      "H2:Matching & messages",
+      "H2:Mariage & relations sérieuses",
+      "H2:Sécurité",
+      "H2:DÉCOUVRIR",
+      "H2:AIDE & SÉCURITÉ",
+      "H2:CONFIDENTIALITÉ & LÉGAL",
+      "H2:SWIVV"
+    ],
+    "imgCount": 3,
+    "imgsNoAlt": 0,
+    "imgsEmptyAlt": 0,
+    "ctrlCount": 49,
+    "unnamedControls": 0,
+    "fieldCount": 1,
+    "unlabeledFields": 0,
+    "overflowX": null,
+    "firstText": "Créer mon profil Recherche avancée Près de moi En ligne Mariage Relation sérieuse Nouveaux profils Photos récentes Profils populaires On répond à tout Inscription, matching, mariage, sécurité : tout ce qu'il faut savoir sur SWIVV. Inscription & compte SWIVV es",
+    "consoleErrors": [
+      "[tanstack-router] These exports from \"C:/Users/akrem/OneDrive - Barkley Transport Services/Documents/New OpenCode Project/swivv/src/routes/matches.tsx\" will not be code-split and will increase your bu"
+    ],
+    "failedRequests": [],
+    "screenshot": "C:\\Users\\akrem\\AppData\\Local\\Temp\\opencode\\qa\\mobile-faq.png"
+  }
+]
