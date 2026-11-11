@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "deploy": "powershell -ExecutionPolicy Bypass -File scripts/deploy-vps.ps1",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",

@@ -4,12 +4,11 @@ export type Lang = (typeof LANGS)[number];
 export const LANG_COOKIE = "swivv_lang";
 
 /**
- * ponytail: first-visit language comes from the CDN's own header (Vercel sets
- * x-vercel-ip-country / -region) — no GeoIP dependency, no lookup call, no cookie write.
+ * ponytail: first-visit language comes from a country header when the host sends one
+ * (Cloudflare cf-ipcountry, or x-country from a proxy) — no GeoIP dependency, no lookup call.
  * The SSR <html lang> is the client's fallback, so hydration always agrees with the server.
- * Ceiling: only Vercel's header is read (other hosts and local dev keep French), and a VPN or
- * a traveller gets the language of the exit IP; upgrade to a GeoIP lookup or an
- * Accept-Language tie-break if either ever matters.
+ * Ceiling: our Caddy VPS sends no country header, so first visits get French until the visitor
+ * picks a language; add a GeoIP module in Caddy if that ever matters.
  */
 const FR_COUNTRIES = new Set(
   "FR BE LU MC CH DZ MA TN SN CI CM BF ML NE TD GN TG BJ GA CG CD CF MG MU SC RW BI DJ KM MR HT".split(
@@ -38,7 +37,7 @@ export function langFromHeaders(headers: Headers): Lang {
   const hit = cookie.match(/(?:^|;\s*)swivv_lang=([^;]*)/);
   if (hit?.[1] === "fr" || hit?.[1] === "en" || hit?.[1] === "es") return hit[1];
   return langFromCountry(
-    headers.get("x-vercel-ip-country"),
-    headers.get("x-vercel-ip-country-region"),
+    headers.get("cf-ipcountry") ?? headers.get("x-country"),
+    headers.get("x-country-region"),
   );
 }

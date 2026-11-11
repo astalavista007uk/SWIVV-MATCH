@@ -874,7 +874,6 @@ const KB: Entry[] = [
       "trackers",
       "rastreadores",
       "analytics",
-      "vercel analytics",
       "consentement cookies",
       "cookie consent",
       "consentimiento de cookies",

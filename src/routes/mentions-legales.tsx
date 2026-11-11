@@ -33,8 +33,8 @@ const SECTIONS: { t: string; body: string[] }[] = [
   {
     t: "2. Hébergement",
     body: [
-      "Le site est hébergé par Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis — vercel.com.",
-      "Les données applicatives (comptes, profils, messages, fichiers) sont hébergées par Supabase, notre prestataire de base de données et de stockage.",
+      "Le site est hébergé sur un serveur dédié (VPS) exploité par SWIVV MATCH dans l'Union européenne.",
+      "Les données applicatives (comptes, profils, messages, fichiers) sont hébergées sur le même serveur (base de données, authentification et stockage Supabase auto-hébergés).",
     ],
   },
   {

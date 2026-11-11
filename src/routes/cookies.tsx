@@ -47,7 +47,6 @@ function CookiesPage() {
               <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#111]" aria-hidden="true" />{t("Session : te garder connecté(e) entre deux visites.")}</li>
               <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#111]" aria-hidden="true" />{t("Préférences : langue, filtres de recherche mémorisés.")}</li>
               <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#111]" aria-hidden="true" />{t("Sécurité : protection contre les abus et les faux comptes.")}</li>
-              <li className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#111]" aria-hidden="true" />{t("Mesures anonymes : pages visitées et site référent, via Vercel Analytics — sans cookie ni identification.")}</li>
             </ul>
           </section>
           <section className="rounded-2xl bg-[#f3f3f3] p-5">
@@ -83,7 +82,6 @@ function CookiesPage() {
               ["swivv-cgu-accepted", "localStorage", "Mémoriser l'acceptation des CGU", "Jusqu'à effacement"],
               ["swivv-signup-draft, swivv-pending-profile", "localStorage", "Reprendre une inscription interrompue", "Jusqu'à effacement"],
               ["swivv:notif-cd", "localStorage", "Limiter le spam de notifications", "24 heures"],
-              ["Vercel Analytics", "Sans cookie", "Mesure d'audience anonyme et agrégée", "Aucune identification"],
             ].map(([name, type, purpose, duration]) => {
               const pill =
                 type === "Sans cookie" ? "bg-emerald-600" : type === "Cookie" ? "bg-[#e60050]" : "bg-[#111]";

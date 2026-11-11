@@ -30,8 +30,8 @@ export const readLang = createIsomorphicFn()
     if (chosen) return chosen;
     const headers = getRequest().headers;
     return langFromCountry(
-      headers.get("x-vercel-ip-country"),
-      headers.get("x-vercel-ip-country-region"),
+      headers.get("cf-ipcountry") ?? headers.get("x-country"),
+      headers.get("x-country-region"),
     );
   })
   .client((): Lang => {

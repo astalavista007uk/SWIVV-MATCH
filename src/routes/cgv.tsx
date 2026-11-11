@@ -167,7 +167,7 @@ const SECTIONS: { t: string; body: string[] }[] = [
     t: "17. ÉDITEUR, HÉBERGEUR ET MENTIONS LÉGALES",
     body: [
       "Éditeur du service : SWIVV MATCH — 10 Rue Thureau Dangin, 75015 Paris, France — Téléphone : +33 (0)6 60 36 82 20 — contact@swivvmatch.com.",
-      "Hébergeur : Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis — vercel.com.",
+      "Hébergeur : serveur dédié (VPS) exploité par SWIVV MATCH dans l'Union européenne.",
       "Ces informations sont également publiées sur la page Mentions légales.",
     ],
   },
