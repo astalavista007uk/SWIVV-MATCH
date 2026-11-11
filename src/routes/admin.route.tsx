@@ -1,5 +1,4 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
 import {
   BarChart3,
   BadgeCheck,
@@ -22,7 +21,6 @@ import {
 } from "lucide-react";
 import { AuthModal, openAuthModal } from "@/lib/swivv-auth";
 import { useAdminRole, type StaffRole } from "@/lib/admin";
-import { supabase } from "@/integrations/supabase/client";
 import { SwivvLogo } from "@/components/swivv-logo";
 
 export const Route = createFileRoute("/admin")({
@@ -62,35 +60,6 @@ function AdminShell() {
   const { role, loading, level } = useAdminRole();
   const nav = useNavigate();
 
-  // ponytail: admin-only client error log (1/10s max, message truncated, no tokens/bodies) —
-  // public pages stay uninstrumented until swivv_client_errors proves useful here
-  useEffect(() => {
-    let last = 0;
-    const send = (message: string, source?: string) => {
-      const now = Date.now();
-      if (now - last < 10000) return;
-      last = now;
-      try {
-        supabase.auth.getUser().then(({ data }) => {
-          void (supabase as any).from("swivv_client_errors").insert({
-            message: String(message).slice(0, 500),
-            source: source?.slice(0, 120) ?? null,
-            url: location.pathname.slice(0, 200),
-            user_id: data.user?.id ?? null,
-          }).then(() => {});
-        }).catch(() => {});
-      } catch {}
-    };
-    const onErr = (e: ErrorEvent) => send(e.message || "Erreur", e.filename);
-    const onRej = (e: PromiseRejectionEvent) => send(e.reason?.message ?? String(e.reason) ?? "Rejet", "promise");
-    window.addEventListener("error", onErr);
-    window.addEventListener("unhandledrejection", onRej);
-    return () => {
-      window.removeEventListener("error", onErr);
-      window.removeEventListener("unhandledrejection", onRej);
-    };
-  }, []);
-
   if (loading) return null;
   if (!role) {
     return (
@@ -98,7 +67,7 @@ function AdminShell() {
         <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center">
           <SwivvLogo />
           <h1 className="mt-3 text-xl font-medium text-[#333]">SWIVV Admin</h1>
-          <p className="mt-1 text-sm text-[#777]">
+          <p className="mt-1 text-sm text-[#5c5c66]">
             Accès réservé à l'équipe SWIVV. Connecte-toi avec un compte staff.
           </p>
           <button

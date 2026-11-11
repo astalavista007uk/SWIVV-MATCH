@@ -127,7 +127,7 @@ function AdminContent() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Contenu</h1>
-      <p className="mt-1 text-xs text-[#999]">Photos/bios des 100 profils les plus récents · blog et pages statiques gérés en code (pas de CMS) · originaux toujours conservés pour appel.</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Photos/bios des 100 profils les plus récents · blog et pages statiques gérés en code (pas de CMS) · originaux toujours conservés pour appel.</p>
       <nav className="mt-3 flex gap-1 overflow-x-auto" aria-label="Contenus">
         {TABS.map((t) => (
           <button key={t} type="button" onClick={() => setTab(t)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === t ? "bg-[#14112b] text-white" : "bg-white text-[#555]"}`}>{t}</button>
@@ -143,7 +143,7 @@ function AdminContent() {
                 <strong className="text-[#333]">{r.data?.name ?? "Sans nom"}{r.data?.age ? `, ${r.data.age}` : ""}</strong>
                 {r.data?._mod?.approved_at && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Approuvé</span>}
                 {repBadge(r.user_id)}
-                <span className="text-xs text-[#999]">soumis le {fmt(r.updated_at)}</span>
+                <span className="text-xs text-[#6b6b73]">soumis le {fmt(r.updated_at)}</span>
                 <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche complète</Link>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -167,7 +167,7 @@ function AdminContent() {
               </div>
             </article>
           ))}
-          {withPhotos.length === 0 && <p className="text-sm text-[#777]">Aucune photo.</p>}
+          {withPhotos.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune photo.</p>}
         </div>
       )}
 
@@ -179,13 +179,13 @@ function AdminContent() {
                 <strong className="text-[#333]">{r.data?.name ?? "Sans nom"}{r.data?.age ? `, ${r.data.age}` : ""}</strong>
                 {r.data?._mod?.approved_at && <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Approuvé</span>}
                 {repBadge(r.user_id)}
-                <span className="text-xs text-[#999]">soumis le {fmt(r.updated_at)}</span>
+                <span className="text-xs text-[#6b6b73]">soumis le {fmt(r.updated_at)}</span>
                 <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche complète</Link>
               </div>
-              {r.data?.tagline && <p className="mt-1 text-sm italic text-[#777]">« {r.data.tagline} »</p>}
+              {r.data?.tagline && <p className="mt-1 text-sm italic text-[#5c5c66]">« {r.data.tagline} »</p>}
               {r.data?.bio && <p className="mt-1 text-sm text-[#555]">{r.data.bio}</p>}
               {(reports[r.user_id] ?? []).length > 0 && (
-                <p className="mt-1 text-xs text-[#999]">Historique : {(reports[r.user_id] ?? []).map((x: any) => `${x.category}/${x.status}`).join(" · ")}</p>
+                <p className="mt-1 text-xs text-[#6b6b73]">Historique : {(reports[r.user_id] ?? []).map((x: any) => `${x.category}/${x.status}`).join(" · ")}</p>
               )}
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={() => approve(r.user_id)} className="rounded border border-border px-3 py-1 text-xs">Approuver</button>
@@ -193,18 +193,18 @@ function AdminContent() {
               </div>
             </article>
           ))}
-          {withBio.length === 0 && <p className="text-sm text-[#777]">Aucune bio.</p>}
+          {withBio.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune bio.</p>}
         </div>
       )}
 
       {tab === "Blog" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">{BLOG_POSTS.length} articles publiés (code, Équipe SWIVV) — ni brouillons, ni planification, ni historique de révisions supportés.</p>
+          <p className="text-xs text-[#6b6b73]">{BLOG_POSTS.length} articles publiés (code, Équipe SWIVV) — ni brouillons, ni planification, ni historique de révisions supportés.</p>
           {BLOG_POSTS.map((b) => (
             <article key={b.slug} className="flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 text-sm shadow-sm">
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-[#333]">{b.title}</p>
-                <p className="text-xs text-[#999]">{b.category} · {b.author} · publié le {b.date} · {b.readTime} · {b.content.length} paragraphes{b.testimonials ? ` · ${b.testimonials.length} témoignage(s)` : ""}</p>
+                <p className="text-xs text-[#6b6b73]">{b.category} · {b.author} · publié le {b.date} · {b.readTime} · {b.content.length} paragraphes{b.testimonials ? ` · ${b.testimonials.length} témoignage(s)` : ""}</p>
               </div>
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Publié</span>
               <Link to="/blog/$slug" params={{ slug: b.slug }} className="text-xs text-[#e60050] underline">Aperçu</Link>
@@ -215,11 +215,11 @@ function AdminContent() {
 
       {tab === "Pages" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">Pages légales et statiques gérées en code — toute modification passe par le déploiement, avec relecture.</p>
+          <p className="text-xs text-[#6b6b73]">Pages légales et statiques gérées en code — toute modification passe par le déploiement, avec relecture.</p>
           {PAGES.map(([to, label]) => (
             <div key={to} className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm shadow-sm">
               <p className="flex-1 font-medium text-[#333]">{label}</p>
-              <span className="font-mono text-xs text-[#999]">{to}</span>
+              <span className="font-mono text-xs text-[#6b6b73]">{to}</span>
               <Link to={to as any} className="text-xs text-[#e60050] underline">Voir</Link>
             </div>
           ))}
@@ -233,7 +233,7 @@ function AdminContent() {
             {decisions.filter((x: any) => ["remove", "restrict"].includes(x.decision)).map((x: any) => (
               <p key={x.id} className="mt-1 text-xs text-[#555]">{x.target_kind}:{x.target_ref} → <strong>{x.decision}</strong>{x.reason ? ` — ${x.reason}` : ""} · {fmt(x.created_at)}</p>
             ))}
-            {decisions.length === 0 && <p className="mt-1 text-xs text-[#999]">Aucune décision tracée (table absente ou vide — migration 20261013000000).</p>}
+            {decisions.length === 0 && <p className="mt-1 text-xs text-[#6b6b73]">Aucune décision tracée (table absente ou vide — migration 20261013000000).</p>}
           </section>
           <section className="rounded-xl bg-white p-4 shadow-sm">
             <h2 className="font-medium text-[#333]">Comptes sanctionnés ({sanctions.length})</h2>
@@ -243,7 +243,7 @@ function AdminContent() {
                 {" "}· {x.status}{x.until ? ` jusqu'au ${fmt(x.until)}` : ""}
               </p>
             ))}
-            {sanctions.length === 0 && <p className="mt-1 text-xs text-[#999]">Aucun compte suspendu/banni.</p>}
+            {sanctions.length === 0 && <p className="mt-1 text-xs text-[#6b6b73]">Aucun compte suspendu/banni.</p>}
           </section>
         </div>
       )}

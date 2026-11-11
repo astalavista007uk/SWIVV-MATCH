@@ -10,6 +10,8 @@ export type DirRow = {
   updatedAt: string | null;
   completion: number;
   verified: "yes" | "pending" | "no";
+  /** Second badge (ID document) — set by auto-check or the verification trigger. */
+  idVerified?: boolean;
   reports: number;
   hasCase: boolean;
 };

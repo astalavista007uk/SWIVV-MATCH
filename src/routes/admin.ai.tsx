@@ -54,7 +54,7 @@ function AdminAi() {
       q.from("swivv_profiles").select("user_id,data").order("updated_at", { ascending: false }).limit(300),
       q.from("swivv_chats").select("body,sender,created_at").gte("created_at", new Date(Date.now() - 864e5).toISOString()).order("created_at", { ascending: false }).limit(2000),
       supabase.from("swivv_moderation_cases").select("id,subject_user_id,status,priority,action_taken,created_at").in("status", ["open", "investigating", "waiting"]).order("created_at", { ascending: false }).limit(100),
-      q.from("swivv_email_log").select("status,to,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(100).then((r: any) => (r.error ? [] : (r.data ?? []))),
+      q.from("swivv_email_log").select("status,key,template,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(100).then((r: any) => (r.error ? [] : (r.data ?? []))),
     ]);
     if (rl) {
       setRules(rl);
@@ -168,7 +168,7 @@ function AdminAi() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Centre IA</h1>
-      <p className="mt-1 text-xs text-[#999]">Règles déterministes auditables, revue humaine obligatoire pour toute sanction. {rulesLive ? "" : "Table des règles absente — valeurs locales affichées (migration 20261018000000)."}</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Règles déterministes auditables, revue humaine obligatoire pour toute sanction. {rulesLive ? "" : "Table des règles absente — valeurs locales affichées (migration 20261018000000)."}</p>
       <nav className="mt-3 flex gap-1 overflow-x-auto" aria-label="Centre IA">
         {TABS.map((t) => (
           <button key={t} type="button" onClick={() => setTab(t)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === t ? "bg-[#14112b] text-white" : "bg-white text-[#555]"}`}>{t}</button>
@@ -178,10 +178,10 @@ function AdminAi() {
 
       {tab === "Vue d'ensemble" && (
         <div className="mt-3 grid gap-3 lg:grid-cols-4">
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{prov.configured ? "branché" : "non configuré"}</p><p className="mt-1 text-[#777]">Fournisseur IA ({prov.provider})</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{rules.filter((r) => r.enabled).length}/{rules.length}</p><p className="mt-1 text-[#777]">Règles actives</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{doneRuns}</p><p className="mt-1 text-[#777]">Exécutions OK · {failedRuns} en échec</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#e60050]">{pendingReview.length}</p><p className="mt-1 text-[#777]">À relire (urgences + classements)</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{prov.configured ? "branché" : "non configuré"}</p><p className="mt-1 text-[#5c5c66]">Fournisseur IA ({prov.provider})</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{rules.filter((r) => r.enabled).length}/{rules.length}</p><p className="mt-1 text-[#5c5c66]">Règles actives</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{doneRuns}</p><p className="mt-1 text-[#5c5c66]">Exécutions OK · {failedRuns} en échec</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#e60050]">{pendingReview.length}</p><p className="mt-1 text-[#5c5c66]">À relire (urgences + classements)</p></div>
         </div>
       )}
 
@@ -190,8 +190,8 @@ function AdminAi() {
           <p className="font-medium text-[#333]">En attente de classification ({out.classify.length + out.spam.length}) — moteur : règles v1 (confiance : —, pas de modèle)</p>
           {out.classify.map((s) => sug(s))}
           {out.spam.slice(0, 20).map((s) => sug(s))}
-          {!out.classify.length && !out.spam.length && <p className="mt-1 text-xs text-[#999]">Rien à classer.</p>}
-          <p className="mt-2 text-xs text-[#999]">Action recommandée : ouvrir la fiche membre / le signalement — jamais de sanction auto.</p>
+          {!out.classify.length && !out.spam.length && <p className="mt-1 text-xs text-[#6b6b73]">Rien à classer.</p>}
+          <p className="mt-2 text-xs text-[#6b6b73]">Action recommandée : ouvrir la fiche membre / le signalement — jamais de sanction auto.</p>
         </div>
       )}
 
@@ -200,34 +200,34 @@ function AdminAi() {
           <div className={card}>
             <p className="font-medium text-[#333]">Spam & répétitions ({out.repeatMsg.length})</p>
             {out.repeatMsg.map((s) => sug(s))}
-            {!out.repeatMsg.length && <p className="mt-1 text-xs text-[#999]">Aucun contenu répété ×3+ sur 24 h.</p>}
+            {!out.repeatMsg.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucun contenu répété ×3+ sur 24 h.</p>}
           </div>
           <div className={card}>
             <p className="font-medium text-[#333]">Urgences sécurité ({out.urgent.length})</p>
             {out.urgent.map((s) => sug(s))}
-            {!out.urgent.length && <p className="mt-1 text-xs text-[#999]">Aucune urgence.</p>}
+            {!out.urgent.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucune urgence.</p>}
           </div>
           <div className={card}>
             <p className="font-medium text-[#333]">Onboarding ({out.onboarding.length}) · incomplets ({out.incomplete.length})</p>
             {out.onboarding.slice(0, 10).map((s) => sug(s))}
-            {!out.onboarding.length && !out.incomplete.length && <p className="mt-1 text-xs text-[#999]">Rien à signaler.</p>}
+            {!out.onboarding.length && !out.incomplete.length && <p className="mt-1 text-xs text-[#6b6b73]">Rien à signaler.</p>}
           </div>
           <div className={card}>
             <p className="font-medium text-[#333]">Notifications en échec ({out.failed.length})</p>
             {out.failed.slice(0, 10).map((s) => sug(s))}
-            {!out.failed.length && <p className="mt-1 text-xs text-[#999]">Aucun échec.</p>}
+            {!out.failed.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucun échec.</p>}
           </div>
         </div>
       )}
 
       {tab === "Automatisations" && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-[#999]">Toutes les règles sont en lecture seule (recommandations) — dry_run réservé aux futures actions auto, bascules 80+.</p>
+          <p className="text-xs text-[#6b6b73]">Toutes les règles sont en lecture seule (recommandations) — dry_run réservé aux futures actions auto, bascules 80+.</p>
           {rules.map((r) => (
             <article key={r.key} className="rounded-xl bg-white p-3 text-sm shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="text-[#333]">{r.name}</strong>
-                <span className="text-xs text-[#999]">déclencheur : {r.trigger_kind} · priorité {r.priority} · approbation : {r.approval}</span>
+                <span className="text-xs text-[#6b6b73]">déclencheur : {r.trigger_kind} · priorité {r.priority} · approbation : {r.approval}</span>
                 <span className="ml-auto flex items-center gap-2 text-xs">
                   {level >= 80 ? (
                     <>
@@ -235,14 +235,14 @@ function AdminAi() {
                       <label className="flex items-center gap-1 text-[#555]"><input type="checkbox" checked={!!r.dry_run} onChange={(e) => toggle(r.key, "dry_run", e.target.checked)} /> dry-run</label>
                     </>
                   ) : (
-                    <span className="text-[#999]">{r.enabled ? "active" : "coupée"} · dry-run {r.dry_run ? "oui" : "non"}</span>
+                    <span className="text-[#6b6b73]">{r.enabled ? "active" : "coupée"} · dry-run {r.dry_run ? "oui" : "non"}</span>
                   )}
                   <button type="button" onClick={() => execute(r.key)} disabled={busy === r.key || !r.enabled} className="rounded bg-[#e60050] px-3 py-1 font-medium text-white disabled:opacity-50">
                     {busy === r.key ? "…" : "Exécuter"}
                   </button>
                 </span>
               </div>
-              <p className="mt-1 text-xs text-[#777]">{r.description}</p>
+              <p className="mt-1 text-xs text-[#5c5c66]">{r.description}</p>
             </article>
           ))}
         </div>
@@ -253,7 +253,7 @@ function AdminAi() {
           <p className="font-medium text-[#333]">Aucune tâche en attente — exécutions synchrones manuelles (worker à venir).</p>
           <p className="mt-2 font-medium text-[#333]">Revue humaine requise ({pendingReview.length})</p>
           {pendingReview.slice(0, 20).map((s) => sug(s))}
-          {!pendingReview.length && <p className="mt-1 text-xs text-[#999]">File vide.</p>}
+          {!pendingReview.length && <p className="mt-1 text-xs text-[#6b6b73]">File vide.</p>}
         </div>
       )}
 
@@ -265,7 +265,7 @@ function AdminAi() {
               {r.rule_key} · {r.status}{r.result?.suggestions != null ? ` · ${r.result.suggestions} suggestion(s)` : ""}{r.duration_ms != null ? ` · ${r.duration_ms} ms` : ""}{r.error ? ` · erreur : ${r.error}` : ""} · {new Date(r.created_at).toLocaleString("fr-FR")}
             </p>
           ))}
-          {!runs.length && <p className="mt-1 text-xs text-[#999]">Aucune exécution (table absente ou vide — migration 20261018000000).</p>}
+          {!runs.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucune exécution (table absente ou vide — migration 20261018000000).</p>}
         </div>
       )}
 
@@ -276,7 +276,7 @@ function AdminAi() {
           <ol className="mt-1 list-decimal pl-5 text-[#555]">
             {prov.steps.map((s) => <li key={s}>{s}</li>)}
           </ol>
-          <p className="mt-2 text-xs text-[#999]">Données minimisées : redactForModel() retire e-mails, lieux, corps de messages et photos avant tout envoi futur.</p>
+          <p className="mt-2 text-xs text-[#6b6b73]">Données minimisées : redactForModel() retire e-mails, lieux, corps de messages et photos avant tout envoi futur.</p>
         </div>
       )}
     </div>

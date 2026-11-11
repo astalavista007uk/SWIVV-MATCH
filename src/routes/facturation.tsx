@@ -60,7 +60,7 @@ function FacturationPage() {
         <section aria-label={t("Historique de mes relevés")} className="mt-4 rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="text-lg font-medium text-[#333]">{t("Historique de mes relevés")}</h2>
           {loading ? (
-            <p className="mt-3 text-sm text-[#777]">{t("Chargement…")}</p>
+            <p className="mt-3 text-sm text-[#5c5c66]">{t("Chargement…")}</p>
           ) : !user ? (
             <p className="mt-3 text-sm text-[#555]">
               <button type="button" onClick={() => openAuthModal("account", "signin")} className="font-medium text-[#e60050] hover:underline">{t("Connecte-toi")}</button> {t("pour voir tes relevés mensuels d'accès gratuit.")}
@@ -75,7 +75,7 @@ function FacturationPage() {
                 <li key={r.ref} className="flex flex-wrap items-center gap-2 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-medium capitalize text-[#333">{statementMonthLabel(r, dateLocale)}</p>
-                    <p className="text-xs text-[#777]">
+                    <p className="text-xs text-[#5c5c66]">
                       {t("Relevé mensuel d'accès gratuit · 0,00 € · Gratuit · émis le {date}", { date: formatFrDate(r.issueIso, dateLocale) })}
                     </p>
                   </div>
@@ -100,7 +100,7 @@ function FacturationPage() {
         </section>
         <div className="mt-4 rounded-2xl bg-white p-6 text-center shadow-sm">
           <p className="text-[15px] text-[#333]">{t("SWIVV est entièrement gratuit : aucun abonnement, aucun paiement, donc aucune facture.")}</p>
-          <p className="mt-2 text-sm text-[#777]">
+          <p className="mt-2 text-sm text-[#5c5c66]">
             {t("Si des options payantes voient le jour, elles feront l'objet de factures séparées.")}
           </p>
           <Link to="/cgv" className="mt-4 inline-block text-sm font-medium text-[#e60050] hover:underline">

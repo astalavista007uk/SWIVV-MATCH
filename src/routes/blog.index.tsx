@@ -61,18 +61,18 @@ function BlogPage() {
         </Link>
 
         <h1 className="text-3xl font-medium text-[#333]">{t("Le blog SWIVV")}</h1>
-        <p className="mt-2 text-[#777]">
+        <p className="mt-2 text-[#5c5c66]">
           {t("Conseils rencontres, mariage, idées de sorties et témoignages de couples.")}
         </p>
 
         <div className="relative mb-4 mt-6">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#999]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b73]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("Rechercher un article…")}
             aria-label={t("Rechercher un article")}
-            className="w-full rounded-md border border-border bg-white py-2.5 pl-9 pr-3 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+            className="w-full rounded-md border border-border bg-white py-2.5 pl-9 pr-3 text-[15px] placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
           />
         </div>
 
@@ -98,8 +98,8 @@ function BlogPage() {
             <div className="p-5">
               <p className="text-xs font-bold uppercase tracking-wide text-[#e60050]">{t(featured.category)}</p>
               <h2 className="mt-1 text-2xl font-medium text-[#333]">{t(featured.title)}</h2>
-              <p className="mt-2 text-sm text-[#777]">{t(featured.excerpt)}</p>
-              <p className="mt-3 text-xs text-[#999]">
+              <p className="mt-2 text-sm text-[#5c5c66]">{t(featured.excerpt)}</p>
+              <p className="mt-3 text-xs text-[#6b6b73]">
                 {t(featured.author)} · {formatDate(featured.date, dateLocale)} · {t(featured.readTime)}
               </p>
             </div>
@@ -123,8 +123,8 @@ function BlogPage() {
                 <h3 className="mt-1 font-medium leading-snug text-[#333] group-hover:text-[#e60050]">
                   {t(p.title)}
                 </h3>
-                <p className="mt-1 line-clamp-2 text-sm text-[#777]">{t(p.excerpt)}</p>
-                <p className="mt-2 flex items-center gap-1 text-xs text-[#999]">
+                <p className="mt-1 line-clamp-2 text-sm text-[#5c5c66]">{t(p.excerpt)}</p>
+                <p className="mt-2 flex items-center gap-1 text-xs text-[#6b6b73]">
                   <Clock className="h-3.5 w-3.5" /> {t(p.readTime)} · {formatDate(p.date, dateLocale)}
                 </p>
               </div>
@@ -132,7 +132,7 @@ function BlogPage() {
           ))}
         </div>
         {rest.length === 0 && !featured && (
-          <p className="mt-6 text-sm text-[#777]">{t("Aucun article trouvé.")}</p>
+          <p className="mt-6 text-sm text-[#5c5c66]">{t("Aucun article trouvé.")}</p>
         )}
       </div>
       <SwivvFooter />

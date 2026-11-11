@@ -2,7 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { audit } from "@/lib/admin";
-import { displayStatus, needsReason } from "@/lib/admin-verify";
+import { displayKind, displayStatus, needsReason } from "@/lib/admin-verify";
 
 const STATUSES = ["pending", "approved", "rejected", "expired"];
 const KINDS = ["email", "phone", "profile", "identity"];
@@ -12,8 +12,9 @@ export const Route = createFileRoute("/admin/verification")({
   component: AdminVerification,
 } as any);
 
-// ponytail: no IDV provider, no document storage (minimum-data: kinds + decisions only) —
-// email stays Supabase Auth, face check stays local liveness (never an identity proof); reviewer + reason per decision
+// ponytail: no IDV provider — an ID is auto-checked on-device (document portrait vs profile
+// photo) and only doubtful cases land here with a private photo, deleted on decision.
+// Upgrade to a hosted provider when document fraud has to be caught; reviewer + reason per decision.
 function AdminVerification() {
   const [rows, setRows] = useState<any[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
@@ -108,6 +109,8 @@ function AdminVerification() {
       setMsg(error.message.includes("column") ? "Colonne review_note absente — applique la migration 20261014000000_swivv_verification.sql." : error.message);
       return;
     }
+    // Badge is written by the swivv_identity_badge trigger (moderators can't update profiles).
+    if (r.doc_path) void supabase.storage.from("swivv-id").remove([r.doc_path]).then(() => {});
     audit(`admin.verify.${status}`, "verification", r.id, { reason: reason.trim() });
     setReason("");
     load();
@@ -126,7 +129,7 @@ function AdminVerification() {
 
   async function requestEvidence(r: any) {
     if (!r.user_id) return;
-    const { error } = await (supabase as any).from("swivv_notifications").insert({ user_id: r.user_id, type: "admin", title: "Complément de vérification", message: `Pour ta demande (${r.kind}), l'équipe a besoin d'un justificatif complémentaire. Réponds via le support.` });
+    const { error } = await (supabase as any).from("swivv_notifications").insert({ user_id: r.user_id, type: "admin", title: "Complément de vérification", message: `Pour ta demande (${displayKind(r.kind)}), l'équipe a besoin d'un justificatif complémentaire. Réponds via le support.` });
     if (error) {
       setMsg(error.message);
       return;
@@ -140,7 +143,7 @@ function AdminVerification() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Vérification ({shown.length})</h1>
-      <p className="mt-1 text-xs text-[#999]">Aucun fournisseur d'identité branché — une photo ou un score IA ne prouve jamais une identité. E-mail via Supabase Auth · visage = contrôle local uniquement.</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Pièce d'identité : contrôle automatique sur l'appareil (visage de la pièce ↔ photo de profil), seuls les cas douteux arrivent ici. Le document est supprimé après la décision. E-mail via Supabase Auth · aucune preuve juridique d'identité.</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Compte, nom, ID…" aria-label="Rechercher" className="min-w-0 flex-1 rounded-md border border-border bg-white px-3 py-2 text-sm" />
         <select value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filtre statut" className={sel}>
@@ -163,10 +166,10 @@ function AdminVerification() {
           return (
             <article key={r.id} className="rounded-xl bg-white p-3 shadow-sm">
               <button type="button" onClick={() => openDetail(r)} aria-expanded={open} className="flex w-full flex-wrap items-center gap-2 text-left text-sm">
-                <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{r.kind}</span>
+                <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{displayKind(r.kind)}</span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${r.status === "approved" ? "bg-green-100 text-green-800" : r.status === "rejected" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"}`}>{displayStatus(r)}</span>
                 <span className="text-[#333]">{nm(r.user_id)}</span>
-                <span className="ml-auto text-xs text-[#999]" title={new Date(r.created_at).toLocaleString("fr-FR")}>
+                <span className="ml-auto text-xs text-[#6b6b73]" title={new Date(r.created_at).toLocaleString("fr-FR")}>
                   {new Date(r.created_at).toLocaleDateString("fr-FR")} · réexaminé par : {r.reviewed_by ? nm(r.reviewed_by) : "—"} · assigné : {r.assigned_to ? nm(r.assigned_to) : "—"}
                 </span>
               </button>
@@ -175,11 +178,32 @@ function AdminVerification() {
                   <p className="font-mono text-[11px] text-[#bbb]">ID {r.id}</p>
                   <div className="mt-1 flex flex-wrap gap-2">
                     {r.user_id && <Link to="/admin/users/$userId" params={{ userId: r.user_id }} className="text-[#e60050] underline">Fiche membre 360</Link>}
+                    {r.doc_path && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const { data, error } = await supabase.storage.from("swivv-id").createSignedUrl(r.doc_path, 120);
+                          if (error || !data?.signedUrl) {
+                            setMsg("Document indisponible (déjà supprimé ou migration 20261031000000 non appliquée).");
+                            return;
+                          }
+                          window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+                        }}
+                        className="text-[#e60050] underline"
+                      >
+                        Voir la pièce (lien 2 min)
+                      </button>
+                    )}
                   </div>
+                  {r.auto_note && (
+                    <p className="mt-2 text-xs text-[#555]">
+                      Contrôle automatique : {r.auto_note}{r.auto_score != null ? ` (${r.auto_score}/100)` : ""}
+                    </p>
+                  )}
                   {(history[r.user_id] ?? []).length > 0 && (
                     <div className="mt-2 rounded-lg bg-[#f7f7f7] p-2">
                       <p className="text-xs font-medium text-[#555]">Historique du compte ({history[r.user_id].length})</p>
-                      {history[r.user_id].map((x: any, i: number) => <p key={i} className="text-xs text-[#777]">{x.kind} · {x.status} · {new Date(x.created_at).toLocaleDateString("fr-FR")}</p>)}
+                      {history[r.user_id].map((x: any, i: number) => <p key={i} className="text-xs text-[#5c5c66]">{displayKind(x.kind)} · {x.status} · {new Date(x.created_at).toLocaleDateString("fr-FR")}</p>)}
                     </div>
                   )}
                   {r.review_note && <p className="mt-2 text-xs text-[#555]">Motif archivé : « {r.review_note} »</p>}
@@ -215,7 +239,7 @@ function AdminVerification() {
             </article>
           );
         })}
-        {shown.length === 0 && <p className="text-sm text-[#777]">Aucune demande avec ces filtres. L'e-mail reste vérifié via Supabase Auth ; les demandes identité arriveront ici.</p>}
+        {shown.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune demande avec ces filtres. L'e-mail reste vérifié via Supabase Auth ; les demandes identité arriveront ici.</p>}
       </div>
     </div>
   );

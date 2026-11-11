@@ -172,7 +172,7 @@ function AdminModeration() {
     n > PAGE && (
       <div className="mt-3 flex items-center justify-center gap-2 text-sm">
         <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-md border border-border bg-white px-3 py-1.5 disabled:opacity-40">←</button>
-        <span className="text-[#777]">Page {page + 1} / {Math.ceil(n / PAGE)}</span>
+        <span className="text-[#5c5c66]">Page {page + 1} / {Math.ceil(n / PAGE)}</span>
         <button type="button" disabled={(page + 1) * PAGE >= n} onClick={() => setPage((p) => p + 1)} className="rounded-md border border-border bg-white px-3 py-1.5 disabled:opacity-40">→</button>
       </div>
     );
@@ -185,7 +185,7 @@ function AdminModeration() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Modération</h1>
-      <p className="mt-1 text-xs text-[#999]">
+      <p className="mt-1 text-xs text-[#6b6b73]">
         File proactive (textes/photos scannés) + cas signalés. Règles déterministes, jamais d'inférence sur l'apparence ou les attributs sensibles ·{" "}
         {aiAvailable() ? "IA branchée." : "IA indisponible — aucun fournisseur configuré."} · sanctions graves = humain.
       </p>
@@ -208,11 +208,11 @@ function AdminModeration() {
           {cases.map((c) => (
             <article key={c.id} className="rounded-xl bg-white p-3 shadow-sm">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-mono text-xs text-[#999]">{c.id.slice(0, 8)}</span>
+                <span className="font-mono text-xs text-[#6b6b73]">{c.id.slice(0, 8)}</span>
                 <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{c.priority}</span>
                 <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{c.status}</span>
                 {c.action_taken && <span className="text-xs text-[#555]">→ {c.action_taken}</span>}
-                <span className="ml-auto text-xs text-[#999]">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
+                <span className="ml-auto text-xs text-[#6b6b73]">{new Date(c.created_at).toLocaleString("fr-FR")}</span>
               </div>
               {c.reason && <p className="mt-1 text-sm text-[#555]">{c.reason}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
@@ -233,7 +233,7 @@ function AdminModeration() {
               </div>
               <div className="mt-2 border-t border-border pt-2">
                 {(notes[c.id] ?? []).map((n: any) => (
-                  <p key={n.id} className="text-xs text-[#555]">· {n.body} <span className="text-[#999]">({new Date(n.created_at).toLocaleString("fr-FR")})</span></p>
+                  <p key={n.id} className="text-xs text-[#555]">· {n.body} <span className="text-[#6b6b73]">({new Date(n.created_at).toLocaleString("fr-FR")})</span></p>
                 ))}
                 <div className="mt-1 flex gap-2">
                   <input
@@ -266,13 +266,13 @@ function AdminModeration() {
               </div>
             </article>
           ))}
-          {cases.length === 0 && <p className="text-sm text-[#777]">Aucun cas. Crée-en un depuis un signalement.</p>}
+          {cases.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun cas. Crée-en un depuis un signalement.</p>}
         </div>
       )}
 
       {queue === "Textes" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">{texts.length} profils avec bio/accroche (300 plus récents scannés).</p>
+          <p className="text-xs text-[#6b6b73]">{texts.length} profils avec bio/accroche (300 plus récents scannés).</p>
           {slice(texts).map((p) => {
             const ref = `${p.user_id}:bio`;
             const flags = flagReasons(flagText(`${p.data?.tagline ?? ""}\n${p.data?.bio ?? ""}`));
@@ -290,7 +290,7 @@ function AdminModeration() {
                   {decBadge("text", ref)}
                   <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche membre</Link>
                 </div>
-                {p.data?.tagline && <p className="mt-1 italic text-[#777]">« {p.data.tagline} »</p>}
+                {p.data?.tagline && <p className="mt-1 italic text-[#5c5c66]">« {p.data.tagline} »</p>}
                 {p.data?.bio && <p className="mt-1 text-[#555]">{p.data.bio}</p>}
                 {canDecide && (
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -304,14 +304,14 @@ function AdminModeration() {
               </article>
             );
           })}
-          {texts.length === 0 && <p className="text-sm text-[#777]">Aucun texte à relire.</p>}
+          {texts.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun texte à relire.</p>}
           {pager(texts.length)}
         </div>
       )}
 
       {queue === "Photos" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">{photos.length} profils avec photos — aperçu restreint, aucune analyse automatisée d'image.</p>
+          <p className="text-xs text-[#6b6b73]">{photos.length} profils avec photos — aperçu restreint, aucune analyse automatisée d'image.</p>
           {slice(photos).map((p) => {
             const src = p.data.photos[0];
             const ref = `${p.user_id}:${src.slice(0, 64)}`;
@@ -319,7 +319,7 @@ function AdminModeration() {
               <article key={p.user_id} className="flex items-center gap-3 rounded-xl bg-white p-3 text-sm shadow-sm">
                 <img src={src} alt="" loading="lazy" className="h-20 w-20 shrink-0 rounded-lg object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-[#333]">{p.data?.name ?? p.user_id.slice(0, 8)} <span className="text-xs font-normal text-[#999]">· {p.data.photos.length} photo(s)</span></p>
+                  <p className="font-medium text-[#333]">{p.data?.name ?? p.user_id.slice(0, 8)} <span className="text-xs font-normal text-[#6b6b73]">· {p.data.photos.length} photo(s)</span></p>
                   <div className="mt-1">{decBadge("photo", ref)}</div>
                   <div className="mt-1 flex flex-wrap gap-2 text-xs">
                     <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="text-[#e60050] underline">Fiche membre</Link>
@@ -331,14 +331,14 @@ function AdminModeration() {
               </article>
             );
           })}
-          {photos.length === 0 && <p className="text-sm text-[#777]">Aucune photo à relire.</p>}
+          {photos.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune photo à relire.</p>}
           {pager(photos.length)}
         </div>
       )}
 
       {queue === "Spam & liens" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">{spam.length} profil(s) avec lien/téléphone/handle/spam présumé — motifs contenus uniquement.</p>
+          <p className="text-xs text-[#6b6b73]">{spam.length} profil(s) avec lien/téléphone/handle/spam présumé — motifs contenus uniquement.</p>
           {slice(spam).map((p) => {
             const flags = flagReasons(flagText(`${p.data?.tagline ?? ""}\n${p.data?.bio ?? ""}`));
             return (
@@ -349,7 +349,7 @@ function AdminModeration() {
                   {decBadge("text", `${p.user_id}:bio`)}
                   <Link to="/admin/users/$userId" params={{ userId: p.user_id }} className="ml-auto text-xs text-[#e60050] underline">Fiche membre</Link>
                 </div>
-                {p.data?.tagline && <p className="mt-1 italic text-[#777]">« {p.data.tagline} »</p>}
+                {p.data?.tagline && <p className="mt-1 italic text-[#5c5c66]">« {p.data.tagline} »</p>}
                 {p.data?.bio && <p className="mt-1 text-[#555]">{p.data.bio}</p>}
                 {canDecide && (
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -362,21 +362,21 @@ function AdminModeration() {
               </article>
             );
           })}
-          {spam.length === 0 && <p className="text-sm text-[#777]">Aucun signal de spam détecté par les règles.</p>}
+          {spam.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun signal de spam détecté par les règles.</p>}
           {pager(spam.length)}
         </div>
       )}
 
       {queue === "Messages" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">Signalements vocaux/photos/messages ({msgReports.length}) — les contenus non signalés restent privés et invisibles ici.</p>
+          <p className="text-xs text-[#6b6b73]">Signalements vocaux/photos/messages ({msgReports.length}) — les contenus non signalés restent privés et invisibles ici.</p>
           {msgReports.map((r) => (
             <article key={r.id} className="rounded-xl bg-white p-3 text-sm shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="text-[#333]">{r.category}</strong>
                 <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{r.status}</span>
-                <span className="text-xs text-[#777]">{nm(r.reporter_id)} → {nm(r.reported_user_id)}</span>
-                <span className="ml-auto text-xs text-[#999]">{new Date(r.created_at).toLocaleString("fr-FR")}</span>
+                <span className="text-xs text-[#5c5c66]">{nm(r.reporter_id)} → {nm(r.reported_user_id)}</span>
+                <span className="ml-auto text-xs text-[#6b6b73]">{new Date(r.created_at).toLocaleString("fr-FR")}</span>
               </div>
               {r.description && <p className="mt-1 text-[#555]">« {r.description} »</p>}
               {r.evidence_url && <a href={r.evidence_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-[#e60050] underline">Voir le contenu signalé</a>}
@@ -388,30 +388,30 @@ function AdminModeration() {
               </div>
             </article>
           ))}
-          {msgReports.length === 0 && <p className="text-sm text-[#777]">Aucun message signalé. Les signalements vocaux/photos partent dans le fil de conversation (contexte privé) + file Signalements pour les comptes.</p>}
+          {msgReports.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun message signalé. Les signalements vocaux/photos partent dans le fil de conversation (contexte privé) + file Signalements pour les comptes.</p>}
         </div>
       )}
 
       {queue === "Évaluations" && (
         <div className="mt-4 space-y-1">
-          <p className="text-xs text-[#999]">{evals.length} évaluations (règles v1 — références uniquement, jamais de contenus). Écrites par les décisions et les ouvertures de cas.</p>
+          <p className="text-xs text-[#6b6b73]">{evals.length} évaluations (règles v1 — références uniquement, jamais de contenus). Écrites par les décisions et les ouvertures de cas.</p>
           {evals.map((e: any, i: number) => (
             <p key={i} className="rounded-lg bg-white px-3 py-2 text-xs text-[#555] shadow-sm">
               <span className={`mr-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${e.severity === "critical" ? "bg-red-100 text-red-800" : e.severity === "warning" ? "bg-amber-100 text-amber-800" : "bg-[#f2f2f2]"}`}>{e.severity}</span>
               {e.content_type}:{e.category} · {e.method} · {e.account_ref ? nm(e.account_ref) : "—"} · {e.content_ref ?? "—"} · {e.recommended ? `→ ${e.recommended}` : ""}{e.action_taken ? ` · fait : ${e.action_taken}` : ""} · {new Date(e.created_at).toLocaleString("fr-FR")}
             </p>
           ))}
-          {!evals.length && <p className="text-sm text-[#777]">Aucune évaluation (table absente ou vide — migration 20261024000000).</p>}
+          {!evals.length && <p className="text-sm text-[#5c5c66]">Aucune évaluation (table absente ou vide — migration 20261024000000).</p>}
         </div>
       )}
 
       {queue === "Politiques" && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-[#999]">Règles actives (v1, {policies.length}) · auto_apply reste à faux — aucune sanction automatique. Appels : aucun canal dédié n'existe ; les contestations passent par le support.</p>
+          <p className="text-xs text-[#6b6b73]">Règles actives (v1, {policies.length}) · auto_apply reste à faux — aucune sanction automatique. Appels : aucun canal dédié n'existe ; les contestations passent par le support.</p>
           {policies.map((p) => (
             <article key={p.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 text-sm shadow-sm">
               <strong className="text-[#333]">{p.name}</strong>
-              <span className="text-xs text-[#777]">signaux : {(p.signals ?? []).join(", ")}</span>
+              <span className="text-xs text-[#5c5c66]">signaux : {(p.signals ?? []).join(", ")}</span>
               {level >= 80 ? (
                 <>
                   <select value={p.severity} onChange={async (e) => {
@@ -436,11 +436,11 @@ function AdminModeration() {
                   </select>
                 </>
               ) : (
-                <span className="text-xs text-[#777]">{p.severity} → {p.action} (édition réservée admin 80+)</span>
+                <span className="text-xs text-[#5c5c66]">{p.severity} → {p.action} (édition réservée admin 80+)</span>
               )}
             </article>
           ))}
-          {policies.length === 0 && <p className="text-sm text-[#777]">Politiques non chargées — applique la migration <code>20261013000000_swivv_moderation.sql</code>.</p>}
+          {policies.length === 0 && <p className="text-sm text-[#5c5c66]">Politiques non chargées — applique la migration <code>20261013000000_swivv_moderation.sql</code>.</p>}
         </div>
       )}
     </div>

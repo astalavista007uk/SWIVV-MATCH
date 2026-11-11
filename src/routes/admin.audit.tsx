@@ -90,7 +90,7 @@ function AdminAudit() {
         <h1 className="text-2xl font-medium text-[#333]">Audit ({list.length})</h1>
         <button type="button" onClick={exportCsv} className="ml-auto rounded-md border border-border bg-white px-3 py-1.5 text-xs font-medium text-[#555]">Export CSV</button>
       </div>
-      <p className="mt-1 text-xs text-[#999]">Append-only : lecture + ajout (≥30) uniquement, aucune modification/suppression possible ici. Contenus sensibles exclus des charges utiles.</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Append-only : lecture + ajout (≥30) uniquement, aucune modification/suppression possible ici. Contenus sensibles exclus des charges utiles.</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Action, cible, motif…" aria-label="Recherche plein texte" className="min-w-0 flex-1 rounded-md border border-border bg-white px-3 py-2 text-sm" />
         <input value={actor} onChange={(e) => setActor(e.target.value)} placeholder="Acteur (ID)…" aria-label="Filtre acteur" className="w-40 rounded-md border border-border bg-white px-3 py-2 text-sm" />
@@ -121,7 +121,7 @@ function AdminAudit() {
                 <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${sevCls(rowSeverity(r))}`}>{rowSeverity(r)}</span>
                 {(r.outcome ?? "success") !== "success" && <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-800">{r.outcome}</span>}
                 {r.target_kind && <span className="text-[#555]">· {r.target_kind}:{String(r.target_id ?? "").slice(0, 8)}</span>}
-                <span className="ml-auto font-mono text-xs text-[#999]">
+                <span className="ml-auto font-mono text-xs text-[#6b6b73]">
                   {String(r.actor_id ?? "sys").slice(0, 8)} · {new Date(r.created_at).toLocaleString("fr-FR")}
                 </span>
               </button>
@@ -145,12 +145,12 @@ function AdminAudit() {
             </div>
           );
         })}
-        {shown.length === 0 && <p className="text-sm text-[#777]">Aucune entrée avec ces filtres.</p>}
+        {shown.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune entrée avec ces filtres.</p>}
       </div>
       {pages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2 text-sm">
           <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-md border border-border bg-white px-3 py-1.5 disabled:opacity-40">←</button>
-          <span className="text-[#777]">Page {page + 1} / {pages}</span>
+          <span className="text-[#5c5c66]">Page {page + 1} / {pages}</span>
           <button type="button" disabled={page + 1 >= pages} onClick={() => setPage((p) => p + 1)} className="rounded-md border border-border bg-white px-3 py-1.5 disabled:opacity-40">→</button>
         </div>
       )}

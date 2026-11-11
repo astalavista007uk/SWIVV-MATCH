@@ -8,7 +8,8 @@ import { SwivvFooter } from "@/components/swivv-footer";
 import { MODERATION_EMAIL } from "@/lib/swivv-email-templates";
 import { supabase } from "@/integrations/supabase/client";
 import { submitContactTicket } from "@/lib/contact.functions";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
+import { answerSupport, SUPPORT_STARTERS } from "@/lib/support-kb";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact-us")({
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/contact-us")({
 
 const SUBJECTS = [
   "Question sur mon compte",
+  "Question sur la vérification d'identité",
   "Signaler un abus ou un faux profil",
   "Problème de match ou de message",
   "Signaler un problème technique",
@@ -37,63 +39,13 @@ const SUBJECTS = [
 
 const ABUSE_SUBJECT = "Signaler un abus ou un faux profil";
 
-// ponytail: keyword responder over a local KB, no LLM backend — plug a real assistant API
-// behind answer() if volume ever justifies it
-type KbEntry = { keys: string[]; text: string; to?: string; link?: string };
-
-// ponytail: the keyword responder matches French keys only and its answers are translated at render —
-// add per-locale keys if EN/ES chatbot traffic ever matters
-const KB: KbEntry[] = [
-  { keys: ["match", "compatible", "pourcentage", "%"], text: "Le % sur chaque profil vient de tes critères Mes Matches : plus tu remplis de critères correspondants, plus il grimpe. Change tes critères puis « Sauvegarder et rechercher » pour voir les chiffres se mettre à jour partout.", to: "/matches", link: "Ouvrir Mes Matches" },
-  { keys: ["like", "liker", "coeur"], text: "Touche le cœur sur un profil ou glisse sa photo vers la droite dans SWIVV Swipe. Tu peux déjà lui écrire ; s'il te like en retour, c'est un match et les vocaux et photos se débloquent.", to: "/swipe", link: "Ouvrir SWIVV Swipe" },
-  { keys: ["recu", "reçu"], text: "L'icône cœur pleine en haut affiche tes Likes reçus : les profils qui t'ont liké. C'est aussi là que naissent tes futurs matches.", to: "/browse" },
-  { keys: ["message", "discuter", "discussion", "conversation"], text: "Va dans Messages (l'enveloppe en haut), choisis une conversation et écris. Tes messages se synchronisent entre ton téléphone et ton ordinateur.", to: "/messagerie", link: "Ouvrir Messages" },
-  { keys: ["appel", "appeler", "telephone", "téléphone", "video", "vidéo", "camera", "caméra"], text: "Les appels vidéo sont réservés aux matches mutuels : sur son profil, clique « Demander un appel », confirme, et l'appel démarre dès qu'il accepte. Autorise micro et caméra dans ton navigateur (version https sur téléphone).", to: "/comment-ca-marche", link: "Comment ça marche" },
-  { keys: ["vocal", "voix", "audio", "micro"], text: "Avec un match mutuel, touche le micro dans la conversation pour enregistrer un vocal, ■ pour envoyer, ✕ pour annuler. Écoutable des deux côtés, sur téléphone comme ordinateur." },
-  { keys: ["photo", "image", "avatar"], text: "Ajoute jusqu'à 5 photos (2,5 Mo max) : directement sur Mon Profil en cliquant + sous ta photo principale, ou à l'étape 6 de l'inscription. La première photo devient ta photo principale.", to: "/mon-profil", link: "Mon profil" },
-  { keys: ["inscription", "inscrire", "compte", "creer", "créer"], text: "Crée ton compte depuis « Créer mon profil » en 2 minutes (18 ans minimum, CGU à lire jusqu'en bas et 2 cases à cocher), puis complète ton profil à ton rythme.", to: "/inscription", link: "Créer mon profil" },
-  { keys: ["18", "age", "âge", "majeur"], text: "SWIVV est réservé aux 18 ans et plus : tu le certifies en cochant la première case à l'inscription." },
-  { keys: ["cgu", "cgv", "condition", "cookie", "confidentialite", "confidentialité"], text: "Tout est en bas de page : CGU détaillées, CGV, cookies, confidentialité. Tu dois les accepter (case à cocher) pour t'inscrire." },
-  { keys: ["distance", "km", "loin", "ville"], text: "Les distances sont de vraies distances route depuis ta ville (Paris → Nice ≈ 930 km). Vérifie que ta ville est bien renseignée dans ton profil si un chiffre te surprend." },
-  { keys: ["recherche", "filtre", "critere", "critère"], text: "Affine par âge, ville, taille, style de vie et bien plus dans Mes Matches, puis « Sauvegarder et rechercher ». Tes critères sont conservés pour la prochaine visite.", to: "/matches", link: "Mes Matches" },
-  { keys: ["langue", "parle"], text: "Indique ta langue maternelle et tes autres langues à l'inscription (47 langues proposées) et filtre dessus dans Mes Matches." },
-  { keys: ["supprimer", "effacer", "desinscrire", "désinscrire", "fermer"], text: "Tu peux supprimer ton compte depuis Paramètres : profil, photos et données sont effacés. Cette action est définitive.", to: "/parametres", link: "Paramètres" },
-  { keys: ["bloquer", "bloque", "signaler", "abus", "faux", "arnaque", "harcelement", "harcèlement"], text: "Sur la page du profil : Bloquer (il disparaît et ne peut plus te contacter) ou Signaler (notre modération examine). En cas de danger immédiat, contacte aussi les autorités.", },
-  { keys: ["securite", "sécurité", "conseil", "rencontre", "rendez-vous"], text: "Premier rendez-vous : lieu public, préviens un proche, garde tes moyens de transport. Le détail est dans « Comment ça marche », section 7.", to: "/comment-ca-marche", link: "Conseils sécurité" },
-  { keys: ["notification", "notif", "alerte"], text: "Gère likes, messages et nouveautés depuis Paramètres. Si tu ne reçois rien sur téléphone, vérifie aussi les autorisations du navigateur." },
-  { keys: ["prix", "tarif", "gratuit", "payant", "abonnement", "premium"], text: "Tout est gratuit sur SWIVV : inscription, profils, likes, matchs et messages, sans carte bancaire. Les CGV le confirment." },
-  { keys: ["parrainage", "inviter", "ami", "parrain"], text: "Invite tes amis célibataires depuis la page d'accueil : plus de profils de qualité, plus de belles rencontres." },
-  { keys: ["bug", "marche pas", "erreur", "probleme", "problème", "charge"], text: "Essaie d'abord : recharger la page (Ctrl+Maj+R), te reconnecter, ou un autre navigateur. Si ça persiste, décris-le dans le formulaire ci-dessous avec ton téléphone et ton navigateur." },
-  { keys: ["mot de passe", "connexion", "connecter", "oublie", "oublié"], text: "Utilise « Mot de passe oublié » sur l'écran de connexion pour recevoir un lien de réinitialisation. Vérifie tes spams." },
-  { keys: ["temoignage", "témoignage", "histoire"], text: "Raconte ta belle histoire sur la page Témoignage : elle pourra inspirer la communauté.", to: "/temoignage", link: "Partager mon témoignage" },
-  { keys: ["swipe", "glisser"], text: "Dans SWIVV Swipe, glisse la photo vers la droite pour liker, vers la gauche pour passer. La carte suit ton doigt et la suivante apparaît dessous.", to: "/swipe", link: "SWIVV Swipe" },
-  { keys: ["humain", "conseiller", "equipe", "équipe", "support", "email", "e-mail"], text: "Je transmets aux humains ! Utilise le formulaire ci-dessous, l'équipe SWIVV répond en général sous 1 à 2 jours ouvrés." },
-];
-
-function normalize(s: string): string {
-  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, " ");
-}
-
-function answer(q: string): KbEntry {
-  const n = ` ${normalize(q)} `;
-  let best: KbEntry | null = null;
-  let bestHits = 0;
-  for (const e of KB) {
-    const hits = e.keys.filter((k) => n.includes(normalize(k))).length;
-    if (hits > bestHits) {
-      best = e;
-      bestHits = hits;
-    }
-  }
-  return best ?? { keys: [], text: "Hmm, je n'ai pas bien compris. Reformule ou choisis un sujet, sinon l'équipe support te répondra via le formulaire ci-dessous." };
-}
-
 type ChatMsg = { from: "bot" | "me"; text: string; to?: string; link?: string };
 
 function SupportChat() {
   const t = useT();
+  const lang = useLang();
   const [msgs, setMsgs] = useState<ChatMsg[]>([
-    { from: "bot", text: "Salut ! Je suis l'assistant SWIVV. Pose-moi une question sur les matches, les messages, les appels, ton profil… ou écris « humain » pour contacter le support." },
+    { from: "bot", text: SUPPORT_STARTERS[lang] },
   ]);
   const [draft, setDraft] = useState("");
   // ponytail: container-level scroll only — scrollIntoView would yank the whole page
@@ -108,7 +60,7 @@ function SupportChat() {
     e.preventDefault();
     const text = draft.trim();
     if (!text) return;
-    const a = answer(text);
+    const a = answerSupport(text, lang);
     setMsgs((m) => [...m, { from: "me", text }, { from: "bot", text: a.text, to: a.to, link: a.link }]);
     setDraft("");
   }
@@ -122,10 +74,10 @@ function SupportChat() {
       <div ref={boxRef} className="max-h-80 space-y-2 overflow-y-auto" aria-live="polite">
         {msgs.map((m, i) => (
           <div key={i} className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${m.from === "me" ? "ml-auto bg-[#e60050] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
-            <p>{m.from === "bot" ? t(m.text) : m.text}</p>
+            <p>{m.text}</p>
             {m.to && (
               <Link to={m.to as never} className={`mt-1 inline-block text-xs font-medium underline ${m.from === "me" ? "" : "text-[#e60050]"}`}>
-                {t(m.link ?? "Ouvrir")}
+                {m.link ?? t("Ouvrir")}
               </Link>
             )}
           </div>
@@ -173,7 +125,6 @@ function ContactPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -193,7 +144,6 @@ function ContactPage() {
           email: email.trim(),
           subject,
           message: message.trim(),
-          fileNames: files.map((f) => f.name),
           userId: user?.id ?? null,
         },
       });
@@ -223,7 +173,7 @@ function ContactPage() {
           {t("Contact")}
         </p>
         <h1 className="mt-1 text-3xl font-medium text-[#333]">{t("Parlons-nous")}</h1>
-        <p className="mt-2 text-[#777]">
+        <p className="mt-2 text-[#5c5c66]">
           {t("Une question, un abus à signaler, un témoignage à partager ? Réponse en général sous 1 à 2 jours ouvrés.")}
         </p>
 
@@ -259,15 +209,15 @@ function ContactPage() {
               <path d="M63 36 L73 46 L89 28" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <p className="mt-6 text-4xl font-bold text-[#111]">{t("Merci !")}</p>
-            <p className="mx-auto mt-3 max-w-md text-sm text-[#777]">
+            <p className="mx-auto mt-3 max-w-md text-sm text-[#5c5c66]">
               {t("Ton message a bien été reçu, merci {name} ! L'équipe SWIVV MATCH te répondra à {email} dans les plus brefs délais.", { name: name.trim(), email: email.trim() })}
             </p>
-            <p className="mt-8 text-sm text-[#777]">{t("Cordialement,")}</p>
-            <p className="mt-1 text-sm text-[#777]">{t("L'équipe SWIVV MATCH")}</p>
+            <p className="mt-8 text-sm text-[#5c5c66]">{t("Cordialement,")}</p>
+            <p className="mt-1 text-sm text-[#5c5c66]">{t("L'équipe SWIVV MATCH")}</p>
             {/* ponytail: local reset only (clears the form for a new subject) — router reload if a clean URL state ever matters */}
             <button
               type="button"
-              onClick={() => { setSent(false); setName(""); setEmail(""); setMessage(""); setFiles([]); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              onClick={() => { setSent(false); setName(""); setEmail(""); setMessage(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               className="mt-8 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white hover:bg-[#c2185b]"
             >
               {t("Contacte-nous pour un autre sujet")}
@@ -311,7 +261,7 @@ function ContactPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Jane"
-                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                 />
               </div>
               <div>
@@ -324,7 +274,7 @@ function ContactPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@example.com"
-                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                 />
               </div>
             </div>
@@ -339,44 +289,11 @@ function ContactPage() {
                 rows={5}
                 maxLength={2000}
                 placeholder={t("Décris ta demande le plus précisément possible…")}
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
-            {/* ponytail: files stay client-side (names ride in the ticket, staff reclaims them by e-mail) — real upload to storage when attachments need to travel with the ticket */}
-            <div>
-              <label htmlFor="docs" className="mb-1.5 block text-sm font-medium text-[#333]">
-                {t("Documents (3 maximum)")}
-              </label>
-              <input
-                id="docs"
-                type="file"
-                multiple
-                onChange={(e) => {
-                  // ponytail: append (each picker opens a new folder, replacing would drop the rest) — dedupe on name+size, cap at 3
-                  const picked = Array.from(e.target.files ?? []);
-                  e.target.value = "";
-                  if (!picked.length) return;
-                  setFiles((prev) => [...prev, ...picked.filter((p) => !prev.some((x) => x.name === p.name && x.size === p.size))].slice(0, 3));
-                }}
-                className="w-full rounded-md border border-border px-3 py-2.5 text-sm text-[#555] file:mr-3 file:rounded-md file:border-0 file:bg-[#e60050]/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-[#e60050]"
-              />
-              {!!files.length && (
-                <ul className="mt-2 space-y-1">
-                  {files.map((f, i) => (
-                    <li key={`${f.name}-${i}`} className="flex items-center gap-2 text-sm text-[#555]">
-                      <span className="truncate">{f.name}</span>
-                      <button
-                        type="button"
-                        aria-label={t("Retirer {name}", { name: f.name })}
-                        onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                        className="font-medium text-[#e60050] hover:underline"
-                      >
-                        ×
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="rounded-md border border-border bg-[#f7f7f7] p-3 text-sm text-[#555]">
+              {t("Pour joindre des documents, envoie-les par e-mail à contact@swivvmatch.com.")}
             </div>
             <button
               type="submit"
@@ -390,7 +307,7 @@ function ContactPage() {
                 {t("Envoi impossible pour le moment — vérifie ta connexion et réessaie.")}
               </p>
             )}
-            <p className="text-center text-xs text-[#999]">
+            <p className="text-center text-xs text-[#6b6b73]">
               {t("En cas d'urgence (menace, chantage), contacte aussi les autorités locales.")}
             </p>
           </form>

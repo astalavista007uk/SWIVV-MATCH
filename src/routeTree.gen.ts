@@ -14,6 +14,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin.route'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as CgvRouteImport } from './routes/cgv'
 import { Route as CommentCaMarcheRouteImport } from './routes/comment-ca-marche'
+import { Route as ConfidentialiteDonneesRouteImport } from './routes/confidentialite-donnees'
 import { Route as ContactUsRouteImport } from './routes/contact-us'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as EmailsRouteImport } from './routes/emails'
@@ -23,6 +24,7 @@ import { Route as GuidePhotosRouteImport } from './routes/guide-photos'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as InscriptionRouteImport } from './routes/inscription'
 import { Route as MatchesRouteImport } from './routes/matches'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as MessagerieRouteImport } from './routes/messagerie'
 import { Route as ModerationRouteImport } from './routes/moderation'
 import { Route as MonProfilRouteImport } from './routes/mon-profil'
@@ -31,11 +33,14 @@ import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PrivacyCentreRouteImport } from './routes/privacy-centre'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as RechercheAvanceeRouteImport } from './routes/recherche-avancee'
+import { Route as ResetRouteImport } from './routes/reset'
+import { Route as SimulationErreurRouteImport } from './routes/simulation-erreur'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as SwipeRouteImport } from './routes/swipe'
 import { Route as TemoignageRouteImport } from './routes/temoignage'
 import { Route as TermsAndConditionsRouteImport } from './routes/terms-and-conditions'
 import { Route as VerificationRouteImport } from './routes/verification'
+import { Route as VerificationAgeRouteImport } from './routes/verification-age'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAlertsRouteImport } from './routes/admin.alerts'
@@ -85,6 +90,11 @@ const CommentCaMarcheRoute = CommentCaMarcheRouteImport.update({
   path: '/comment-ca-marche',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfidentialiteDonneesRoute = ConfidentialiteDonneesRouteImport.update({
+  id: '/confidentialite-donnees',
+  path: '/confidentialite-donnees',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactUsRoute = ContactUsRouteImport.update({
   id: '/contact-us',
   path: '/contact-us',
@@ -130,6 +140,11 @@ const MatchesRoute = MatchesRouteImport.update({
   path: '/matches',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagerieRoute = MessagerieRouteImport.update({
   id: '/messagerie',
   path: '/messagerie',
@@ -170,6 +185,16 @@ const RechercheAvanceeRoute = RechercheAvanceeRouteImport.update({
   path: '/recherche-avancee',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetRoute = ResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimulationErreurRoute = SimulationErreurRouteImport.update({
+  id: '/simulation-erreur',
+  path: '/simulation-erreur',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StatistiquesRoute = StatistiquesRouteImport.update({
   id: '/statistiques',
   path: '/statistiques',
@@ -193,6 +218,11 @@ const TermsAndConditionsRoute = TermsAndConditionsRouteImport.update({
 const VerificationRoute = VerificationRouteImport.update({
   id: '/verification',
   path: '/verification',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerificationAgeRoute = VerificationAgeRouteImport.update({
+  id: '/verification-age',
+  path: '/verification-age',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -317,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/cgv': typeof CgvRoute
   '/comment-ca-marche': typeof CommentCaMarcheRoute
+  '/confidentialite-donnees': typeof ConfidentialiteDonneesRoute
   '/contact-us': typeof ContactUsRoute
   '/cookies': typeof CookiesRoute
   '/emails': typeof EmailsRoute
@@ -326,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRoute
   '/inscription': typeof InscriptionRoute
   '/matches': typeof MatchesRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/messagerie': typeof MessagerieRoute
   '/moderation': typeof ModerationRoute
   '/mon-profil': typeof MonProfilRoute
@@ -334,11 +366,14 @@ export interface FileRoutesByFullPath {
   '/privacy-centre': typeof PrivacyCentreRoute
   '/progress': typeof ProgressRoute
   '/recherche-avancee': typeof RechercheAvanceeRoute
+  '/reset': typeof ResetRoute
+  '/simulation-erreur': typeof SimulationErreurRoute
   '/statistiques': typeof StatistiquesRoute
   '/swipe': typeof SwipeRoute
   '/temoignage': typeof TemoignageRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/verification': typeof VerificationRoute
+  '/verification-age': typeof VerificationAgeRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/alerts': typeof AdminAlertsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -368,6 +403,7 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseRoute
   '/cgv': typeof CgvRoute
   '/comment-ca-marche': typeof CommentCaMarcheRoute
+  '/confidentialite-donnees': typeof ConfidentialiteDonneesRoute
   '/contact-us': typeof ContactUsRoute
   '/cookies': typeof CookiesRoute
   '/emails': typeof EmailsRoute
@@ -377,6 +413,7 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRoute
   '/inscription': typeof InscriptionRoute
   '/matches': typeof MatchesRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/messagerie': typeof MessagerieRoute
   '/moderation': typeof ModerationRoute
   '/mon-profil': typeof MonProfilRoute
@@ -385,11 +422,14 @@ export interface FileRoutesByTo {
   '/privacy-centre': typeof PrivacyCentreRoute
   '/progress': typeof ProgressRoute
   '/recherche-avancee': typeof RechercheAvanceeRoute
+  '/reset': typeof ResetRoute
+  '/simulation-erreur': typeof SimulationErreurRoute
   '/statistiques': typeof StatistiquesRoute
   '/swipe': typeof SwipeRoute
   '/temoignage': typeof TemoignageRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/verification': typeof VerificationRoute
+  '/verification-age': typeof VerificationAgeRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/alerts': typeof AdminAlertsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -421,6 +461,7 @@ export interface FileRoutesById {
   '/browse': typeof BrowseRoute
   '/cgv': typeof CgvRoute
   '/comment-ca-marche': typeof CommentCaMarcheRoute
+  '/confidentialite-donnees': typeof ConfidentialiteDonneesRoute
   '/contact-us': typeof ContactUsRoute
   '/cookies': typeof CookiesRoute
   '/emails': typeof EmailsRoute
@@ -430,6 +471,7 @@ export interface FileRoutesById {
   '/help': typeof HelpRoute
   '/inscription': typeof InscriptionRoute
   '/matches': typeof MatchesRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/messagerie': typeof MessagerieRoute
   '/moderation': typeof ModerationRoute
   '/mon-profil': typeof MonProfilRoute
@@ -438,11 +480,14 @@ export interface FileRoutesById {
   '/privacy-centre': typeof PrivacyCentreRoute
   '/progress': typeof ProgressRoute
   '/recherche-avancee': typeof RechercheAvanceeRoute
+  '/reset': typeof ResetRoute
+  '/simulation-erreur': typeof SimulationErreurRoute
   '/statistiques': typeof StatistiquesRoute
   '/swipe': typeof SwipeRoute
   '/temoignage': typeof TemoignageRoute
   '/terms-and-conditions': typeof TermsAndConditionsRoute
   '/verification': typeof VerificationRoute
+  '/verification-age': typeof VerificationAgeRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/alerts': typeof AdminAlertsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -475,6 +520,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/cgv'
     | '/comment-ca-marche'
+    | '/confidentialite-donnees'
     | '/contact-us'
     | '/cookies'
     | '/emails'
@@ -484,6 +530,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/inscription'
     | '/matches'
+    | '/mentions-legales'
     | '/messagerie'
     | '/moderation'
     | '/mon-profil'
@@ -492,11 +539,14 @@ export interface FileRouteTypes {
     | '/privacy-centre'
     | '/progress'
     | '/recherche-avancee'
+    | '/reset'
+    | '/simulation-erreur'
     | '/statistiques'
     | '/swipe'
     | '/temoignage'
     | '/terms-and-conditions'
     | '/verification'
+    | '/verification-age'
     | '/admin/ai'
     | '/admin/alerts'
     | '/admin/analytics'
@@ -526,6 +576,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/cgv'
     | '/comment-ca-marche'
+    | '/confidentialite-donnees'
     | '/contact-us'
     | '/cookies'
     | '/emails'
@@ -535,6 +586,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/inscription'
     | '/matches'
+    | '/mentions-legales'
     | '/messagerie'
     | '/moderation'
     | '/mon-profil'
@@ -543,11 +595,14 @@ export interface FileRouteTypes {
     | '/privacy-centre'
     | '/progress'
     | '/recherche-avancee'
+    | '/reset'
+    | '/simulation-erreur'
     | '/statistiques'
     | '/swipe'
     | '/temoignage'
     | '/terms-and-conditions'
     | '/verification'
+    | '/verification-age'
     | '/admin/ai'
     | '/admin/alerts'
     | '/admin/analytics'
@@ -578,6 +633,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/cgv'
     | '/comment-ca-marche'
+    | '/confidentialite-donnees'
     | '/contact-us'
     | '/cookies'
     | '/emails'
@@ -587,6 +643,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/inscription'
     | '/matches'
+    | '/mentions-legales'
     | '/messagerie'
     | '/moderation'
     | '/mon-profil'
@@ -595,11 +652,14 @@ export interface FileRouteTypes {
     | '/privacy-centre'
     | '/progress'
     | '/recherche-avancee'
+    | '/reset'
+    | '/simulation-erreur'
     | '/statistiques'
     | '/swipe'
     | '/temoignage'
     | '/terms-and-conditions'
     | '/verification'
+    | '/verification-age'
     | '/admin/ai'
     | '/admin/alerts'
     | '/admin/analytics'
@@ -631,6 +691,7 @@ export interface RootRouteChildren {
   BrowseRoute: typeof BrowseRoute
   CgvRoute: typeof CgvRoute
   CommentCaMarcheRoute: typeof CommentCaMarcheRoute
+  ConfidentialiteDonneesRoute: typeof ConfidentialiteDonneesRoute
   ContactUsRoute: typeof ContactUsRoute
   CookiesRoute: typeof CookiesRoute
   EmailsRoute: typeof EmailsRoute
@@ -640,6 +701,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRoute
   InscriptionRoute: typeof InscriptionRoute
   MatchesRoute: typeof MatchesRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
   MessagerieRoute: typeof MessagerieRoute
   ModerationRoute: typeof ModerationRoute
   MonProfilRoute: typeof MonProfilRoute
@@ -648,11 +710,14 @@ export interface RootRouteChildren {
   PrivacyCentreRoute: typeof PrivacyCentreRoute
   ProgressRoute: typeof ProgressRoute
   RechercheAvanceeRoute: typeof RechercheAvanceeRoute
+  ResetRoute: typeof ResetRoute
+  SimulationErreurRoute: typeof SimulationErreurRoute
   StatistiquesRoute: typeof StatistiquesRoute
   SwipeRoute: typeof SwipeRoute
   TemoignageRoute: typeof TemoignageRoute
   TermsAndConditionsRoute: typeof TermsAndConditionsRoute
   VerificationRoute: typeof VerificationRoute
+  VerificationAgeRoute: typeof VerificationAgeRoute
   BlogSlugRoute: typeof BlogSlugRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalTermsRoute: typeof LegalTermsRoute
@@ -695,6 +760,13 @@ declare module '@tanstack/react-router' {
       path: '/comment-ca-marche'
       fullPath: '/comment-ca-marche'
       preLoaderRoute: typeof CommentCaMarcheRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite-donnees': {
+      id: '/confidentialite-donnees'
+      path: '/confidentialite-donnees'
+      fullPath: '/confidentialite-donnees'
+      preLoaderRoute: typeof ConfidentialiteDonneesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact-us': {
@@ -760,6 +832,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messagerie': {
       id: '/messagerie'
       path: '/messagerie'
@@ -816,6 +895,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RechercheAvanceeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset': {
+      id: '/reset'
+      path: '/reset'
+      fullPath: '/reset'
+      preLoaderRoute: typeof ResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulation-erreur': {
+      id: '/simulation-erreur'
+      path: '/simulation-erreur'
+      fullPath: '/simulation-erreur'
+      preLoaderRoute: typeof SimulationErreurRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/statistiques': {
       id: '/statistiques'
       path: '/statistiques'
@@ -849,6 +942,13 @@ declare module '@tanstack/react-router' {
       path: '/verification'
       fullPath: '/verification'
       preLoaderRoute: typeof VerificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verification-age': {
+      id: '/verification-age'
+      path: '/verification-age'
+      fullPath: '/verification-age'
+      preLoaderRoute: typeof VerificationAgeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -1077,6 +1177,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseRoute: BrowseRoute,
   CgvRoute: CgvRoute,
   CommentCaMarcheRoute: CommentCaMarcheRoute,
+  ConfidentialiteDonneesRoute: ConfidentialiteDonneesRoute,
   ContactUsRoute: ContactUsRoute,
   CookiesRoute: CookiesRoute,
   EmailsRoute: EmailsRoute,
@@ -1086,6 +1187,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRoute,
   InscriptionRoute: InscriptionRoute,
   MatchesRoute: MatchesRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
   MessagerieRoute: MessagerieRoute,
   ModerationRoute: ModerationRoute,
   MonProfilRoute: MonProfilRoute,
@@ -1094,11 +1196,14 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyCentreRoute: PrivacyCentreRoute,
   ProgressRoute: ProgressRoute,
   RechercheAvanceeRoute: RechercheAvanceeRoute,
+  ResetRoute: ResetRoute,
+  SimulationErreurRoute: SimulationErreurRoute,
   StatistiquesRoute: StatistiquesRoute,
   SwipeRoute: SwipeRoute,
   TemoignageRoute: TemoignageRoute,
   TermsAndConditionsRoute: TermsAndConditionsRoute,
   VerificationRoute: VerificationRoute,
+  VerificationAgeRoute: VerificationAgeRoute,
   BlogSlugRoute: BlogSlugRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalTermsRoute: LegalTermsRoute,

@@ -6,6 +6,9 @@ export const en = {
   "Retour à l'accueil": "Back to home",
   "Ton e-mail est en attente de confirmation — clique sur le lien reçu par e-mail pour activer ton compte.":
     "Your email is awaiting confirmation — click the link we sent to activate your account.",
+  "Confirme ton e-mail": "Confirm your email",
+  "E-mail renvoyé ! Vérifie ta boîte de réception (et tes spams).":
+    "Email resent! Check your inbox (and spam).",
   "Compte banni": "Account banned",
   "Compte suspendu": "Account suspended",
   "Ton compte a été définitivement fermé pour non-respect du règlement.":
@@ -14,7 +17,6 @@ export const en = {
   "Ton compte est suspendu.": "Your account is suspended.",
   "Tu peux contester via la page contact.": "You can appeal via the contact page.",
   "Se déconnecter": "Sign out",
-
   // ── auth modal + header ──────────────────────────────────────────────────
   "Connexion requise": "Sign in required",
   "Crée un compte ou connecte-toi pour liker ce membre.": "Create an account or sign in to like this member.",
@@ -47,7 +49,6 @@ export const en = {
   "Mon profil": "My profile",
   "Menu du compte": "Account menu",
   "Fermer le menu": "Close menu",
-
   // ── category nav ─────────────────────────────────────────────────────────
   Catégories: "Categories",
   "Recherche avancée": "Advanced search",
@@ -61,7 +62,6 @@ export const en = {
   Tous: "Everyone",
   Femmes: "Women",
   Hommes: "Men",
-
   // ── footer ───────────────────────────────────────────────────────────────
   Découvrir: "Discover",
   "Aide & Sécurité": "Help & Safety",
@@ -78,10 +78,19 @@ export const en = {
   "Conditions d'utilisation": "Terms of use",
   "Conditions Générales de Vente (CGV)": "Terms of sale",
   "Centre de confidentialité": "Privacy center",
+  "Vérification de l'âge & protection des mineurs":
+    "Age verification & minors protection",
+  "Confidentialité des données": "Data privacy",
+  "Démo": "Demo",
+  "Profil de démonstration": "Demo profile",
+  "Les profils marqués « Démo » sont des exemples, pas des membres réels.":
+    "Profiles marked “Demo” are examples, not real members.",
+  "Pour joindre des documents, envoie-les par e-mail à contact@swivvmatch.com.":
+    "To attach documents, email them to contact@swivvmatch.com.",
+  "Dernière mise à jour : novembre 2026.": "Last updated: November 2026.",
   Cookies: "Cookies",
   Accueil: "Home",
   "Blog rencontres": "Dating blog",
-  "Application mobile": "Mobile app",
   "Your Match. Your Story.": "Your Match. Your Story.",
   SWIVV: "SWIVV",
   "© 2026 SWIVV. Tous droits réservés.": "© 2026 SWIVV. All rights reserved.",
@@ -90,7 +99,6 @@ export const en = {
   "Langue de traduction des messages": "Message translation language",
   "Les messages de la messagerie et certains textes de profil peuvent être traduits vers cette langue.":
     "Messages and some profile text can be translated into this language.",
-
   // ── landing page ─────────────────────────────────────────────────────────
   "100% gratuit. Pas de carte bancaire.": "100% free. No credit card.",
   "Fais de belles": "Meet wonderful",
@@ -106,24 +114,26 @@ export const en = {
   "Pour commencer": "To get started",
   "Fonctionnalités SWIVV": "SWIVV features",
   "Voir la section {n}": "Go to section {n}",
-  "Rejoins SWIVV en 2 minutes": "Join SWIVV in 2 minutes",
+  "Rejoins SWIVV\nen 2 minutes": "Join SWIVV\nin 2 minutes",
   "Compte gratuit en 2 minutes — complète ton profil à ton rythme.":
     "Free account in 2 minutes — build your profile at your own pace.",
   "Crée ton profil": "Create your profile",
   "Découvre des compatibles": "Discover compatible people",
   "Like, matche, discute": "Like, match, chat",
-  "Un matching qui a du sens": "Matching that makes sense",
+  "Un matching\nqui a du sens": "Matching that\nmakes sense",
   "On te montre d'abord les personnes vraiment compatibles.": "We show you the people who are genuinely compatible first.",
   "Score de compatibilité": "Compatibility score",
   "Profils vérifiés": "Verified profiles",
   "Intentions claires": "Clear intentions",
   "Sécurité d'abord": "Safety first",
   "Entends sa voix avant le premier rendez-vous": "Hear their voice before the first date",
+  "Après une demande de connexion acceptée, passe du texte à la voix si l'autre membre l'autorise.":
+    "After a connection request is accepted, move from text to voice if the other member allows it.",
   "Réservés aux matchs : quand l'intérêt est réciproque, passe du texte à la voix.":
     "Matches only: once the interest is mutual, go from text to voice.",
   "Partage de photos": "Photo sharing",
   "Messages vocaux": "Voice messages",
-  "Suis tes chiffres et ta progression": "Track your numbers and your progress",
+  "Suis tes chiffres\net ta progression": "Track your numbers and\nyour progress",
   "Des repères concrets sur ton activité, sans classement ni pression.":
     "Concrete signals about your activity, no ranking and no pressure.",
   Statistiques: "Statistics",
@@ -145,6 +155,7 @@ export const en = {
   "Emporte tes matchs partout et commence à Swivver en quelques secondes.":
     "Take your matches anywhere and start Swivving in seconds.",
   "Déjà téléchargé ? Ne plus afficher": "Already downloaded? Hide this",
+  "Bientôt disponible sur Google Play et l'App Store": "Coming soon on Google Play and the App Store",
   "Je recherche :": "I'm looking for:",
   "Filtrer par genre": "Filter by gender",
   "Aucun profil trouvé. Essaie un autre genre.": "No profiles found. Try another gender.",
@@ -159,14 +170,12 @@ export const en = {
   Profil: "Profile",
   Aide: "Help",
   Réglages: "Settings",
-
   // ── help ─────────────────────────────────────────────────────────────────
   "Inscription, matching, messages, sécurité.": "Sign-up, matching, messages, safety.",
   "Comment ça marche": "How it works",
   "Le fonctionnement de SWIVV en bref.": "How SWIVV works, in short.",
   "Des photos validées du premier coup.": "Photos approved on the first try.",
   "Une question ? Écris-nous directement.": "A question? Write to us directly.",
-
   // ── cookies ──────────────────────────────────────────────────────────────
   "Nos cookies, sans langue de bois": "Our cookies, no jargon",
   "SWIVV n'utilise que des cookies techniques. Pas de publicité, pas de revente.":
@@ -183,11 +192,53 @@ export const en = {
   "Pas de traceurs de réseaux sociaux intégrés aux profils.": "No social-network trackers embedded in profiles.",
   "Tu peux bloquer les cookies dans ton navigateur : le site reste consultable, mais la connexion et les filtres mémorisés ne fonctionneront plus. Questions ?":
     "You can block cookies in your browser: the site stays readable, but signing in and saved filters will stop working. Questions?",
+  "Liste des stockages utilisés": "List of storage we use",
+  "Dernière mise à jour : 3 novembre 2026. Responsable : SWIVV MATCH, 10 Rue Thureau Dangin, 75015 Paris — contact@swivvmatch.com.":
+    "Last updated: 3 November 2026. Controller: SWIVV MATCH, 10 Rue Thureau Dangin, 75015 Paris — contact@swivvmatch.com.",
+  "Type": "Type",
+  "Finalité": "Purpose",
+  "Durée": "Duration",
+  "Cookie": "Cookie",
+  "localStorage": "localStorage",
+  "Langue choisie (FR/EN/ES)": "Selected language (FR/EN/ES)",
+  "Session connectée (Supabase)": "Signed-in session (Supabase)",
+  "Jusqu'à déconnexion ou expiration": "Until sign-out or expiry",
+  "Mémoriser l'acceptation des CGU": "Remember acceptance of the terms",
+  "Jusqu'à effacement": "Until cleared",
+  "Reprendre une inscription interrompue": "Resume an interrupted sign-up",
+  "Limiter le spam de notifications": "Limit notification spam",
+  "24 heures": "24 hours",
+  "Sans cookie": "No cookie",
+  "Mesure d'audience anonyme et agrégée": "Anonymous, aggregated analytics",
+  "Aucune identification": "No identification",
+  "Pourquoi aucun bandeau de consentement : nous n'utilisons que des traceurs strictement nécessaires (session, langue, sécurité, acceptation des CGU) et une mesure d'audience sans cookie ni identification, exemptée de consentement. Aucun traceur publicitaire ou de reciblage n'est déposé. Si un traceur non essentiel est ajouté, un bandeau de consentement sera affiché avant tout dépôt, avec un moyen de refuser aussi simple que d'accepter.":
+    "Why there is no consent banner: we only use strictly necessary trackers (session, language, security, terms acceptance) and cookieless, non-identifying analytics that is exempt from consent. No advertising or retargeting trackers are set. If a non-essential tracker is added, a consent banner will be shown before anything is set, with a way to refuse as easy as to accept.",
+  "Comment les supprimer : la déconnexion efface la session ; efface les cookies et données de site dans les réglages de ton navigateur ; ou utilise le mode navigation privée. Le blocage des stockages techniques peut empêcher la connexion et la mémorisation de tes filtres. Pour toute question ou pour exercer tes droits, écris-nous ou adresse une réclamation à la CNIL (cnil.fr).":
+    "How to delete them: signing out clears the session; clear cookies and site data in your browser settings; or use private browsing. Blocking technical storage may prevent sign-in and remembered filters. For any question or to exercise your rights, contact us or lodge a complaint with the CNIL (cnil.fr).",
   "Contacte-nous": "Contact us",
-
   // ── terms (short page) ───────────────────────────────────────────────────
-  "Les règles du jeu, en langage simple. Dernière mise à jour : septembre 2026.":
-    "The rules, in plain language. Last updated: September 2026.",
+  "Les règles du jeu, en langage simple. Dernière mise à jour : 3 novembre 2026.":
+    "The rules, in plain language. Last updated: 3 November 2026.",
+  "Les règles du jeu, en clair : ce que tu acceptes en créant ton compte et comment SWIVV fonctionne.":
+    "The rules in plain words: what you accept when you create an account and how SWIVV works.",
+  "Le cadre du service : gratuité actuelle, responsabilités et règles prévues pour les services payants à venir.":
+    "The service framework: free today, responsibilities, and the rules planned for future paid services.",
+  "Ce document juridique est fourni en français ; la version française fait foi.":
+    "This legal document is provided in French; the French version prevails.",
+  "La politique détaillée ci-dessous est fournie en français ; la version française fait foi.":
+    "The detailed policy below is provided in French; the French version prevails.",
+  "Conditions générales d'utilisation — texte intégral": "Terms of use — full text",
+  "Voir aussi :": "See also:",
+  "cookies": "cookies",
+  "CGV": "Sales terms",
+  "mentions légales": "legal notice",
+  "Mentions légales": "Legal notice",
+  "Éditeur, hébergeur, propriété intellectuelle, signalements et litiges : l'essentiel en un coup d'œil.":
+    "Publisher, host, intellectual property, reports and disputes: the essentials at a glance.",
+  "6. Contact et recours":
+    "6. Contact and appeals",
+  "Pour toute question, réclamation ou contestation d'une décision de modération, écris-nous via la page contact. Le texte intégral ci-dessous fait foi et détaille notamment les droits prévus par le DSA pour les membres de l'Union européenne.":
+    "For any question, complaint or appeal against a moderation decision, contact us via the contact page. The full text below prevails and details in particular the rights provided by the DSA for users in the European Union.",
   "1. Le service": "1. The service",
   "SWIVV est un site de rencontres : profils, likes, matchs et messagerie privée. Tout est gratuit, sans carte bancaire, sans abonnement. Il faut avoir 18 ans ou plus pour s'inscrire.":
     "SWIVV is a dating site: profiles, likes, matches and private messaging. Everything is free — no card, no subscription. You must be 18 or older to sign up.",
@@ -198,8 +249,8 @@ export const en = {
   "Arnaques, demandes d'argent, faux profils et comportements abusifs entraînent un bannissement immédiat et définitif. Signale tout abus via la page contact.":
     "Scams, money requests, fake profiles and abusive behaviour lead to an immediate, permanent ban. Report any abuse via the contact page.",
   "4. Rencontres réelles : prudence": "4. Real-life dates: be careful",
-  "SWIVV ne vérifie pas l'identité de chaque membre dans la vie réelle. Pour un premier rendez-vous : lieu public, durée limitée, préviens un proche. Tu restes responsable de ta sécurité.":
-    "SWIVV does not verify every member's real-world identity. For a first date: public place, limited time, tell someone close to you. You remain responsible for your own safety.",
+  "SWIVV ne vérifie pas l'identité de chaque membre dans la vie réelle. Le badge Identité confirme qu'une pièce officielle correspond à tes photos, mais ne constitue pas une preuve légale d'identité ; la pièce n'est conservée que le temps de la décision, puis supprimée. Pour un premier rendez-vous : lieu public, durée limitée, préviens un proche. Tu restes responsable de ta sécurité.":
+    "SWIVV does not verify every member's real-world identity. The Identity badge confirms that an official document matches your photos, but is not legal proof of identity; the document is kept only until the decision, then deleted. For a first date: public place, limited time, tell someone close to you. You remain responsible for your own safety.",
   "5. Données et suppression": "5. Data and deletion",
   "Tes données servent uniquement au fonctionnement du service (profils, compatibilité, modération). Tu peux exporter ou supprimer tes données à tout moment, et supprimer ton compte en 1 clic.":
     "Your data is used only to run the service (profiles, compatibility, moderation). You can export or delete your data at any time, and delete your account in one click.",
@@ -208,7 +259,6 @@ export const en = {
     "For any question about these terms, write to us via the contact page. Full detailed version: see the terms of use.",
   "Données et confidentialité :": "Data and privacy:",
   "centre de confidentialité": "privacy center",
-
   // ── photo guide ──────────────────────────────────────────────────────────
   "Photo acceptée": "Photo approved",
   "Photo refusée": "Photo rejected",
@@ -253,7 +303,14 @@ export const en = {
   "avant de publier.": "before posting.",
   "Vérifier mes photos avec un selfie": "Verify my photos with a selfie",
   "Modifier mes photos": "Edit my photos",
-
+  "Badge Identité": "Identity badge",
+  "En plus du badge photos, tu peux vérifier ton identité avec une pièce officielle. La comparaison du visage se fait dans ton navigateur : si elle correspond, aucune pièce n'est envoyée ni stockée. En cas de doute, la pièce est conservée en privé pour la modération et supprimée dès la décision.":
+    "As well as the photo badge, you can verify your identity with an official document. The face comparison runs in your browser: if it matches, no document is sent or stored. If in doubt, the document is kept privately for moderation and deleted as soon as a decision is made.",
+  "Vérifier mon identité": "Verify my identity",
+  "Vérifier mon profil": "Verify my profile",
+  "Badges Photos et Identité : comment ça marche et quelles données sont conservées.":
+    "Photo and Identity badges: how they work and what data is kept.",
+  "Question sur la vérification d'identité": "Question about identity verification",
   // ── testimonial ──────────────────────────────────────────────────────────
   "Partager votre témoignage": "Share your story",
   "Vous vous êtes dit oui grâce à SWIVV ? Racontez votre histoire, elle inspirera les prochains couples.":
@@ -270,7 +327,6 @@ export const en = {
   "Photo de couple {n}": "Couple photo {n}",
   "Retirer la photo {n}": "Remove photo {n}",
   "Envoyer notre témoignage": "Send our story",
-
   // ── blog index ───────────────────────────────────────────────────────────
   "Le blog SWIVV": "The SWIVV blog",
   "Conseils rencontres, mariage, idées de sorties et témoignages de couples.":
@@ -278,7 +334,6 @@ export const en = {
   "Rechercher un article…": "Search for an article.",
   "Rechercher un article": "Search for an article",
   "Aucun article trouvé.": "No articles found.",
-
   // ── verification ─────────────────────────────────────────────────────────
   "Vérifie ton profil": "Verify your profile",
   "Prends un selfie : on le compare à ta photo de profil, sur ton appareil uniquement. Rien n'est envoyé ni stocké.":
@@ -309,7 +364,39 @@ export const en = {
     "That's you! Your profile now shows the verified badge.",
   "Ce selfie ne correspond à aucune de tes photos. Si c'est bien toi aujourd'hui, utilise-le comme nouvelle photo de profil.":
     "This selfie doesn't match any of your photos. If this is really you today, use it as your new profile photo.",
-
+  "Vérification d'identité": "Identity verification",
+  "Prends ta pièce d'identité en photo : le visage est comparé à tes photos directement sur ton appareil. Le document n'est envoyé que si un contrôle humain est nécessaire.":
+    "Take a photo of your ID: the portrait is compared with your photos directly on your device. The document is only uploaded if a human review is needed.",
+  "Identité vérifiée — le badge est actif sur ton profil.":
+    "Identity verified — the badge is now active on your profile.",
+  "Pièce reçue — l'équipe l'examine sous 48 h. Aucun document n'est conservé après la décision.":
+    "Document received — the team reviews it within 48 hours. Nothing is kept after the decision.",
+  "Pièce refusée": "Document rejected",
+  "Tu peux réessayer avec une photo plus nette.": "You can try again with a sharper photo.",
+  "Contrôle automatique…": "Automatic check…",
+  "Prendre ma pièce en photo": "Take a photo of my ID",
+  "Vérifie d'abord tes photos ci-dessus.": "Verify your photos above first.",
+  "Aucune donnée de la pièce n'est conservée : elle est supprimée après la décision, seuls le badge et sa date restent.":
+    "No data from the document is kept: it is deleted after the decision, only the badge and its date remain.",
+  "Identité vérifiée": "Identity verified",
+  "Image trop lourde (8 Mo max).": "Image too large (8 MB max).",
+  "Envoi impossible. Réessaie.": "Upload failed. Try again.",
+  "Retour": "Back",
+  "Retour au site": "Back to the site",
+  "Continuer": "Continue",
+  "Capturer": "Capture",
+  "Ton selfie": "Your selfie",
+  "Prendre un selfie": "Take a selfie",
+  "Reprendre le selfie": "Retake the selfie",
+  "Changer de photo de référence": "Change the reference photo",
+  "Utiliser ce selfie comme photo de profil": "Use this selfie as my profile photo",
+  "Résultat par photo": "Result per photo",
+  "Trouve un endroit bien éclairé": "Find an area with good lighting",
+  "Évite les reflets et les ombres": "Avoid glare or shadows",
+  "Garde tout ton visage dans le cadre": "Keep your whole face in the frame",
+  "Assure-toi que les quatre coins sont visibles": "Make sure all four corners are visible",
+  "La comparaison se fait sur ton appareil. Aucune photo n'est envoyée ni conservée.":
+    "The comparison runs on your device. No photo is sent or kept.",
   // ── faq ──────────────────────────────────────────────────────────────────
   "Inscription & compte": "Sign-up & account",
   "Matching & messages": "Matching & messages",
@@ -323,6 +410,13 @@ export const en = {
   "Que veut dire le score de compatibilité ?": "What does the compatibility score mean?",
   "Je n'ai pas de réponse à mon message, que faire ?": "I got no reply to my message — what should I do?",
   "Puis-je discuter avant un match ?": "Can I chat before a match?",
+  "Comment envoyer une demande de connexion ?": "How do I send a connection request?",
+  "Oui. Créer ton profil, parcourir les profils, liker et matcher est gratuit et sans limite. Envoyer une demande de connexion et discuter avec les membres qui l'acceptent est gratuit aussi.":
+    "Yes. Creating your profile, browsing profiles, liking and matching is free and unlimited. Sending a connection request and chatting with members who accept it is free too.",
+  "Oui, grâce à la demande de connexion : tu peux contacter n'importe quel membre en lui envoyant un premier message. S'il accepte, les messages texte s'ouvrent. Les vocaux et les pièces jointes restent désactivés par défaut : l'autre membre peut les autoriser, et chacun peut les révoquer à tout moment.":
+    "Yes, through a connection request: you can contact any member by sending a first message. If they accept, text messages open. Voice notes and attachments stay off by default: the other member can allow them, and either side can revoke them at any time.",
+  "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser. Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée.":
+    "On a member's profile, click \"Message\", write a first message (500 characters max) then \"Send request\". The member receives it in Messages and can accept or decline it. After a decline you can try again after 7 days. A mutual match does not unlock the conversation: an accepted request is still required.",
   "SWIVV convient-il pour trouver un mariage ?": "Is SWIVV suitable for finding a marriage?",
   "Puis-je impliquer ma famille ?": "Can I involve my family?",
   "Comment reconnaître un faux profil ?": "How do I spot a fake profile?",
@@ -341,6 +435,22 @@ export const en = {
   "SWIVV n'accepte que les vraies photos : ni dessins, ni illustrations, ni photos de célébrités. Ajoute des photos réelles et récentes pour être validé. Les erreurs les plus fréquentes sont listées":
     "SWIVV only accepts real photos: no drawings, illustrations or celebrity photos. Add real, recent photos to get approved. The most common mistakes are listed",
   "dans cet article": "in this article",
+  "Tu likes les profils qui te plaisent. Quand l'intérêt est réciproque, cela devient un match : les deux membres reçoivent une notification et une annonce à l'écran. Pour discuter, envoie une demande de connexion : les messages texte s'ouvrent quand elle est acceptée, puis l'autre membre peut autoriser les vocaux et les pièces jointes. Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
+    "You like the profiles you fancy. When the interest is mutual it becomes a match: both members get a notification and an on-screen announcement. To chat, send a connection request: text messages open once it is accepted, then the other member can allow voice notes and attachments. Each profile shows a compatibility score based on city, age, interests, religion and intentions.",
+  "Tu likes les profils qui te plaisent. Quand l'intérêt est réciproque, cela devient un match : les deux membres reçoivent une notification et une annonce à l'écran. Pour discuter, envoie une demande de connexion : l'autre membre choisit alors ce qu'il autorise (messages texte, vocaux et pièces jointes). Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
+    "You like the profiles you fancy. When the interest is mutual it becomes a match: both members get a notification and an on-screen announcement. To chat, send a connection request: the other member then chooses what to allow (text messages, voice notes and attachments). Each profile shows a compatibility score based on city, age, interests, religion and intentions.",
+  "Oui, grâce à la demande de connexion : tu peux contacter n'importe quel membre en lui envoyant un premier message. S'il accepte, il choisit aussi ce qu'il autorise : messages texte, vocaux et pièces jointes. Tout reste désactivé par défaut et peut être révoqué à tout moment.":
+    "Yes, through a connection request: you can contact any member by sending a first message. If they accept, they also choose what to allow: text messages, voice notes and attachments. Everything stays off by default and can be revoked at any time.",
+  "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser, en choisissant les communications qu'il autorise (texte, vocaux, pièces jointes). Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée.":
+    "On a member's profile, click \"Message\", write a first message (500 characters max) then \"Send request\". The member receives it in Messages and can accept or decline it, choosing which communications to allow (text, voice notes, attachments). After a decline you can try again after 7 days. A mutual match does not unlock the conversation: an accepted request is still required.",
+  "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser, en choisissant les communications qu'il autorise (texte, vocaux, pièces jointes). Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée. Dès qu'il répond, une fenêtre s'affiche sur ton écran, où que tu sois sur le site, avec sa décision et les fonctionnalités qu'il a autorisées.":
+    "On a member's profile, click \"Message\", write a first message (500 characters max) then \"Send request\". The member receives it in Messages and can accept or decline it, choosing which communications to allow (text, voice notes, attachments). After a decline you can try again after 7 days. A mutual match does not unlock the conversation: an accepted request is still required. As soon as they answer, a popup appears on your screen, wherever you are on the site, with their decision and the features they allowed.",
+  "Like les profils qui te plaisent. Quand l'intérêt est réciproque, un match est annoncé aux deux membres par une notification et un message à l'écran. Pour discuter, envoie une demande de connexion : le texte, les vocaux et les pièces jointes ne s'ouvrent qu'après acceptation, chaque option devant être autorisée par l'autre membre.":
+    "Like the profiles you fancy. When the interest is mutual, both members are notified of the match with a notification and an on-screen message. To chat, send a connection request: text, voice notes and attachments only open after acceptance, and each option must be allowed by the other member.",
+  "Le texte, les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit ce qu'il autorise. Chaque permission peut être révoquée à tout moment.":
+    "Text, voice notes and attachments do not open automatically, even between matches: send a connection request, then the other member chooses what to allow. Each permission can be revoked at any time.",
+  "Le texte, les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit ce qu'il autorise. Chaque permission peut être révoquée à tout moment. Quand l'autre membre répond, une fenêtre t'annonce sa décision et les fonctionnalités qu'il a autorisées, où que tu sois sur le site.":
+    "Text, voice notes and attachments do not open automatically, even between matches: send a connection request, then the other member chooses what to allow. Each permission can be revoked at any time. When the other member answers, a popup tells you their decision and the features they allowed, wherever you are on the site.",
   "Tu likes les profils qui te plaisent et tu peux déjà leur écrire. Quand l'intérêt est réciproque, cela devient un match et les vocaux et les photos se débloquent. Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
     "You like the profiles you fancy and you can already message them. When the interest is mutual it becomes a match, and voice notes and photos unlock. Each profile shows a compatibility score based on city, age, interests, religion and intentions.",
   "Comprendre le matching": "Understanding matching",
@@ -360,7 +470,13 @@ export const en = {
     "Of course. After a few conversations to check compatibility, you can introduce the person to your family before going further. It is even recommended for a marriage project.",
   "Méfie-toi des photos trop parfaites sans vie quotidienne, des bios vides, des demandes rapides de changer d'application et surtout de toute demande d'argent. Les 8 signaux d'alerte sont détaillés":
     "Be wary of overly perfect photos with no everyday life, empty bios, quick requests to switch apps and above all any request for money. The 8 warning signs are detailed",
-  ". Privilégie les profils avec le badge vérifié.": ". Favour profiles with the verified badge.",
+  ". Privilégie les profils avec le badge Photos vérifiées ou Identité vérifiée.":
+    ". Favour profiles with the Photos verified or Identity verified badge.",
+  "Comment vérifier mon identité et que devient ma pièce ?":
+    "How do I verify my identity and what happens to my ID?",
+  "Prends une photo de ta pièce d'identité depuis la page Vérification : le visage est comparé à tes photos dans ton navigateur. S'il correspond, le badge Identité s'affiche tout de suite et la pièce n'est ni envoyée ni conservée. En cas de doute, elle part dans un espace privé réservé à la modération, puis est supprimée dès la décision. Seuls le badge et sa date restent ; aucune donnée de la pièce n'est conservée.":
+    "Take a photo of your ID from the Verification page: the face is compared with your photos in your browser. If it matches, the Identity badge appears immediately and the document is neither sent nor stored. If in doubt, it goes to a private space reserved for moderation and is deleted as soon as a decision is made. Only the badge and its date remain; no data from the document is kept.",
+  "Détails dans le centre de confidentialité": "Details in the privacy centre",
   "Sur chaque profil et chaque conversation, utilise le bouton de signalement, ou":
     "On every profile and every conversation, use the report button, or",
   "écris-nous via la page contact": "write to us via the contact page",
@@ -382,10 +498,9 @@ export const en = {
   "Toujours bloqué ?": "Still stuck?",
   "L'équipe SWIVV répond en général sous 1 à 2 jours ouvrés.":
     "The SWIVV team usually replies within 1 to 2 working days.",
-
   // ── how it works ─────────────────────────────────────────────────────────
-  "Inscription, profil, photos, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.":
-    "Sign-up, profile, photos, matching, safety and progress tracking: everything you need to start well on SWIVV and make great connections with confidence.",
+  "Inscription, profil, photos, vérification d'identité, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.":
+    "Sign-up, profile, photos, identity verification, matching, safety and progress tracking: everything you need to start well on SWIVV and make great connections with confidence.",
   "Voir les profils": "Browse profiles",
   "Créer mon profil gratuit": "Create my free profile",
   "1. Compte en 2 minutes, profil à ton rythme": "1. An account in 2 minutes, a profile at your pace",
@@ -446,6 +561,22 @@ export const en = {
     "Swipe, discover, like: you browse selected profiles, you like the ones you fancy, and some become matches.",
   "Parcours les profils par ville, âge, intention et centres d'intérêt.":
     "Browse profiles by city, age, intention and interests.",
+  "Like les profils qui te plaisent. Quand l'intérêt est réciproque, un match est annoncé aux deux membres par une notification et un message à l'écran. Pour discuter, envoie une demande de connexion : les textes, vocaux et pièces jointes ne s'ouvrent qu'après acceptation.":
+    "Like the profiles you fancy. When the interest is mutual, both members are notified of the match with a notification and an on-screen message. To chat, send a connection request: text, voice notes and attachments only open after acceptance.",
+  "Les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit d'autoriser les vocaux et les fichiers. Les textes sont inclus dès l'acceptation, et chaque autorisation peut être révoquée à tout moment.":
+    "Voice notes and attachments do not open automatically, even between matches: send a connection request, then the other member chooses whether to allow voice notes and files. Text is included from acceptance, and each permission can be revoked at any time.",
+  "Réagir compte aussi comme un like : ton intérêt est transmis au membre. S'il te like ou réagit en retour, vous êtes en match et vous recevez une notification. Pour discuter, envoyez-vous une demande de connexion.":
+    "Reacting also counts as a like: your interest reaches the member. If they like or react back, you match and both get a notification. To chat, send each other a connection request.",
+  "Match mutuel — envoie une demande de connexion pour discuter.": "Mutual match — send a connection request to chat.",
+  "Choisis ce que tu autorises :": "Choose what you allow:",
+  "Texte": "Text",
+  "Autoriser": "Allow",
+  "Fonctionnalités autorisées": "Allowed features",
+  "Les messages texte ne sont pas encore autorisés. Active-les ci-dessus.": "Text messages are not allowed yet. Enable them above.",
+  "Les messages texte ne sont pas encore autorisés par ce membre.": "Text messages are not allowed by this member yet.",
+  "Les messages texte ne sont pas encore autorisés. Autorise-les pour discuter.": "Text messages are not allowed yet. Allow them to chat.",
+  "Les messages texte ne sont pas encore autorisés par {name}.": "Text messages are not allowed by {name} yet.",
+  "Autoriser les messages texte": "Allow text messages",
   "Like les profils qui te plaisent et écris-leur librement. Quand l'intérêt est réciproque, cela devient un match et les vocaux et les photos se débloquent.":
     "Like the profiles you fancy and write to them freely. When the interest is mutual it becomes a match, and voice notes and photos unlock.",
   "Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
@@ -464,6 +595,7 @@ export const en = {
   "Fais confiance à ton instinct : un malaise suffit à écourter ou annuler, sans justification.":
     "Trust your instinct: feeling uncomfortable is enough to cut it short or cancel, no justification needed.",
   "8. Messages vocaux et envoi d'images": "8. Voice notes and image sharing",
+  "8. Messages texte, vocaux et envoi d'images": "8. Text, voice and image messages",
   "Les vocaux et les images se débloquent avec un match : tu dois liker et être liké(e) en retour. Tant que ce n'est pas réciproque, seuls les messages écrits sont possibles. Pour parler de vive voix, échange ton numéro quand tu es prêt(e).":
     "Voice notes and images unlock with a match: you must like and be liked back. Until it is mutual, only written messages are possible. To talk out loud, swap numbers when you are ready.",
   "Messages vocaux : dans la conversation (popup sur le profil ou page Messages), touche le micro pour enregistrer, ■ pour envoyer, ✕ pour annuler. Tes vocaux sont écoutables des deux côtés, sur téléphone comme sur ordinateur.":
@@ -534,7 +666,21 @@ export const en = {
     "No image is sent to the server for the comparison: only the verified badge is saved.",
   "Photos trop anciennes, floues ou retouchées : la comparaison peut échouer, même si c'est bien toi.":
     "Photos too old, blurry or edited: the comparison may fail, even if it really is you.",
-
+  "13. Vérifier ton identité (badge Identité)": "13. Verify your identity (Identity badge)",
+  "En plus du badge photos, tu peux obtenir le badge Identité : il confirme qu'une pièce d'identité avec photo correspond à ton profil. La comparaison du visage se fait dans ton navigateur.":
+    "As well as the photo badge, you can earn the Identity badge: it confirms that a photo ID matches your profile. The face comparison runs in your browser.",
+  "Depuis la page Vérification, prends en photo ta pièce d'identité (recto, portrait visible). Le visage est comparé à tes photos de profil directement sur ton appareil.":
+    "From the Verification page, take a photo of your ID (front, portrait visible). The face is compared with your profile photos directly on your device.",
+  "Si le visage correspond, le badge Identité s'affiche immédiatement : aucune pièce n'est envoyée ni conservée.":
+    "If the face matches, the Identity badge appears immediately: no document is sent or stored.",
+  "Si le contrôle automatique est douteux (photo floue, portrait peu visible), la pièce est envoyée dans un espace privé réservé à la modération, le temps de la décision.":
+    "If the automatic check is doubtful (blurry photo, portrait hard to see), the document is sent to a private space reserved for moderation while a decision is made.",
+  "La pièce est supprimée dès la décision, validée ou refusée. Seuls le badge, sa date et le motif de la décision restent enregistrés.":
+    "The document is deleted as soon as the decision is made, approved or rejected. Only the badge, its date and the decision reason are kept.",
+  "Aucune donnée lisible sur la pièce (numéro, date de naissance, adresse) n'est extraite ni conservée, et la pièce n'est jamais partagée avec les autres membres.":
+    "No readable data from the document (number, date of birth, address) is extracted or stored, and the document is never shared with other members.",
+  "Le badge Identité est un signal de confiance, pas une preuve légale d'identité : reste prudent lors des rencontres.":
+    "The Identity badge is a trust signal, not legal proof of identity: stay careful when meeting.",
   // ── contact ──────────────────────────────────────────────────────────────
   Contact: "Contact",
   "Parlons-nous": "Let's talk",
@@ -641,10 +787,30 @@ export const en = {
   "SWIVV Swipe": "SWIVV Swipe",
   "Je transmets aux humains ! Utilise le formulaire ci-dessous, l'équipe SWIVV répond en général sous 1 à 2 jours ouvrés.":
     "Passing you to the humans! Use the form below — the SWIVV team usually replies within 1 to 2 working days.",
-
   // ── terms of sale (CGV) ──────────────────────────────────────────────────
   "Conditions Générales de Vente et de Services — SWIVV": "Terms of Sale and Service — SWIVV",
-  "Dernière mise à jour : 22 septembre 2026.": "Last updated: 22 September 2026.",
+  "Dernière mise à jour : 3 novembre 2026.": "Last updated: 3 November 2026.",
+  "17. ÉDITEUR, HÉBERGEUR ET MENTIONS LÉGALES": "17. PUBLISHER, HOST AND LEGAL NOTICE",
+  "Éditeur du service : SWIVV MATCH — 10 Rue Thureau Dangin, 75015 Paris, France — Téléphone : +33 (0)6 60 36 82 20 — contact@swivvmatch.com.":
+    "Service publisher: SWIVV MATCH — 10 Rue Thureau Dangin, 75015 Paris, France — Phone: +33 (0)6 60 36 82 20 — contact@swivvmatch.com.",
+  "Hébergeur : Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis — vercel.com.":
+    "Host: Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, USA — vercel.com.",
+  "Ces informations sont également publiées sur la page Mentions légales.":
+    "This information is also published on the Legal notice page.",
+  "18. MÉDIATEUR DE LA CONSOMMATION": "18. CONSUMER MEDIATOR",
+  "Pendant la phase actuelle, entièrement gratuite, SWIVV ne conclut aucune vente avec les utilisateurs : la médiation de la consommation n'est donc pas applicable.":
+    "During the current, entirely free phase, SWIVV concludes no sale with users: consumer mediation therefore does not apply.",
+  "Avant la mise en place de tout service payant, SWIVV désignera un médiateur de la consommation conformément à l'article L612-1 du Code de la consommation et publiera ses coordonnées sur cette page ainsi que sur la page Mentions légales.":
+    "Before launching any paid service, SWIVV will appoint a consumer mediator in accordance with article L612-1 of the French Consumer Code and publish their contact details on this page and on the Legal notice page.",
+  "En cas de réclamation, l'utilisateur est invité à contacter SWIVV en priorité via la page contact afin de rechercher une solution amiable.":
+    "In the event of a complaint, users are invited to contact SWIVV first via the contact page to seek an amicable solution.",
+  "19. DROIT DE RÉTRACTATION ET RÉSILIATION (SERVICES PAYANTS À VENIR)": "19. RIGHT OF WITHDRAWAL AND CANCELLATION (FUTURE PAID SERVICES)",
+  "Aucun service payant n'étant proposé actuellement, aucun droit de rétractation ni abonnement n'est applicable à ce jour.":
+    "As no paid service is currently offered, no right of withdrawal or subscription applies at this time.",
+  "Lorsque des services payants seront proposés, l'utilisateur consommateur disposera d'un délai de 14 jours pour se rétracter, sauf renoncement express à ce droit en cas d'accès immédiat au service numérique, conformément à la réglementation applicable.":
+    "When paid services are offered, consumer users will have 14 days to withdraw, unless they expressly waive that right for immediate access to the digital service, in accordance with applicable regulations.",
+  "Les abonnements payants, s'ils sont mis en place, pourront être résiliés en ligne à tout moment, sans frais, au moyen d'une procédure simple et accessible. Les modalités de renouvellement, de résiliation et de remboursement seront communiquées avant toute souscription.":
+    "Paid subscriptions, if introduced, may be cancelled online at any time, free of charge, through a simple and accessible process. Renewal, cancellation and refund terms will be provided before any subscription.",
   "Bienvenue sur SWIVV, une plateforme de rencontre et de mise en relation permettant aux personnes majeures de découvrir d'autres utilisateurs, d'échanger et de faire de nouvelles rencontres.":
     "Welcome to SWIVV, a dating and connection platform that lets adults discover other users, chat and make new connections.",
   "Les présentes Conditions Générales de Vente et de Services (« CGV ») définissent les conditions applicables aux services proposés par SWIVV.":
@@ -655,6 +821,7 @@ export const en = {
   "Le service est exploité sous le nom :": "The service is operated under the name:",
   "Adresse : 10 Rue Thureau Dangin — 75015 Paris — France.": "Address: 10 Rue Thureau Dangin — 75015 Paris — France.",
   "Téléphone : +33 (0)6 60 36 82 20.": "Phone: +33 (0)6 60 36 82 20.",
+  "E-mail : contact@swivvmatch.com.": "Email: contact@swivvmatch.com.",
   "SWIVV est actuellement lancé sous la forme d'un MVP (Minimum Viable Product).":
     "SWIVV is currently launched as an MVP (Minimum Viable Product).",
   "2. SERVICE GRATUIT": "2. FREE SERVICE",
@@ -760,9 +927,8 @@ export const en = {
   "16. CONTACT": "16. CONTACT",
   "Pour toute question concernant les présentes conditions ou le fonctionnement de SWIVV :":
     "For any question about these Terms or how SWIVV works:",
-  "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20.":
-    "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Phone: +33 (0)6 60 36 82 20.",
-
+  "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20 — E-mail : contact@swivvmatch.com.":
+    "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Phone: +33 (0)6 60 36 82 20 — Email: contact@swivvmatch.com.",
   // ── privacy centre ───────────────────────────────────────────────────────
   "Tes données t'appartiennent. Voici ce que SWIVV collecte, pourquoi, et comment reprendre le contrôle.":
     "Your data belongs to you. Here is what SWIVV collects, why, and how to take back control.",
@@ -781,7 +947,6 @@ export const en = {
   "Généré !": "Generated!",
   "Télécharger en PDF": "Download as PDF",
   "Connecte-toi pour télécharger tes données": "Sign in to download your data",
-  "Format JSON": "JSON format",
   "Aller aux Paramètres": "Go to Settings",
   "En résumé": "In short",
   "Pas de publicité ciblée avec tes données de rencontres.":
@@ -801,20 +966,23 @@ export const en = {
   "Ton profil public (photos, prénom, âge, ville, bio) est visible par les membres connectés uniquement. Ton e-mail, ta position exacte et tes signalements restent strictement privés. Seule ta ville et une distance approximative en km sont affichées.":
     "Your public profile (photos, first name, age, city, bio) is visible to signed-in members only. Your email, exact location and reports stay strictly private. Only your city and an approximate distance in km are shown.",
   "4. Conservation": "4. Retention",
-  "Tes données sont conservées tant que ton compte est actif. Après suppression du compte, ton profil public, tes photos et tes conversations sont effacés, sous réserve des durées légales (ex. journaux de modération en cas d'abus).":
-    "Your data is kept for as long as your account is active. After the account is deleted, your public profile, photos and conversations are erased, subject to legal retention periods (e.g. moderation logs in the event of abuse).",
-  "5. Tes droits": "5. Your rights",
+  "Tes données sont conservées tant que ton compte est actif. Les messages sont conservés 3 mois, lus ou non. Après suppression du compte, ton profil public, tes photos et tes conversations sont effacés, sous réserve des durées légales (ex. journaux de modération en cas d'abus).":
+    "Your data is kept for as long as your account is active. Messages are kept for 3 months, read or not. After the account is deleted, your public profile, photos and conversations are erased, subject to legal retention periods (e.g. moderation logs in the event of abuse).",
+  "5. Vérification d'identité": "5. Identity verification",
+  "Le badge Identité atteste qu'une pièce d'identité avec photo correspond à tes photos de profil. Le contrôle du visage est réalisé dans ton navigateur : si le visage correspond, aucune pièce n'est envoyée ni stockée. En cas de doute, la photo de la pièce est transmise dans un espace de stockage privé, accessible uniquement à l'équipe de modération, puis supprimée dès la décision (validation ou refus). Aucune donnée lisible sur la pièce (numéro, date de naissance, adresse) n'est extraite ni conservée. Seuls le badge, sa date et le motif de la décision restent enregistrés. La pièce n'est jamais visible par les autres membres et n'est jamais utilisée à d'autres fins.":
+    "The Identity badge certifies that a photo ID matches your profile photos. The face check is performed in your browser: if the face matches, no document is sent or stored. If in doubt, the document photo is transferred to a private storage space, accessible only to the moderation team, then deleted as soon as the decision is made (approved or rejected). No readable data from the document (number, date of birth, address) is extracted or kept. Only the badge, its date and the decision reason remain stored. The document is never visible to other members and is never used for any other purpose.",
+  "6. Tes droits": "6. Your rights",
   "Accès, rectification, export, suppression : écris-nous via la page contact en précisant ta demande et l'e-mail de ton compte. Réponse sous 30 jours. Tu peux aussi supprimer ton compte toi-même en 1 clic depuis ton profil.":
     "Access, correction, export, deletion: write to us via the contact page stating your request and your account email. Reply within 30 days. You can also delete your account yourself in one click from your profile.",
-  "6. Cookies": "6. Cookies",
+  "7. Cookies": "7. Cookies",
   "SWIVV utilise uniquement des cookies techniques (session, préférences, sécurité). Aucun cookie publicitaire. Détails sur la page cookies.":
     "SWIVV only uses technical cookies (session, preferences, security). No advertising cookies. Details on the cookies page.",
-  "7. Sécurité": "7. Security",
+  "8. Sécurité": "8. Security",
   "Connexions chiffrées, mots de passe jamais stockés en clair, accès internes limités. En cas de faille avérée, les membres concernés sont informés conformément à la réglementation.":
     "Encrypted connections, passwords never stored in plain text, limited internal access. In the event of a confirmed breach, affected members are informed in accordance with the regulations.",
-  "8. Contact": "8. Contact",
-  "Pour exercer tes droits ou poser une question : page contact, objet « Supprimer mes données » ou « Question confidentialité ».":
-    "To exercise your rights or ask a question: contact page, subject \"Delete my data\" or \"Privacy question\".",
+  "9. Contact": "9. Contact",
+  "Pour exercer tes droits ou poser une question : page contact, objet « Supprimer mes données ».":
+    "To exercise your rights or ask a question: contact page, subject \"Delete my data\".",
   "Mes données SWIVV": "My SWIVV data",
   "Mes données": "My data",
   "Exporté le {date}": "Exported on {date}",
@@ -838,7 +1006,6 @@ export const en = {
   Religion: "Religion",
   Langues: "Languages",
   "Centres d'intérêt": "Interests",
-
   // ── browse ───────────────────────────────────────────────────────────────
   Intention: "Looking for",
   Toutes: "All",
@@ -891,7 +1058,6 @@ export const en = {
   "Original(e)": "Original",
   "Relation amoureuse": "Romantic relationship",
   "Belle histoire": "Beautiful story",
-
   // ── blog ─────────────────────────────────────────────────────────────────
   Conseils: "Advice",
   Sorties: "Date ideas",
@@ -931,7 +1097,6 @@ export const en = {
   "Lien copié !": "Link copied!",
   Partager: "Share",
   "Articles similaires": "Similar articles",
-
   // ── my profile ───────────────────────────────────────────────────────────
   "Connexion perdue": "Connection lost",
   "Impossible de charger ton profil sans connexion. Tes données sont en sécurité — réessaie quand internet revient.":
@@ -951,7 +1116,6 @@ export const en = {
     "Tap My Matches to set up your perfect Swivv!",
   "Connecte-toi ou inscris-toi pour voir à quel point tu matches avec {name}.":
     "Sign in or sign up to see how well you match with {name}.",
-
   // ── profile fields / sections ────────────────────────────────────────────
   "Photos vérifiées": "Verified photos",
   Nouveau: "New",
@@ -1025,7 +1189,6 @@ export const en = {
   "Date de naissance": "Date of birth",
   Genre: "Gender",
   Nom: "Name",
-
   // ── access logs ──────────────────────────────────────────────────────────
   "Mon accès et mes relevés": "My access and statements",
   "Formule actuelle": "Current plan",
@@ -1047,7 +1210,6 @@ export const en = {
   "Si des options payantes voient le jour, elles feront l'objet de factures séparées.":
     "If paid options appear, they will be invoiced separately.",
   "Voir les conditions tarifaires (CGV)": "See the pricing terms (Terms of Sale)",
-
   // ── settings ─────────────────────────────────────────────────────────────
   "Connecte-toi pour gérer tes paramètres.": "Sign in to manage your settings.",
   Compte: "Account",
@@ -1099,7 +1261,6 @@ export const en = {
   "Ancien mot de passe incorrect.": "Current password is incorrect.",
   "Mot de passe mis à jour.": "Password updated.",
   "La suppression a échoué, réessaie dans un instant.": "Deletion failed, try again in a moment.",
-
   // ── notifications ────────────────────────────────────────────────────────
   "Non lues": "Unread",
   Messages: "Messages",
@@ -1146,7 +1307,6 @@ export const en = {
   "E-mails marketing": "Marketing emails",
   "Reçois occasionnellement nos nouveautés, conseils et offres SWIVV MATCH. Désinscription possible à tout moment ici.":
     "Occasionally receive our news, tips and SWIVV MATCH offers. You can unsubscribe here at any time.",
-
   // ── matches ──────────────────────────────────────────────────────────────
   "Connecte-toi pour découvrir tes matches.": "Sign in to discover your matches.",
   "Sélectionne tes critères puis sauvegarde : ils définissent ton % de compatibilité partout sur le site, et les profils correspondants s'affichent ci-dessous, meilleurs en premier.":
@@ -1189,7 +1349,6 @@ export const en = {
   "Déménagement accepté": "Willing to relocate",
   "Niveau d'études": "Education level",
   "L'essentiel": "The essentials",
-
   // ── swivv progress ───────────────────────────────────────────────────────
   "Succès débloqué : {name}": "Achievement unlocked: {name}",
   "{n} succès débloqués": "{n} achievements unlocked",
@@ -1290,7 +1449,6 @@ export const en = {
   "Le module de sensibilisation au respect et à la sécurité en ligne arrive bientôt.":
     "The online respect and safety awareness module is coming soon.",
   "Terminer le parcours respect et sécurité en ligne": "Complete the online respect and safety course",
-
   // ── messaging ────────────────────────────────────────────────────────────
   "Conversations ({total} · {unread} non lu{s})": "Conversations ({total} · {unread} unread)",
   "Les messages de plus de 3 mois sont supprimés automatiquement, lus ou non.":
@@ -1343,7 +1501,6 @@ export const en = {
   "Envoyer quand même": "Send anyway",
   "Voir profil de {name}": "View {name}'s profile",
   "Dis bonjour à {name} !": "Say hi to {name}!",
-
   // ── statistics ───────────────────────────────────────────────────────────
   "Connecte-toi pour voir tes statistiques.": "Sign in to see your statistics.",
   "Membre supprimé": "Deleted member",
@@ -1510,7 +1667,6 @@ export const en = {
   Amitié: "Friendship",
   "Mes Likes": "My Likes",
   "Profils likés": "Liked profiles",
-
   // ── notification templates (stored French copy) ──────────────────────────
   "Nouveau message": "New message",
   "Nouveau message vocal": "New voice message",
@@ -1742,6 +1898,64 @@ export const en = {
   "Ronde": "Curvy",
   "Corpulent": "Stocky",
   "Corpulente": "Stocky",
+  "Contacter {name}": "Contact {name}",
+  "Demande de connexion": "Connection request",
+  "Impossible de contacter ce membre pour le moment.": "You can't contact this member right now.",
+  "Demande envoyée": "Request sent",
+  "Nouvelle demande de connexion": "New connection request",
+  "En attente de sa réponse. Tu peux annuler tant qu'elle n'a pas répondu.": "Waiting for their answer. You can cancel until they reply.",
+  "Annuler la demande": "Cancel request",
+  "Accepter ou refuser dans Messages": "Accept or decline in Messages",
+  "Cette personne a refusé la demande. Tu pourras réessayer dans {n} jour(s).": "This person declined the request. You can try again in {n} day(s).",
+  "Présente-toi en quelques lignes…": "Introduce yourself in a few lines…",
+  "Ton premier message": "Your first message",
+  "Un seul message, lisible avant acceptation.": "One message only, readable before acceptance.",
+  "Envoyer la demande": "Send request",
+  "Demandes de connexion": "Connection requests",
+  "Membre SWIVV": "SWIVV member",
+  "Souhaites-tu te connecter avec cette personne ?": "Would you like to connect with this person?",
+  "Les messages texte sont inclus. Active ce que tu acceptes en plus :": "Text messages are included. Enable what you also accept:",
+  "Vocaux": "Voice notes",
+  "Pièces jointes": "Attachments",
+  "Autorisé": "Allowed",
+  "Refusé": "Declined",
+  "Refuser la demande": "Decline request",
+  "Accepter la demande": "Accept request",
+  "Texte activé": "Text enabled",
+  "Activé": "Enabled",
+  "Demandé": "Requested",
+  "Non autorisé": "Not allowed",
+  "Révoquer": "Revoke",
+  "Refuser": "Decline",
+  "Accepter": "Accept",
+  "Demander": "Request",
+  "Cette demande attend ta réponse ci-dessus.": "This request is waiting for your answer above.",
+  "Demande envoyée — en attente de sa réponse.": "Request sent — waiting for their answer.",
+  "Demande refusée. Tu pourras réessayer dans {n} jour(s).": "Request declined. You can try again in {n} day(s).",
+  "Envoie une demande de connexion depuis le profil pour commencer à discuter.": "Send a connection request from the profile to start chatting.",
+  "Choisir une pièce jointe": "Choose an attachment",
+  "Envoyer une pièce jointe": "Send an attachment",
+  "Envoyer cette pièce jointe ?": "Send this attachment?",
+  "Un seul fichier par message, 2 Mo max. Formats : JPG, PNG, WebP, PDF, TXT.": "One file per message, 2 MB max. Formats: JPG, PNG, WebP, PDF, TXT.",
+  "Aperçu de la pièce jointe": "Attachment preview",
+  "Retirer la pièce jointe": "Remove attachment",
+  "Envoi de la pièce jointe…": "Sending attachment…",
+  "1 pièce jointe par message, 2 Mo max : JPG, JPEG, PNG, WebP, PDF ou TXT. Les vocaux sont limités à 5 Mo. Les fichiers exécutables, scripts et archives sont refusés.": "1 attachment per message, 2 MB max: JPG, JPEG, PNG, WebP, PDF or TXT. Voice notes are capped at 5 MB. Executables, scripts and archives are refused.",
+  "Je certifie avoir 18 ans ou plus et que la date de naissance fournie est exacte. J'accepte les": "I confirm that I am at least 18 years old and that the date of birth I have provided is accurate. I accept the",
+  "SWIVV MATCH est exclusivement réservé aux adultes de 18 ans et plus.": "SWIVV MATCH is exclusively for adults aged 18 and over.",
+  "Désolé, SWIVV MATCH est réservé aux personnes de 18 ans et plus. Tu ne peux pas créer de compte pour le moment.": "Sorry, SWIVV MATCH is exclusively available to people aged 18 and over. You cannot create an account at this time.",
+  "Indique une date de naissance valide.": "Enter a valid date of birth.",
+  "Utilisateur suspecté d'être mineur": "Suspected underage user",
+  "Mot de passe oublié ?": "Forgot your password?",
+  "Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé.": "If an account exists for this email, a reset link has just been sent.",
+  "Impossible d'envoyer l'e-mail pour le moment.": "The email could not be sent right now.",
+  "Réinitialise ton mot de passe": "Reset your password",
+  "Choisis un nouveau mot de passe.": "Choose a new password.",
+  "Vérification du lien…": "Checking the link…",
+  "Ce lien de réinitialisation a expiré ou n'est pas valide.": "This reset link has expired or is not valid.",
+  "Demander un nouveau lien": "Request a new link",
+  "Impossible de mettre à jour le mot de passe. Demande un nouveau lien.": "The password could not be updated. Request a new link.",
+  "Ton nouveau mot de passe": "Your new password",
+  "Enregistrer": "Save",
 } as const;
-
 export type EnKey = keyof typeof en;

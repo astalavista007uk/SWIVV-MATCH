@@ -81,9 +81,9 @@ export function onboardingHelp(profiles: { user_id: string; data: any }[], days 
     .map((p) => ({ ref: p.user_id, label: `Onboarding : ${p.data?.name ?? p.user_id.slice(0, 8)}`, detail: "compte récent peu complété", severity: "info" as const }));
 }
 
-export function failedNotify(emailLog: { status: string; to?: string; created_at: string }[]): Suggestion[] {
+export function failedNotify(emailLog: { status: string; template?: string; created_at: string }[]): Suggestion[] {
   return emailLog
     .filter((e) => e.status === "failed")
     .slice(0, 50)
-    .map((e) => ({ ref: e.to ?? e.created_at, label: `Échec d'envoi ${e.to ? `à ${e.to}` : ""}`, detail: new Date(e.created_at).toLocaleString("fr-FR"), severity: "warning" as const }));
+    .map((e) => ({ ref: e.template ?? e.created_at, label: `Échec d'envoi${e.template ? ` (${e.template})` : ""}`, detail: new Date(e.created_at).toLocaleString("fr-FR"), severity: "warning" as const }));
 }

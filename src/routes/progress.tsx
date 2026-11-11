@@ -214,7 +214,7 @@ function ProgressPage() {
     return (
       <Shell>
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">{t("Connecte-toi pour voir ta progression.")}</p>
+          <p className="text-sm text-[#5c5c66]">{t("Connecte-toi pour voir ta progression.")}</p>
           <button
             type="button"
             onClick={() => openAuthModal("account", "signin")}
@@ -254,7 +254,7 @@ function ProgressPage() {
                 <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[#1b1b1e]">
                   {t("Ta progression")}
                 </h1>
-                <p className="mt-1 max-w-xl text-sm text-[#777]">
+                <p className="mt-1 max-w-xl text-sm text-[#5c5c66]">
                   {t("Des repères pour avancer à ton rythme, sans pression ni classement.")}
                 </p>
               </div>
@@ -276,7 +276,7 @@ function ProgressPage() {
               </div>
             )}
             {!data && !failed && (
-              <p className="mt-6 text-sm text-[#777]">{t("Chargement de ta progression…")}</p>
+              <p className="mt-6 text-sm text-[#5c5c66]">{t("Chargement de ta progression…")}</p>
             )}
 
             {data && (
@@ -316,7 +316,7 @@ function ProgressPage() {
                           </h2>
                           <p className="mt-2 text-3xl font-semibold text-[#1b1b1e]">
                             {run.current}{" "}
-                            <span className="text-base font-normal text-[#777]">
+                            <span className="text-base font-normal text-[#5c5c66]">
                               {run.current > 1 ? t("jours d'affilée") : t("jour d'affilée")}
                             </span>
                           </p>
@@ -335,7 +335,7 @@ function ProgressPage() {
                           const isToday = ord === dayOrdinal(now);
                           return (
                             <li key={ord} className="flex flex-col items-center gap-1.5">
-                              <span className="text-[11px] uppercase tracking-wide text-[#999]">
+                              <span className="text-[11px] uppercase tracking-wide text-[#6b6b73]">
                                 {ordLabel(ord)}
                               </span>
                               <span
@@ -391,7 +391,7 @@ function ProgressPage() {
                             aria-label={t("Profil complété à {pct} %", { pct: completion })}
                             className="h-2.5 bg-[#f1f2f4] [&>div]:bg-[#e60050]"
                           />
-                          <p className="mt-2 text-xs text-[#777]">
+                          <p className="mt-2 text-xs text-[#5c5c66]">
                             {t("Ce score mesure la complétude, pas ton attractivité.")}
                           </p>
                         </div>
@@ -399,7 +399,7 @@ function ProgressPage() {
                       <div className="mt-4 rounded-2xl bg-[#f7f7f8] p-3">
                         {step ? (
                           <>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-[#777]">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[#5c5c66]">
                               {t("Prochaine étape")}
                             </p>
                             <p className="mt-1 text-sm text-[#333]">{t("Compléter « {label} »", { label: t(step.label) })}</p>
@@ -434,7 +434,7 @@ function ProgressPage() {
                           aria-label={replies > 0 ? t("Objectif atteint") : t("Objectif non atteint")}
                           className="h-2.5 bg-[#f1f2f4] [&>div]:bg-[#e60050]"
                         />
-                        <p className="mt-2 text-xs text-[#777]">
+                        <p className="mt-2 text-xs text-[#5c5c66]">
                           {replies > 0
                             ? t("Objectif atteint : {n} conversations relancées cette semaine.", { n: replies })
                             : t("0 pour l'instant — une seule réponse suffit, sans envoi massif.")}
@@ -480,7 +480,7 @@ function ProgressPage() {
                           </span>
                         </li>
                       </ul>
-                      <p className="mt-3 text-xs text-[#999]">
+                      <p className="mt-3 text-xs text-[#6b6b73]">
                         Ces chiffres restent privés : ils ne sont visibles que par toi.
                       </p>
                     </Card>
@@ -491,7 +491,7 @@ function ProgressPage() {
                   <div className="flex flex-wrap items-end justify-between gap-2">
                     <div>
                       <h2 className="text-lg font-semibold text-[#1b1b1e]">{t("Succès")}</h2>
-                      <p className="text-sm text-[#777]">
+                      <p className="text-sm text-[#5c5c66]">
                         {t("{n} débloqués sur {total}. Chaque succès ne se débloque qu'une fois.", { n: unlocked.length, total: badges.filter((b) => b.available).length })}
                       </p>
                     </div>
@@ -521,7 +521,7 @@ function ProgressPage() {
                                 {t(b.name)}
                                 {!b.unlocked && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
                               </p>
-                              <p className="mt-1 text-xs text-[#777]">{t(b.description)}</p>
+                              <p className="mt-1 text-xs text-[#5c5c66]">{t(b.description)}</p>
                             </div>
                           </div>
                           <p className="mt-3 text-xs text-[#555]">
@@ -529,7 +529,7 @@ function ProgressPage() {
                             {t(b.condition)}
                           </p>
                           <p
-                            className={`mt-2 text-xs font-medium ${b.unlocked ? "text-[#16A34A]" : "text-[#999]"}`}
+                            className={`mt-2 text-xs font-medium ${b.unlocked ? "text-[#16A34A]" : "text-[#6b6b73]"}`}
                           >
                             {b.unlocked && b.at
                               ? t("Débloqué le {date}", { date: fmtDay(b.at) })
@@ -549,7 +549,7 @@ function ProgressPage() {
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div>
                       <h2 className="text-lg font-semibold text-[#1b1b1e]">{t("Statistiques privées")}</h2>
-                      <p className="text-sm text-[#777]">
+                      <p className="text-sm text-[#5c5c66]">
                         {t("Calculées sur tes propres données, jamais sur celles des autres membres.")}
                       </p>
                     </div>
@@ -629,11 +629,11 @@ function ProgressPage() {
                     stats.visits +
                     stats.activeDays ===
                     0 && (
-                    <div className="mt-4 rounded-2xl border border-dashed border-[#dcdcdf] bg-[#fafafa] p-4 text-sm text-[#777]">
+                    <div className="mt-4 rounded-2xl border border-dashed border-[#dcdcdf] bg-[#fafafa] p-4 text-sm text-[#5c5c66]">
                       {t("Aucune activité sur cette période. Un profil complété et un échange sincère suffisent à faire vivre ces chiffres — le volume n'est pas un objectif.")}
                     </div>
                   )}
-                  <p className="mt-4 text-xs text-[#999]">
+                  <p className="mt-4 text-xs text-[#6b6b73]">
                     {t("Les jours sont comptés en heure locale, du lundi au dimanche. Les visites de profil ne sont affichées que lorsqu'elles sont enregistrées par SWIVV MATCH.")}
                   </p>
                 </TabsContent>
@@ -683,7 +683,7 @@ function Tile({
   return (
     <div className="rounded-[18px] border border-[#ececee] bg-white p-4">
       {/* ponytail: CSS-only black hint mirroring MatchTooltip — hover only, tap users get the sr-only text; popover API if touch needs it */}
-      <p className="group relative flex items-center gap-2 text-xs font-medium text-[#777]">
+      <p className="group relative flex items-center gap-2 text-xs font-medium text-[#5c5c66]">
         <Icon className="h-4 w-4 text-[#e60050]" aria-hidden="true" />
         {t(label)}
         <span className="pointer-events-none absolute left-0 top-full z-10 mt-1 hidden w-48 rounded-lg bg-black p-2.5 text-left text-[11px] font-normal leading-snug text-white shadow-lg group-hover:block">

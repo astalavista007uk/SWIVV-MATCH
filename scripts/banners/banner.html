@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SWIVV banner</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+  body { font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif; background: #101014; }
+  img { display: block; }
+
+  .banner { position: fixed; inset: 0; container-type: size; overflow: hidden; }
+  .banner[hidden] { display: none; }
+
+  /* ---------- A: dark hero wall (mirrors the home page hero) ---------- */
+  .a { background: #101014; color: #fff; }
+  .a .wall {
+    position: absolute; inset: -18% -8%; display: grid; grid-template-columns: repeat(8, 1fr);
+    gap: 1.4cqh; transform: rotate(-8deg); opacity: .5;
+  }
+  .a .col { display: flex; flex-direction: column; gap: 1.4cqh; }
+  .a .col:nth-child(2n) { transform: translateY(-14%); }
+  .a .col:nth-child(3n) { transform: translateY(-5%); }
+  .a .col:nth-child(4n) { transform: translateY(-22%); }
+  .a .wall img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 1.2cqh; }
+  .a .veil {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(105% 100% at 0% 50%, rgba(16,16,20,.98) 0%, rgba(16,16,20,.95) 36%, rgba(16,16,20,.72) 58%, rgba(16,16,20,.62) 78%, rgba(16,16,20,.88) 100%),
+      linear-gradient(180deg, rgba(16,16,20,.3) 0%, rgba(16,16,20,0) 35%, rgba(16,16,20,.45) 100%);
+  }
+  .a .glow {
+    position: absolute; width: 80cqh; height: 80cqh; right: -16cqh; top: -26cqh;
+    background: radial-gradient(circle, rgba(230,0,80,.4), rgba(230,0,80,0) 62%);
+  }
+  .content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: center;
+    padding: 8cqh 8cqw; }
+  .a .logo { width: 30cqw; height: auto; margin-bottom: 3.6cqh; }
+  .pill { display: inline-flex; align-items: center; gap: 1.1cqh; align-self: flex-start;
+    border-radius: 100px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.18);
+    padding: 1.3cqh 2.4cqh; font-size: 2cqh; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: rgba(255,255,255,.88); }
+  .pill i { width: 1.5cqh; height: 1.5cqh; border-radius: 50%; background: #34d399; }
+  .a h1 { text-wrap: balance; margin: 3cqh 0 0; font-size: 8.8cqh; line-height: 1.02; font-weight: 800; letter-spacing: -.028em; max-width: 17ch; }
+  .a h1 em { font-style: normal; color: #ff4d86; white-space: nowrap; }
+  .a .sub { margin: 2.8cqh 0 0; font-size: 3.1cqh; line-height: 1.35; color: rgba(255,255,255,.76); max-width: 36ch; }
+  .a .sub b { color: #fff; font-weight: 700; }
+  .a .sub span { color: #ff9cc0; font-style: italic; }
+  .cta { align-self: flex-start; margin-top: 4.2cqh; display: inline-flex; align-items: center; gap: 2cqh;
+    background: #e60050; color: #fff; border-radius: 100px; padding: 2.2cqh 4.2cqh; font-size: 3.1cqh; font-weight: 700; white-space: nowrap; }
+  .cta s { text-decoration: none; display: grid; place-items: center; width: 3.6cqh; height: 3.6cqh; border-radius: 50%;
+    background: rgba(0,0,0,.16); font-size: 2.3cqh; font-weight: 700; }
+
+  /* wide mode: Facebook cover 820x312 — forced at 16:9 via ?wide=1 for the 1024x576 export */
+  @media (min-aspect-ratio: 2.1/1) {
+    .content { flex-direction: row; align-items: center; justify-content: center; padding: 8cqh 4cqw; gap: 3.4cqw; }
+    .a .logo { width: 26cqw; margin: 0; flex: 0 0 auto; }
+    .a .pill { padding: 1cqh 1.8cqh; font-size: 1.4cqh; gap: .8cqh; }
+    .pill i { width: 1cqh; height: 1cqh; }
+    .a h1 { margin-top: 1.8cqh; font-size: 4.7cqw; max-width: 24ch; }
+    .a .sub { margin-top: 1.4cqh; font-size: 1.65cqw; max-width: 56ch; }
+    .cta { display: none; }
+  }
+  .wide .content { flex-direction: row; align-items: center; justify-content: center; padding: 8cqh 4cqw; gap: 3.4cqw; }
+  .wide .a .logo { width: 23cqw; margin: 0; flex: 0 0 auto; }
+  .wide .a .pill { padding: 1cqh 1.8cqh; font-size: 1.4cqh; gap: .8cqh; }
+  .wide .pill i { width: 1cqh; height: 1cqh; }
+  .wide .a h1 { margin-top: 1.8cqh; font-size: 4.35cqw; max-width: 30ch; text-wrap: wrap; }
+  .wide .a .sub { margin-top: 1.4cqh; font-size: 1.65cqw; max-width: 56ch; }
+  .wide .cta { display: none; }
+
+  /* tall mode: story 1080x1920 */
+  @media (max-aspect-ratio: 4/5) {
+    .a .wall { grid-template-columns: repeat(4, 1fr); inset: -12% -30% auto -30%; height: 72%; opacity: .44; gap: 2.4cqw; }
+    .a .col { gap: 2.4cqw; }
+    .a .wall img { border-radius: 2cqw; }
+    .a .glow { display: none; }
+    .a .veil { background:
+      radial-gradient(80% 50% at 50% 10%, rgba(230,0,80,.26) 0%, rgba(230,0,80,0) 60%),
+      linear-gradient(180deg, rgba(16,16,20,.5) 0%, rgba(16,16,20,0) 26%, rgba(16,16,20,.9) 58%, #101014 82%); }
+    .content { justify-content: flex-end; padding: 7cqw 8cqw 16cqw; }
+    .a .logo { width: 46cqw; margin-bottom: 5cqw; }
+    .a .pill { padding: 2cqw 3.6cqw; font-size: 3cqw; gap: 1.4cqw; }
+    .pill i { width: 2cqw; height: 2cqw; }
+    .a h1 { margin-top: 4.6cqw; font-size: 11.6cqw; max-width: 15ch; }
+    .a .sub { margin-top: 3.6cqw; font-size: 4.2cqw; max-width: 26ch; }
+    .cta { margin-top: 5.4cqw; padding: 3.4cqw 6.2cqw; font-size: 4.2cqw; gap: 2.8cqw; }
+    .cta s { width: 5cqw; height: 5cqw; font-size: 3cqw; }
+  }
+
+  /* ---------- B: light editorial ---------- */
+  .b { background: #f6f7f9; color: #0d1626; }
+  .b .bg { position: absolute; inset: 0;
+    background:
+      radial-gradient(60% 80% at 88% 8%, rgba(230,0,80,.14) 0%, rgba(230,0,80,0) 62%),
+      radial-gradient(50% 60% at 0% 100%, rgba(255,77,134,.12) 0%, rgba(230,0,80,0) 60%); }
+  .b .ring { position: absolute; border-radius: 50%; border: 1.2cqh solid rgba(230,0,80,.16);
+    width: 62cqh; height: 62cqh; right: -20cqh; top: -30cqh; }
+  .b .grid { position: relative; z-index: 2; height: 100%; display: grid; grid-template-columns: 1fr .92fr; align-items: center; }
+  .b .copy { padding: 8cqh 2cqw 8cqh 8cqw; }
+  .b .logo { width: 24cqw; height: auto; margin-bottom: 3.2cqh; }
+  .b .eyebrow { font-size: 2cqh; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+    color: #e60050; display: flex; align-items: center; gap: 1.4cqh; }
+  .b .eyebrow::before { content: ""; width: 4.4cqh; height: .28cqh; background: #e60050; border-radius: 2px; }
+  .b h1 { text-wrap: balance; margin: 2.2cqh 0 0; font-size: 8.4cqh; line-height: .98; font-weight: 800; letter-spacing: -.032em; }
+  .b h1 em { font-style: normal; color: #e60050; display: block; }
+  .b .sub { margin: 3cqh 0 0; font-size: 2.8cqh; line-height: 1.4; color: #3a4658; max-width: 30ch; }
+  .b .chips { display: flex; flex-wrap: wrap; gap: 1.2cqh; margin-top: 3.2cqh; }
+  .b .chips span { border: 1px solid #dfe3ea; background: #fff; color: #22303f; border-radius: 100px;
+    padding: 1.1cqh 2.2cqh; font-size: 2cqh; font-weight: 600; }
+  .b .url { margin-top: 3.6cqh; display: inline-flex; align-items: center; gap: 1.4cqh; font-size: 3.2cqh; font-weight: 800; }
+  .b .url b { color: #e60050; }
+  .b .url s { text-decoration: none; display: grid; place-items: center; width: 3.2cqh; height: 3.2cqh; border-radius: 50%; background: #e60050; color: #fff; font-size: 2cqh; }
+
+  .collage { position: relative; height: 100%; }
+  .card { position: absolute; overflow: hidden; border-radius: 2.4cqh; background: #ddd; border: .8cqh solid #fff; box-shadow: 0 2.2cqh 5.6cqh rgba(13,22,38,.22); }
+  .card img { width: 100%; height: 100%; object-fit: cover; }
+  .card.c1 { width: 28cqh; aspect-ratio: 3/4; left: 3%; top: 14%; transform: rotate(-7deg); }
+  .card.c2 { width: 32cqh; aspect-ratio: 3/4; left: 30%; top: 25%; transform: rotate(4deg); z-index: 2; }
+  .card.c3 { width: 25cqh; aspect-ratio: 3/4; left: 62%; top: 12%; transform: rotate(10deg); }
+  .b .badge { position: absolute; left: 26%; top: 16%; z-index: 3; transform: rotate(-4deg);
+    background: #e60050; color: #fff; border-radius: 100px; padding: 1.4cqh 2.8cqh; font-size: 2.2cqh; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 1cqh 2.6cqh rgba(230,0,80,.35); }
+
+  @media (min-aspect-ratio: 2.1/1) {
+    .b .grid { grid-template-columns: 1.3fr .7fr; }
+    .b .copy { padding: 6cqh 1cqw 6cqh 6cqw; }
+    .b .logo { width: 20cqw; margin-bottom: 2cqh; }
+    .b .eyebrow { font-size: 1.4cqh; gap: .9cqh; }
+    .b .eyebrow::before { width: 2.6cqh; }
+    .b h1 { font-size: 4.8cqw; margin-top: 1.2cqh; }
+    .b h1 em { display: inline; margin-left: .22em; }
+    .b .sub { display: none; }
+    .b .chips { margin-top: 1.8cqh; gap: .7cqh; }
+    .b .chips span { font-size: 1.3cqw; padding: .8cqh 1.3cqw; }
+    .b .url { font-size: 1.7cqw; margin-top: 1.6cqh; gap: .9cqw; }
+    .b .url s { width: 1.9cqw; height: 1.9cqw; font-size: 1.2cqw; }
+    .card.c1 { width: 28cqh; }
+    .card.c2 { width: 32cqh; left: 26%; }
+    .card.c3 { width: 22cqh; }
+  }
+
+  @media (max-aspect-ratio: 4/5) {
+    .b .grid { grid-template-columns: 1fr; grid-template-rows: 45% 55%; align-items: stretch; }
+    .b .copy { grid-row: 2; padding: 3cqw 8cqw 22cqw; display: flex; flex-direction: column; justify-content: center; }
+    .b .logo { width: 40cqw; margin-bottom: 3cqw; }
+    .b .eyebrow { font-size: 2.8cqw; gap: 2cqw; }
+    .b .eyebrow::before { width: 6.4cqw; height: .45cqw; }
+    .b h1 { font-size: 9.8cqw; margin-top: 2.4cqw; }
+    .b .sub { font-size: 3.7cqw; margin-top: 3cqw; max-width: 26ch; }
+    .b .chips { margin-top: 3.2cqw; gap: 1.5cqw; }
+    .b .chips span { font-size: 2.9cqw; padding: 1.4cqw 2.8cqw; }
+    .b .url { font-size: 4.2cqw; margin-top: 4cqw; gap: 2cqw; }
+    .b .url s { width: 4.2cqw; height: 4.2cqw; font-size: 2.7cqw; }
+    .collage { overflow: hidden; }
+    .card.c1 { width: 36cqw; left: 2%; top: 18%; transform: rotate(-6deg); border-radius: 3.6cqw; border-width: 1.4cqw; }
+    .card.c2 { width: 42cqw; left: 30%; top: 10%; transform: rotate(3deg); border-radius: 3.6cqw; border-width: 1.4cqw; }
+    .card.c3 { width: 32cqw; left: 70%; top: 22%; transform: rotate(8deg); border-radius: 3.6cqw; border-width: 1.4cqw; }
+    .b .badge { left: 30%; top: 11%; font-size: 3.2cqw; padding: 2cqw 3.8cqw; }
+    .b .ring { border-width: 2cqw; }
+  }
+  @media (min-aspect-ratio: 4/5) and (max-aspect-ratio: 1.3/1) {
+    .b .grid { grid-template-columns: 1.1fr .9fr; }
+    .b .copy { padding: 7cqh 1cqw 7cqh 8cqw; }
+    .b .logo { width: 20cqw; margin-bottom: 2.6cqh; }
+    .b h1 { font-size: 7cqh; }
+    .b .sub { font-size: 2.5cqh; max-width: 28ch; margin-top: 2.4cqh; }
+    .b .chips { margin-top: 2.6cqh; gap: 1cqh; }
+    .b .chips span { font-size: 1.8cqh; padding: 1cqh 2cqh; }
+    .b .url { font-size: 2.9cqh; margin-top: 3cqh; }
+    .card.c1 { width: 25cqh; left: 1%; }
+    .card.c2 { width: 29cqh; left: 25%; }
+    .card.c3 { width: 19cqh; left: 46%; top: 16%; }
+    .b .badge { left: 21%; top: 14%; font-size: 2cqh; padding: 1.2cqh 2.4cqh; }
+  }
+
+  /* YouTube channel art: keep everything inside the 1546x423 safe strip */
+  @media (min-width: 1800px) {
+    .a .content {
+      position: absolute; top: 35.4%; left: 0; right: 0; height: 29.2%; padding: 0 13cqw;
+      flex-direction: row; align-items: center; justify-content: center; gap: 3.4cqw;
+    }
+    .a .logo { width: 13cqw; margin: 0; flex: 0 0 auto; }
+    .a .pill { display: none; }
+    .a h1 { margin: 0; font-size: 2.35cqw; line-height: 1.05; max-width: 24ch; }
+    .a .sub { margin-top: 1.2cqh; font-size: .92cqw; line-height: 1.4; max-width: 64ch; }
+    .cta { display: none; }
+    .b .copy { padding-left: 22cqw; }
+    .b .logo { width: 12cqw; margin-bottom: 3cqh; }
+    .b h1 { font-size: 3.4cqw; }
+    .b .sub { font-size: 1.05cqw; margin-top: 2cqh; max-width: 36ch; }
+    .b .eyebrow { font-size: .85cqw; }
+    .b .chips { margin-top: 2cqh; }
+    .b .chips span { font-size: .8cqw; padding: .9cqh 1cqw; }
+    .b .url { font-size: 1.15cqw; margin-top: 2.2cqh; }
+    .b .url s { width: 1.3cqw; height: 1.3cqw; font-size: .8cqw; }
+  }
+
+</style>
+</head>
+<body>
+<div class="banner a" id="design-a">
+  <div class="wall" id="wall" aria-hidden="true"></div>
+  <div class="veil"></div>
+  <div class="glow"></div>
+  <div class="content">
+    <img class="logo" src="logo-dark.png" alt="SWIVV Match">
+    <div class="copy">
+      <span class="pill"><i></i><span data-copy="pill">100% free · no credit card</span></span>
+      <h1 data-copy="h1">Make beautiful connections, <em>for free.</em></h1>
+      <p class="sub" data-copy="sub">The dating site that is <b>100% free</b>. <span>Your Match. Your Story.</span></p>
+    </div>
+    <span class="cta"><span data-copy="cta">Start Swivving</span><s>&#8594;</s></span>
+  </div>
+</div>
+
+<div class="banner b" id="design-b" hidden>
+  <div class="bg"></div>
+  <div class="ring"></div>
+  <div class="grid">
+    <div class="copy">
+      <img class="logo" src="logo-light.png" alt="SWIVV Match">
+      <span class="eyebrow" data-copy="eyebrow">Serious dating</span>
+      <h1 data-copy="h1b">Your Match.<em>Your Story.</em></h1>
+      <p class="sub" data-copy="subb">Real people, real conversations. Create your free profile in minutes — no subscription, no credit card.</p>
+      <div class="chips" data-copy="chips">
+        <span>100% free</span><span>Verified profiles</span><span>No credit card</span>
+      </div>
+      <div class="url"><span>swivvmatch<b>.com</b></span><s>&#8594;</s></div>
+    </div>
+    <div class="collage">
+      <figure class="card c1" style="margin:0"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&crop=faces&w=600&h=800&q=75" alt=""></figure>
+      <figure class="card c2" style="margin:0"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&crop=faces&w=600&h=800&q=75" alt=""></figure>
+      <figure class="card c3" style="margin:0"><img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&crop=faces&w=600&h=800&q=75" alt=""></figure>
+      <span class="badge" data-copy="badge">100% free</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PHOTOS = [
+    "photo-1494790108377-be9c29b29330", "photo-1506794778202-cad84cf45f1d",
+    "photo-1489424731084-a5d8b219a5bb", "photo-1472099645785-5658abf4ff4e",
+    "photo-1524504388940-b1c1722653e1", "photo-1500648767791-00dcc994a43e",
+    "photo-1544005313-94ddf0286df2", "photo-1507003211169-0a1dd7228f2d",
+    "photo-1438761681033-6461ffad8d80", "photo-1519085360753-af0119f7cbe7",
+    "photo-1531123897727-8f129e1688ce", "photo-1492562080023-ab3db95bfbce",
+    "photo-1529626455594-4ff0802cfb7e", "photo-1463453091185-61582044d556",
+    "photo-1508214751196-bcfd4ca60f91", "photo-1560250097-0b93528c311a",
+  ];
+  const face = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&crop=faces&w=600&h=800&q=75`;
+  const wall = document.getElementById("wall");
+  for (let c = 0; c < 8; c++) {
+    const col = document.createElement("div");
+    col.className = "col";
+    for (let r = 0; r < 5; r++) {
+      const img = document.createElement("img");
+      img.src = face(PHOTOS[(c * 5 + r * 3) % PHOTOS.length]);
+      img.alt = "";
+      col.append(img);
+    }
+    wall.append(col);
+  }
+
+  const COPY = {
+    en: {},
+    fr: {
+      pill: "100% gratuit · sans carte bancaire",
+      h1: "Fais de belles rencontres, <em>gratuitement.</em>",
+      sub: "Le site de rencontres <b>100% gratuit</b>. <span>Your Match. Your Story.</span>",
+      cta: "Commence à Swivver",
+      eyebrow: "Rencontres sérieuses",
+      subb: "De vraies personnes, de vraies conversations. Crée ton profil gratuit en quelques minutes — sans abonnement, sans carte bancaire.",
+      chips: "<span>100% gratuit</span><span>Profils vérifiés</span><span>Sans carte</span>",
+      badge: "100% gratuit",
+    },
+    es: {
+      pill: "100% gratis · sin tarjeta de crédito",
+      h1: "Conoce a personas maravillosas, <em>gratis.</em>",
+      sub: "El sitio de citas <b>100% gratis</b>. <span>Your Match. Your Story.</span>",
+      cta: "Empieza a Swivver",
+      eyebrow: "Citas serias",
+      subb: "Personas reales, conversaciones reales. Crea tu perfil gratis en minutos — sin suscripción, sin tarjeta.",
+      chips: "<span>100% gratis</span><span>Perfiles verificados</span><span>Sin tarjeta</span>",
+      badge: "100% gratis",
+    },
+  };
+  const params = new URLSearchParams(location.search);
+  const design = params.get("d") === "b" ? "b" : "a";
+  if (params.get("wide") === "1") document.body.classList.add("wide");
+  document.getElementById("design-a").hidden = design !== "a";
+  document.getElementById("design-b").hidden = design !== "b";
+  const lang = COPY[params.get("lang")] ? params.get("lang") : "en";
+  if (lang !== "en") {
+    for (const [k, v] of Object.entries(COPY[lang])) {
+      const el = document.querySelector(`[data-copy="${k}"]`);
+      if (el) el.innerHTML = v;
+    }
+  }
+  window.__ready = Promise.all([...document.images].map((i) => i.decode().catch(() => {})));
+</script>
+</body>
+</html>

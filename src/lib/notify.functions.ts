@@ -2,10 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getUserEmail, getUserIdentity, getUserName, sendEmail, type EmailResult } from "@/lib/email";
-import { swivvActivityDigest, swivvNewLike, swivvNewMatch, swivvNewMessage } from "@/lib/swivv-email-templates";
+import { swivvActivityDigest, swivvNewLike, swivvNewMatch, swivvNewMessage, swivvNewRequest } from "@/lib/swivv-email-templates";
 import { CHAT_CD, LIKE_WINDOW, MATCH_WIN, REACT_CD, VIEW_CD, digestDue, emailAllowed, emailKey, latestBy, previewForEmail } from "@/lib/swivv-notify.logic";
 
-// ponytail: caller == recipient always (recipient's realtime handler triggers) — the event row is re-verified service-side so a forged call sends nothing; Resend missing = logged failed, inbox row already persisted
+// ponytail: caller == recipient always (recipient's realtime handler triggers) — the event row is re-verified service-side so a forged call sends nothing; SMTP missing = logged failed, inbox row already persisted
+const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 async function admin() {
   return (await import("@/integrations/supabase/client.server")).supabaseAdmin as any;
 }
@@ -86,6 +87,69 @@ export const queueEventEmail = createServerFn({ method: "POST" })
         : data.kind === "match"
           ? swivvNewMatch({ name: name ?? "membre", matchName: sender.name })
           : swivvNewMessage({ name: name ?? "membre", senderName: sender.name, senderPhoto: sender.photo, preview: previewForEmail("") });
+    const r = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+    await settle(key, r);
+    return { sent: r.ok, reason: r.ok ? "sent" : "provider-failed" };
+  });
+
+// ponytail: sender-triggered (unlike social events, the recipient may be offline) — the request row is re-verified service-side so a forged id sends nothing
+export const emailRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({ requestId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }: any) => {
+    const uid: string = context.userId;
+    const db = await admin();
+    const row = await db.from("swivv_message_requests").select("sender_id,recipient_id,status,created_at").eq("id", data.requestId).maybeSingle();
+    if (!row.data || row.data.sender_id !== uid || row.data.status !== "pending") return { sent: false, reason: "no-event" };
+    // ponytail: a stale replay must not email — one day is far beyond the send flow
+    if (Date.now() - Date.parse(row.data.created_at) > 86400e3) return { sent: false, reason: "stale" };
+    const recipient = String(row.data.recipient_id);
+    const prefs = await loadPrefs(recipient);
+    if (!emailAllowed(prefs.settings, "messages")) return { sent: false, reason: "pref-off" };
+    const key = `request:${data.requestId}`;
+    if (!(await claimSlot(key, recipient, "request"))) return { sent: false, reason: "duplicate" };
+    const [to, name, sender] = await Promise.all([getUserEmail(recipient), getUserName(recipient), getUserIdentity(uid)]);
+    if (!to) {
+      await settle(key, { ok: false, error: "no-email" });
+      return { sent: false, reason: "no-email" };
+    }
+    const tpl = swivvNewRequest({ name, senderName: sender.name, senderPhoto: sender.photo });
+    const r = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
+    await settle(key, r);
+    return { sent: r.ok, reason: r.ok ? "sent" : "provider-failed" };
+  });
+
+// ponytail: no cron in this stack — the digest goes out on the first login after the interval,
+// and only when there was real activity. Upgrade: pg_cron/edge function for scheduled delivery.
+export const sendDigestIfDue = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: unknown) => z.object({}).parse(d))
+  .handler(async ({ context }: any) => {
+    const uid: string = context.userId;
+    const db = await admin();
+    const prefs = await loadPrefs(uid);
+    if (!emailAllowed(prefs.settings, "interactions")) return { sent: false, reason: "pref-off" };
+    const now = Date.now();
+    const last = await db.from("swivv_email_log").select("sent_at").eq("user_id", uid).eq("template", "digest").eq("status", "sent").order("sent_at", { ascending: false }).limit(1);
+    const lastAt = last.data?.[0]?.sent_at ? Date.parse(last.data[0].sent_at) : null;
+    if (!digestDue(lastAt, now, prefs.digest)) return { sent: false, reason: "not-due" };
+    const winMs = prefs.digest === "weekly" ? 7 * 86400e3 : 86400e3;
+    const since = new Date(now - winMs).toISOString();
+    const [likes, messages] = await Promise.all([
+      db.from("swivv_likes").select("*", { count: "exact", head: true }).eq("liked_id", uid).gte("created_at", since),
+      db.from("swivv_chats").select("*", { count: "exact", head: true }).eq("user_id", uid).eq("sender", "them").gte("created_at", since),
+    ]);
+    const likesN = likes.count ?? 0;
+    const messagesN = messages.count ?? 0;
+    if (!likesN && !messagesN) return { sent: false, reason: "no-activity" };
+    const key = emailKey("digest", uid, now);
+    if (!(await claimSlot(key, uid, "digest"))) return { sent: false, reason: "duplicate" };
+    const [to, name] = await Promise.all([getUserEmail(uid), getUserName(uid)]);
+    if (!to) {
+      await settle(key, { ok: false, error: "no-email" });
+      return { sent: false, reason: "no-email" };
+    }
+    const tpl = swivvActivityDigest({ name, likes: likesN, messages: messagesN });
     const r = await sendEmail({ to, subject: tpl.subject, html: tpl.html });
     await settle(key, r);
     return { sent: r.ok, reason: r.ok ? "sent" : "provider-failed" };
@@ -220,7 +284,7 @@ export const sendSecurityEmail = createServerFn({ method: "POST" })
     const r = await sendEmail({
       to,
       subject: "Sécurité de ton compte SWIVV MATCH",
-      html: `<p>Bonjour ${name ?? "membre"},</p><p>${data.label}</p><p>Si ce n'était pas toi, contacte le support immédiatement depuis la page d'aide.</p>`,
+      html: `<p>Bonjour ${esc(name ?? "membre")},</p><p>${esc(data.label)}</p><p>Si ce n'était pas toi, contacte le support immédiatement depuis la page d'aide.</p>`,
     });
     await settle(key, r);
     return { sent: r.ok };

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { Bell, ChartColumn, LifeBuoy, LogIn, LogOut, Menu, Receipt, Settings, Sparkles } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { SwivvProfile } from "@/lib/swivv-data";
+import { TERMS_VERSION } from "@/lib/swivv-age";
 import { supabase } from "@/integrations/supabase/client";
 import { mediaUrl } from "@/lib/swivv-store";
 import { findOffensive } from "@/lib/swivv-moderation";
@@ -87,7 +88,7 @@ export async function signUpSwivv(
   if (error) {
     if (error.message.toLowerCase().includes("already registered"))
       return "Un compte existe déjà avec cet e-mail. Connecte-toi.";
-    // ponytail: Supabase's shared SMTP caps confirmation e-mails/hour — custom SMTP (Resend) lifts it once the domain is verified
+    // ponytail: Supabase's shared SMTP caps confirmation e-mails/hour — the IONOS mailbox SMTP lifts that cap
     if (error.message.toLowerCase().includes("rate limit") || ((error as { code?: string }).code ?? "").includes("rate_limit"))
       return "Trop d'inscriptions à la suite — réessaie dans une heure.";
     return "Inscription impossible. Réessaie.";
@@ -236,9 +237,20 @@ export async function saveMyProfile(p: SwivvProfile): Promise<string | null> {
   // ponytail: an empty album never overwrites a full one in a merge (gallery UI already requires ≥1 photo to save, so [] here means a stale/failed prefill, not an edit) — admin moderation clears photos via direct SQL, not this path
   const prevHasPhotos = Array.isArray(prevData.photos) && (prevData.photos as unknown[]).length > 0;
   const clean = Object.fromEntries(
-    Object.entries(writable).filter(([k, v]) => (allowClear || v !== "") && v !== null && v !== undefined && (k !== "verified" || v === true) && !(k === "photos" && Array.isArray(v) && v.length === 0 && prevHasPhotos)),
+    // ponytail: NaN (age from an empty birthdate step) serialized to JSON null and wiped a known age — non-finite numbers never write
+    Object.entries(writable).filter(([k, v]) => (allowClear || v !== "") && v !== null && v !== undefined && !(typeof v === "number" && !Number.isFinite(v)) && (k !== "verified" || v === true) && (k !== "idVerified" || v === true) && !(k === "photos" && Array.isArray(v) && v.length === 0 && prevHasPhotos)),
   );
   delete clean.birthdate;
+  // ponytail: the birthdate goes to the staff-only age-assurance table, never into the public profile row; the DB trigger derives age and rejects under-18/future dates. Ignored until that migration is applied (no table), and the client-side check above still gates creation.
+  if (typeof incoming.birthdate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(incoming.birthdate)) {
+    await (supabase as any)
+      .from("swivv_age_assurance")
+      .upsert({ user_id: uid, birthdate: incoming.birthdate, terms_version: TERMS_VERSION }, { onConflict: "user_id" })
+      .then(() => {}, () => {});
+  }
+  // ponytail: no profile is created without an age — signup asks the birthdate after the match-age step, this is the backstop for any path that ever skips it; existing rows keep saving
+  const ageOk = clean.age != null && clean.age !== "" && Number.isFinite(Number(clean.age));
+  if (!Object.keys(prevData).length && !ageOk) return "Ta date de naissance est obligatoire.";
   // ponytail: stale signup stashes saved full-ISO joinedAt/lastActive (rendered raw as "2026-10-03T…") — coerce at the single write choke point; drop if stashes are ever versioned
   const iso = (s: unknown) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}T/.test(s);
   // ponytail: upload dataURL photos at the single write choke point — a failed upload keeps the dataURL (no data loss). The thumb is the 320px list copy; a reordered URL primary keeps the previous thumb until a new upload replaces it.
@@ -326,13 +338,16 @@ export async function getMyBasics(): Promise<{ seeking: "woman" | "man" | null; 
   try {
     const res = await (supabase as any)
       .from("swivv_profiles")
-      .select("data->>seeking,data->>gender,data->>city,data->>country")
+      .select("data->>seeking,data->>gender,data->>city,data->>country,criteria:data->matchCriteria")
       .eq("user_id", uid)
       .maybeSingle();
     if (!res.error && res.data) {
       const sk = res.data.seeking as string | undefined;
-      const seeking: "man" | "woman" | null = sk === "woman" || sk === "man" ? sk
-        : res.data.gender === "woman" ? "man" : res.data.gender === "man" ? "woman" : null;
+      // ponytail: the saved "Je recherche" criteria is the newest explicit choice (editable in Mes Matches) — profile.seeking can go stale after signup; when both exist, criteria wins
+      const crit = (res.data.criteria as { form?: { gender?: string } } | null)?.form?.gender;
+      const fromCriteria: "man" | "woman" | null = crit === "Homme" ? "man" : crit === "Femme" ? "woman" : null;
+      const seeking: "man" | "woman" | null = fromCriteria ?? (sk === "woman" || sk === "man" ? sk
+        : res.data.gender === "woman" ? "man" : res.data.gender === "man" ? "woman" : null);
       const out: { seeking: "man" | "woman" | null; city: string; country: string } = { seeking, city: String(res.data.city ?? ""), country: String(res.data.country ?? "") };
       if (seeking) {
         try {
@@ -395,6 +410,7 @@ const FEED_FIELDS = [
   "bio:data->bio",
   "online:data->online",
   "verified:data->verified",
+  "idVerified:data->idVerified",
   "isNew:data->isNew",
   "compatibility:data->compatibility",
   "distanceKm:data->distanceKm",
@@ -541,6 +557,7 @@ export function AuthModal() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [remember, setRemember] = useState(true);
 
   // Reset the form (and requested tab) every time the popup opens.
@@ -551,6 +568,7 @@ export function AuthModal() {
       setPassword("");
       setBusy(false);
       setError(null);
+      setNotice(null);
     }
   }, [state.open, state.tab]);
 
@@ -593,6 +611,26 @@ export function AuthModal() {
     finish();
   }
 
+  async function forgot() {
+    const cleanEmail = email.trim();
+    setNotice(null);
+    if (!/.+@.+\..+/.test(cleanEmail)) {
+      setError(t("Entre un e-mail valide."));
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: `${window.location.origin}/reset`,
+    });
+    setBusy(false);
+    if (resetError) {
+      setError(t("Impossible d'envoyer l'e-mail pour le moment."));
+      return;
+    }
+    setNotice(t("Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé."));
+  }
+
   return (
     <div
       role="dialog"
@@ -607,7 +645,7 @@ export function AuthModal() {
       >
         <SwivvLogo />
         <h2 className="mt-2 text-xl font-medium text-[#333]">{t("Connexion requise")}</h2>
-        <p className="mt-1 text-sm text-[#777]">{t(REASON_COPY[state.reason])}</p>
+        <p className="mt-1 text-sm text-[#5c5c66]">{t(REASON_COPY[state.reason])}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-1 rounded-md bg-[#f2f2f2] p-1 text-sm" role="tablist">
           {(["signup", "signin"] as const).map((k) => (
@@ -621,7 +659,7 @@ export function AuthModal() {
                 setError(null);
               }}
               className={`rounded px-3 py-1.5 font-medium ${
-                tab === k ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"
+                tab === k ? "bg-white text-[#e60050] shadow-sm" : "text-[#5c5c66]"
               }`}
             >
               {k === "signup" ? t("Créer un compte") : t("Se connecter")}
@@ -642,7 +680,7 @@ export function AuthModal() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="camille@exemple.fr"
                 autoComplete="email"
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
             <div>
@@ -656,9 +694,10 @@ export function AuthModal() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
+            {notice && <p className="text-sm text-[#2f7d32]">{notice}</p>}
             {error && <p className="text-sm text-red-600">{error}</p>}
             <label className="flex cursor-pointer items-center gap-2 text-sm text-[#555]">
               <input
@@ -675,6 +714,14 @@ export function AuthModal() {
               className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-60"
             >
               {busy ? t("Connexion…") : t("Se connecter")}
+            </button>
+            <button
+              type="button"
+              onClick={forgot}
+              disabled={busy}
+              className="w-full text-center text-sm text-[#5c5c66] underline disabled:opacity-60"
+            >
+              {t("Mot de passe oublié ?")}
             </button>
           </form>
         ) : (
@@ -694,7 +741,7 @@ export function AuthModal() {
         <button
           type="button"
           onClick={closeAuthModal}
-          className="mt-3 w-full text-center text-sm text-[#777] hover:text-[#333]"
+          className="mt-3 w-full text-center text-sm text-[#5c5c66] hover:text-[#333]"
         >
           {t("Plus tard")}
         </button>
@@ -774,13 +821,15 @@ export function SwivvAuthButtons() {
         <Link
           to="/notifications"
           aria-label={t("Notifications")}
-          className="relative p-0.5 text-white"
+          className="tap-44 relative text-white"
         >
-          <Bell className="h-6 w-6" strokeWidth={1.5} />
-          <NotifBadge />
+          <span className="relative block">
+            <Bell className="h-6 w-6" strokeWidth={1.5} />
+            <NotifBadge />
+          </span>
         </Link>
         {photo ? (
-          <Link to="/mon-profil" aria-label={t("Mon profil")}>
+          <Link to="/mon-profil" aria-label={t("Mon profil")} className="tap-44">
             <img
               src={photo}
               alt=""
@@ -801,7 +850,7 @@ export function SwivvAuthButtons() {
           <Link
             to="/mon-profil"
             aria-label={t("Mon profil")}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e60050] text-sm font-medium text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-[#e60050] text-sm font-medium text-white"
           >
             {user.name.charAt(0).toUpperCase()}
           </Link>
@@ -816,7 +865,7 @@ export function SwivvAuthButtons() {
         <details className="relative group">
           <summary
             aria-label={t("Menu du compte")}
-            className="cursor-pointer list-none rounded-md border border-white px-3 py-2 [&::-webkit-details-marker]:hidden"
+            className="tap-44 cursor-pointer list-none rounded-md border border-white px-3 py-2 [&::-webkit-details-marker]:hidden"
           >
             <Menu className="h-5 w-5" />
           </summary>

@@ -151,7 +151,15 @@ export async function onReactionReceived(uid: string, reactorId: string, photo: 
   await pingSelf("reaction", "Réaction à ta photo", `${emoji} Un membre a réagi à l'une de tes photos.`, `/statistiques?tab=likes`);
 }
 
-export async function onVerified(): Promise<void> {  await pingSelf("account", "Profil vérifié", "Ton profil a été vérifié. Bravo !", "/mon-profil");
+export async function onVerified(): Promise<void> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const uid = data.session?.user.id;
+    if (!uid) return;
+    const r = await (supabase as any).from("swivv_notifications").select("id").eq("user_id", uid).eq("type", "account").like("title", "Profil v%").gte("created_at", new Date(Date.now() - 7 * 86400e3).toISOString()).limit(1);
+    if ((r.data ?? []).length > 0) return;
+  } catch {}
+  await pingSelf("account", "Profil vérifié", "Ton profil a été vérifié. Bravo !", "/mon-profil");
 }
 
 export async function onSecurityEvent(label: string): Promise<void> {
@@ -182,11 +190,11 @@ export function initNotifyListeners(): () => void {
   void supabase.auth.getSession().then(({ data }) => {
     const uid = data.session?.user.id;
     if (!uid || stopped) return;
-    const mk = (table: string, filter: string | undefined, cb: (row: any) => void) => {
+    const mk = (table: string, filter: string | undefined, cb: (row: any) => void, event: "INSERT" | "UPDATE" = "INSERT") => {
       try {
-        const ch = (supabase as any).channel(`swivv-notify-${table}:${uid}`).on(
+        const ch = (supabase as any).channel(`swivv-notify-${table}:${uid}:${event}`).on(
           "postgres_changes",
-          filter ? { event: "INSERT", schema: "public", table, filter } : { event: "INSERT", schema: "public", table },
+          filter ? { event, schema: "public", table, filter } : { event, schema: "public", table },
           (p: { new: unknown }) => {
             try {
               void Promise.resolve(cb(p.new as any)).catch(() => {});
@@ -209,11 +217,51 @@ export function initNotifyListeners(): () => void {
     mk("swivv_likes", `liked_id=eq.${uid}`, (row) => {
       if (row?.liker_id && row.liker_id !== uid) void onLikeReceived(uid, String(row.liker_id));
     });
+    mk("swivv_message_requests", `recipient_id=eq.${uid}`, (row) => {
+      if (!row || row.status !== "pending") return;
+      try {
+        window.dispatchEvent(new CustomEvent("swivv:request", {
+          detail: {
+            id: String(row.id),
+            name: String(row.sender_name || ""),
+            photo: String(row.sender_photo || ""),
+            message: String(row.initial_message || ""),
+          },
+        }));
+      } catch {}
+    });
+    mk(
+      "swivv_message_requests",
+      `sender_id=eq.${uid}`,
+      (row) => {
+        const status = String(row?.status ?? "");
+        if (status !== "accepted" && status !== "declined") return;
+        // ponytail: responded_at is written only by an accept/decline; later permission edits keep it, so the 15s window filters their echo updates
+        if (!row?.responded_at || Date.now() - +new Date(row.responded_at) > 15000) return;
+        try {
+          window.dispatchEvent(new CustomEvent("swivv:request-answer", {
+            detail: {
+              id: String(row.id),
+              peerId: String(row.recipient_id),
+              accepted: status === "accepted",
+              text: row.text_allowed !== false,
+              voice: !!row.voice_allowed,
+              files: !!row.files_allowed,
+            },
+          }));
+        } catch {}
+      },
+      "UPDATE",
+    );
     // ponytail: RLS already limits match/view rows to mine, so unfiltered channels stay correct — add eq filters if realtime ever delivers beyond RLS
     mk("swivv_matches", undefined, (row) => {
       if (!row) return;
       const other = row.user_a === uid ? row.user_b : row.user_a;
-      if (other) void onMatchFound(uid, String(other));
+      if (!other) return;
+      try {
+        window.dispatchEvent(new CustomEvent("swivv:match", { detail: { id: String(other) } }));
+      } catch {}
+      void onMatchFound(uid, String(other));
     });
     mk("swivv_profile_views", `viewed_id=eq.${uid}`, (row) => {
       if (row?.viewer_id && row.viewer_id !== uid) void onViewReceived(uid, String(row.viewer_id));

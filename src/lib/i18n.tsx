@@ -1,21 +1,21 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { createIsomorphicFn } from "@tanstack/react-start";
-import { getCookie } from "@tanstack/react-start/server";
+import { getCookie, getRequest } from "@tanstack/react-start/server";
 import { en } from "./locales/en";
 import { es } from "./locales/es";
+import { LANG_COOKIE, langFromCountry, type Lang } from "./swivv-lang";
 
-export const LANGS = ["fr", "en", "es"] as const;
-export type Lang = (typeof LANGS)[number];
+export { LANGS, LANG_COOKIE, langFromCountry, type Lang } from "./swivv-lang";
 export type Vars = Record<string, string | number>;
 
-export const LANG_COOKIE = "swivv_lang";
 export const LANG_LABEL: Record<Lang, string> = { fr: "FR", en: "EN", es: "ES" };
 export const DATE_LOCALE: Record<Lang, string> = { fr: "fr-FR", en: "en-GB", es: "es-ES" };
+export const OG_LOCALE: Record<Lang, string> = { fr: "fr_FR", en: "en_US", es: "es_ES" };
 
 const DICTS: Record<Exclude<Lang, "fr">, Record<string, string>> = { en, es };
 
-function asLang(raw: string | undefined | null): Lang {
-  return raw === "en" || raw === "es" ? raw : "fr";
+function pickLang(raw: string | undefined | null): Lang | undefined {
+  return raw === "en" || raw === "es" || raw === "fr" ? raw : undefined;
 }
 
 /**
@@ -25,10 +25,18 @@ function asLang(raw: string | undefined | null): Lang {
  * namespaces if the copy ever churns weekly.
  */
 export const readLang = createIsomorphicFn()
-  .server((): Lang => asLang(getCookie(LANG_COOKIE)))
+  .server((): Lang => {
+    const chosen = pickLang(getCookie(LANG_COOKIE));
+    if (chosen) return chosen;
+    const headers = getRequest().headers;
+    return langFromCountry(
+      headers.get("x-vercel-ip-country"),
+      headers.get("x-vercel-ip-country-region"),
+    );
+  })
   .client((): Lang => {
     const hit = document.cookie.match(/(?:^|;\s*)swivv_lang=([^;]*)/);
-    return asLang(hit?.[1]);
+    return pickLang(hit?.[1]) ?? pickLang(document.documentElement.lang) ?? "fr";
   });
 
 export function translate(lang: Lang, fr: string, vars?: Vars): string {

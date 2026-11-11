@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="gBlue" cx="34%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#c9eeff"/>
+      <stop offset="40%" stop-color="#3d9cf0"/>
+      <stop offset="100%" stop-color="#083a93"/>
+    </radialGradient>
+    <radialGradient id="gRed" cx="34%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#ffd6cc"/>
+      <stop offset="40%" stop-color="#ff5d76"/>
+      <stop offset="100%" stop-color="#87092f"/>
+    </radialGradient>
+    <radialGradient id="shade" cx="50%" cy="50%" r="50%">
+      <stop offset="62%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity=".33"/>
+    </radialGradient>
+    <linearGradient id="armBlue" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#0a3f9e"/>
+      <stop offset="1" stop-color="#63b8ff"/>
+    </linearGradient>
+    <linearGradient id="armRed" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#87092f"/>
+      <stop offset="1" stop-color="#ff8095"/>
+    </linearGradient>
+    <filter id="rough" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.028" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="24" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="roughOuter" x="-25%" y="-25%" width="150%" height="150%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="30" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="soft" x="-90%" y="-90%" width="280%" height="280%">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+  </defs>
+
+  <circle cx="512" cy="512" r="455" fill="none" stroke="#1e4f9c" stroke-width="9"/>
+
+  <!-- blue cell -->
+  <g>
+    <circle cx="265" cy="495" r="181" fill="#8fd0ff" opacity=".55" filter="url(#roughOuter)"/>
+    <circle cx="265" cy="495" r="165" fill="url(#gBlue)" filter="url(#rough)"/>
+    <circle cx="265" cy="495" r="165" fill="url(#shade)"/>
+  </g>
+
+  <!-- red cell -->
+  <g>
+    <circle cx="759" cy="495" r="181" fill="#ff9aa9" opacity=".5" filter="url(#roughOuter)"/>
+    <circle cx="759" cy="495" r="165" fill="url(#gRed)" filter="url(#rough)"/>
+    <circle cx="759" cy="495" r="165" fill="url(#shade)"/>
+  </g>
+
+  <!-- arms + reaching hands (one pointing up, one pointing down) -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M412 556 Q436 522 452 512" fill="none" stroke="url(#armBlue)" stroke-width="52"/>
+    <circle cx="470" cy="510" r="27" fill="url(#armBlue)"/>
+    <path d="M488 506 Q506 504 522 510" fill="none" stroke="url(#armBlue)" stroke-width="18"/>
+  </g>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M612 560 Q588 534 574 528" fill="none" stroke="url(#armRed)" stroke-width="52"/>
+    <circle cx="560" cy="528" r="27" fill="url(#armRed)"/>
+    <path d="M542 532 Q524 532 508 526" fill="none" stroke="url(#armRed)" stroke-width="18"/>
+  </g>
+  <!-- blue cell face: superhero mask + smile -->
+  <g>
+    <path d="M174 488 C196 442 238 430 272 458 C306 430 348 442 370 488 C352 514 316 524 272 512 C228 524 192 514 174 488 Z" fill="#0a1733"/>
+    <ellipse cx="241" cy="480" rx="18" ry="13" fill="#fff" transform="rotate(-8 241 480)"/>
+    <ellipse cx="303" cy="480" rx="18" ry="13" fill="#fff" transform="rotate(8 303 480)"/>
+    <circle cx="245" cy="482" r="7" fill="#0a1733"/>
+    <circle cx="299" cy="482" r="7" fill="#0a1733"/>
+    <path d="M238 558 Q272 592 306 558" fill="none" stroke="#0a1733" stroke-width="11" stroke-linecap="round"/>
+  </g>
+
+  <!-- red cell face: X eyes + sad mouth -->
+  <g stroke="#4a0418" stroke-width="12" stroke-linecap="round" fill="none">
+    <path d="M701 463 l30 30 M731 463 l-30 30"/>
+    <path d="M773 463 l30 30 M803 463 l-30 30"/>
+    <path d="M726 585 Q752 556 778 585"/>
+  </g>
+</svg>

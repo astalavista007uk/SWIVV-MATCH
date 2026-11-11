@@ -1,5 +1,4 @@
 import type { EnKey } from "./en";
-
 // Spanish dictionary — Record<EnKey,string> makes the compiler fail on any key the English one has and this one lacks.
 export const es: Record<EnKey, string> = {
   // ── root shell ───────────────────────────────────────────────────────────
@@ -8,6 +7,9 @@ export const es: Record<EnKey, string> = {
   "Retour à l'accueil": "Volver al inicio",
   "Ton e-mail est en attente de confirmation — clique sur le lien reçu par e-mail pour activer ton compte.":
     "Tu correo está pendiente de confirmación: haz clic en el enlace que te enviamos para activar tu cuenta.",
+  "Confirme ton e-mail": "Confirma tu correo electrónico",
+  "E-mail renvoyé ! Vérifie ta boîte de réception (et tes spams).":
+    "¡Correo reenviado! Revisa tu bandeja de entrada (y el spam).",
   "Compte banni": "Cuenta bloqueada",
   "Compte suspendu": "Cuenta suspendida",
   "Ton compte a été définitivement fermé pour non-respect du règlement.":
@@ -16,7 +18,6 @@ export const es: Record<EnKey, string> = {
   "Ton compte est suspendu.": "Tu cuenta está suspendida.",
   "Tu peux contester via la page contact.": "Puedes apelar desde la página de contacto.",
   "Se déconnecter": "Cerrar sesión",
-
   // ── auth modal + header ──────────────────────────────────────────────────
   "Connexion requise": "Inicio de sesión necesario",
   "Crée un compte ou connecte-toi pour liker ce membre.":
@@ -54,7 +55,6 @@ export const es: Record<EnKey, string> = {
   "Mon profil": "Mi perfil",
   "Menu du compte": "Menú de la cuenta",
   "Fermer le menu": "Cerrar el menú",
-
   // ── category nav ─────────────────────────────────────────────────────────
   Catégories: "Categorías",
   "Recherche avancée": "Búsqueda avanzada",
@@ -68,7 +68,6 @@ export const es: Record<EnKey, string> = {
   Tous: "Todos",
   Femmes: "Mujeres",
   Hommes: "Hombres",
-
   // ── footer ───────────────────────────────────────────────────────────────
   Découvrir: "Descubrir",
   "Aide & Sécurité": "Ayuda y seguridad",
@@ -85,10 +84,19 @@ export const es: Record<EnKey, string> = {
   "Conditions d'utilisation": "Condiciones de uso",
   "Conditions Générales de Vente (CGV)": "Condiciones generales de venta",
   "Centre de confidentialité": "Centro de privacidad",
+  "Vérification de l'âge & protection des mineurs":
+    "Verificación de edad & protección de menores",
+  "Confidentialité des données": "Privacidad de datos",
+  "Démo": "Demo",
+  "Profil de démonstration": "Perfil de demostración",
+  "Les profils marqués « Démo » sont des exemples, pas des membres réels.":
+    "Los perfiles marcados como «Demo» son ejemplos, no miembros reales.",
+  "Pour joindre des documents, envoie-les par e-mail à contact@swivvmatch.com.":
+    "Para adjuntar documentos, envíalos por correo a contact@swivvmatch.com.",
+  "Dernière mise à jour : novembre 2026.": "Última actualización: noviembre de 2026.",
   Cookies: "Cookies",
   Accueil: "Inicio",
   "Blog rencontres": "Blog de citas",
-  "Application mobile": "Aplicación móvil",
   "Your Match. Your Story.": "Your Match. Your Story.",
   SWIVV: "SWIVV",
   "© 2026 SWIVV. Tous droits réservés.": "© 2026 SWIVV. Todos los derechos reservados.",
@@ -97,7 +105,6 @@ export const es: Record<EnKey, string> = {
   "Langue de traduction des messages": "Idioma de traducción de mensajes",
   "Les messages de la messagerie et certains textes de profil peuvent être traduits vers cette langue.":
     "Los mensajes y algunos textos del perfil se pueden traducir a este idioma.",
-
   // ── landing page ─────────────────────────────────────────────────────────
   "100% gratuit. Pas de carte bancaire.": "100% gratis. Sin tarjeta de crédito.",
   "Fais de belles": "Conoce a personas",
@@ -113,24 +120,26 @@ export const es: Record<EnKey, string> = {
   "Pour commencer": "Para empezar",
   "Fonctionnalités SWIVV": "Funciones de SWIVV",
   "Voir la section {n}": "Ir a la sección {n}",
-  "Rejoins SWIVV en 2 minutes": "Únete a SWIVV en 2 minutos",
+  "Rejoins SWIVV\nen 2 minutes": "Únete a SWIVV\nen 2 minutos",
   "Compte gratuit en 2 minutes — complète ton profil à ton rythme.":
     "Cuenta gratis en 2 minutos: completa tu perfil a tu ritmo.",
   "Crée ton profil": "Crea tu perfil",
   "Découvre des compatibles": "Descubre personas compatibles",
   "Like, matche, discute": "Me gusta, match, conversación",
-  "Un matching qui a du sens": "Un matching que tiene sentido",
+  "Un matching\nqui a du sens": "Un matching que\ntiene sentido",
   "On te montre d'abord les personnes vraiment compatibles.": "Primero te mostramos a las personas realmente compatibles.",
   "Score de compatibilité": "Puntuación de compatibilidad",
   "Profils vérifiés": "Perfiles verificados",
   "Intentions claires": "Intenciones claras",
   "Sécurité d'abord": "La seguridad primero",
   "Entends sa voix avant le premier rendez-vous": "Escucha su voz antes de la primera cita",
+  "Après une demande de connexion acceptée, passe du texte à la voix si l'autre membre l'autorise.":
+    "Tras aceptar una solicitud de conexión, pasa del texto a la voz si el otro miembro lo autoriza.",
   "Réservés aux matchs : quand l'intérêt est réciproque, passe du texte à la voix.":
     "Solo para matches: cuando el interés es mutuo, pasa del texto a la voz.",
   "Partage de photos": "Compartir fotos",
   "Messages vocaux": "Mensajes de voz",
-  "Suis tes chiffres et ta progression": "Sigue tus cifras y tu progreso",
+  "Suis tes chiffres\net ta progression": "Sigue tus cifras\ny tu progreso",
   "Des repères concrets sur ton activité, sans classement ni pression.":
     "Datos concretos sobre tu actividad, sin rankings ni presión.",
   Statistiques: "Estadísticas",
@@ -152,6 +161,7 @@ export const es: Record<EnKey, string> = {
   "Emporte tes matchs partout et commence à Swivver en quelques secondes.":
     "Lleva tus matches contigo y empieza a Swivver en segundos.",
   "Déjà téléchargé ? Ne plus afficher": "¿Ya la has descargado? No mostrar",
+  "Bientôt disponible sur Google Play et l'App Store": "Próximamente en Google Play y la App Store",
   "Je recherche :": "Busco:",
   "Filtrer par genre": "Filtrar por género",
   "Aucun profil trouvé. Essaie un autre genre.": "No se han encontrado perfiles. Prueba otro género.",
@@ -166,14 +176,12 @@ export const es: Record<EnKey, string> = {
   Profil: "Perfil",
   Aide: "Ayuda",
   Réglages: "Ajustes",
-
   // ── help ─────────────────────────────────────────────────────────────────
   "Inscription, matching, messages, sécurité.": "Registro, matching, mensajes, seguridad.",
   "Comment ça marche": "Cómo funciona",
   "Le fonctionnement de SWIVV en bref.": "Cómo funciona SWIVV, en resumen.",
   "Des photos validées du premier coup.": "Fotos aprobadas a la primera.",
   "Une question ? Écris-nous directement.": "¿Una pregunta? Escríbenos directamente.",
-
   // ── cookies ──────────────────────────────────────────────────────────────
   "Nos cookies, sans langue de bois": "Nuestras cookies, sin rodeos",
   "SWIVV n'utilise que des cookies techniques. Pas de publicité, pas de revente.":
@@ -190,11 +198,52 @@ export const es: Record<EnKey, string> = {
   "Pas de traceurs de réseaux sociaux intégrés aux profils.": "Sin rastreadores de redes sociales en los perfiles.",
   "Tu peux bloquer les cookies dans ton navigateur : le site reste consultable, mais la connexion et les filtres mémorisés ne fonctionneront plus. Questions ?":
     "Puedes bloquear las cookies en tu navegador: el sitio seguirá siendo visible, pero el inicio de sesión y los filtros guardados dejarán de funcionar. ¿Preguntas?",
+  "Liste des stockages utilisés": "Lista de almacenamientos utilizados",
+  "Dernière mise à jour : 3 novembre 2026. Responsable : SWIVV MATCH, 10 Rue Thureau Dangin, 75015 Paris — contact@swivvmatch.com.":
+    "Última actualización: 3 de noviembre de 2026. Responsable: SWIVV MATCH, 10 Rue Thureau Dangin, 75015 Paris — contact@swivvmatch.com.",
+  "Type": "Tipo",
+  "Finalité": "Finalidad",
+  "Durée": "Duración",
+  "Cookie": "Cookie",
+  "localStorage": "localStorage",
+  "Langue choisie (FR/EN/ES)": "Idioma elegido (FR/EN/ES)",
+  "Session connectée (Supabase)": "Sesión iniciada (Supabase)",
+  "Jusqu'à déconnexion ou expiration": "Hasta cerrar sesión o caducar",
+  "Mémoriser l'acceptation des CGU": "Recordar la aceptación de las condiciones",
+  "Jusqu'à effacement": "Hasta borrarlo",
+  "Reprendre une inscription interrompue": "Reanudar un registro interrumpido",
+  "Limiter le spam de notifications": "Limitar el spam de notificaciones",
+  "24 heures": "24 horas",
+  "Sans cookie": "Sin cookie",
+  "Mesure d'audience anonyme et agrégée": "Medición de audiencia anónima y agregada",
+  "Aucune identification": "Sin identificación",
+  "Pourquoi aucun bandeau de consentement : nous n'utilisons que des traceurs strictement nécessaires (session, langue, sécurité, acceptation des CGU) et une mesure d'audience sans cookie ni identification, exemptée de consentement. Aucun traceur publicitaire ou de reciblage n'est déposé. Si un traceur non essentiel est ajouté, un bandeau de consentement sera affiché avant tout dépôt, avec un moyen de refuser aussi simple que d'accepter.":
+    "Por qué no hay banner de consentimiento: solo usamos rastreadores estrictamente necesarios (sesión, idioma, seguridad, aceptación de las condiciones) y una medición de audiencia sin cookies ni identificación, exenta de consentimiento. No se instala ningún rastreador publicitario ni de reorientación. Si se añade un rastreador no esencial, se mostrará un banner de consentimiento antes de instalarlo, con una forma de rechazar tan sencilla como la de aceptar.",
+  "Comment les supprimer : la déconnexion efface la session ; efface les cookies et données de site dans les réglages de ton navigateur ; ou utilise le mode navigation privée. Le blocage des stockages techniques peut empêcher la connexion et la mémorisation de tes filtres. Pour toute question ou pour exercer tes droits, écris-nous ou adresse une réclamation à la CNIL (cnil.fr).":
+    "Cómo borrarlos: cerrar sesión elimina la sesión; borra las cookies y los datos del sitio en los ajustes de tu navegador; o usa la navegación privada. Bloquear los almacenamientos técnicos puede impedir el inicio de sesión y el recuerdo de tus filtros. Para cualquier pregunta o para ejercer tus derechos, escríbenos o presenta una reclamación ante la CNIL (cnil.fr).",
   "Contacte-nous": "Escríbenos",
-
   // ── terms (short page) ───────────────────────────────────────────────────
-  "Les règles du jeu, en langage simple. Dernière mise à jour : septembre 2026.":
-    "Las reglas, en lenguaje sencillo. Última actualización: septiembre de 2026.",
+  "Les règles du jeu, en langage simple. Dernière mise à jour : 3 novembre 2026.":
+    "Las reglas, en lenguaje sencillo. Última actualización: 3 de noviembre de 2026.",
+  "Les règles du jeu, en clair : ce que tu acceptes en créant ton compte et comment SWIVV fonctionne.":
+    "Las reglas, en claro: lo que aceptas al crear tu cuenta y cómo funciona SWIVV.",
+  "Le cadre du service : gratuité actuelle, responsabilités et règles prévues pour les services payants à venir.":
+    "El marco del servicio: gratuito hoy, responsabilidades y las reglas previstas para futuros servicios de pago.",
+  "Ce document juridique est fourni en français ; la version française fait foi.":
+    "Este documento jurídico se facilita en francés; prevalece la versión francesa.",
+  "La politique détaillée ci-dessous est fournie en français ; la version française fait foi.":
+    "La política detallada a continuación se facilita en francés; prevalece la versión francesa.",
+  "Conditions générales d'utilisation — texte intégral": "Condiciones de uso — texto íntegro",
+  "Voir aussi :": "Ver también:",
+  "cookies": "cookies",
+  "CGV": "Condiciones de venta",
+  "mentions légales": "aviso legal",
+  "Mentions légales": "Aviso legal",
+  "Éditeur, hébergeur, propriété intellectuelle, signalements et litiges : l'essentiel en un coup d'œil.":
+    "Editor, alojamiento, propiedad intelectual, denuncias y litigios: lo esencial de un vistazo.",
+  "6. Contact et recours": "6. Contacto y recursos",
+  "Pour toute question, réclamation ou contestation d'une décision de modération, écris-nous via la page contact. Le texte intégral ci-dessous fait foi et détaille notamment les droits prévus par le DSA pour les membres de l'Union européenne.":
+    "Para cualquier pregunta, reclamación o impugnación de una decisión de moderación, escríbenos desde la página de contacto. El texto íntegro siguiente prevalece y detalla en particular los derechos que el DSA reconoce a los miembros de la Unión Europea.",
   "1. Le service": "1. El servicio",
   "SWIVV est un site de rencontres : profils, likes, matchs et messagerie privée. Tout est gratuit, sans carte bancaire, sans abonnement. Il faut avoir 18 ans ou plus pour s'inscrire.":
     "SWIVV es un sitio de citas: perfiles, me gusta, matches y mensajería privada. Todo es gratis, sin tarjeta bancaria ni suscripción. Hay que tener 18 años o más para registrarse.",
@@ -205,8 +254,8 @@ export const es: Record<EnKey, string> = {
   "Arnaques, demandes d'argent, faux profils et comportements abusifs entraînent un bannissement immédiat et définitif. Signale tout abus via la page contact.":
     "Las estafas, las peticiones de dinero, los perfiles falsos y los comportamientos abusivos conllevan un bloqueo inmediato y definitivo. Denuncia cualquier abuso desde la página de contacto.",
   "4. Rencontres réelles : prudence": "4. Citas reales: precaución",
-  "SWIVV ne vérifie pas l'identité de chaque membre dans la vie réelle. Pour un premier rendez-vous : lieu public, durée limitée, préviens un proche. Tu restes responsable de ta sécurité.":
-    "SWIVV no verifica la identidad de cada miembro en la vida real. Para una primera cita: lugar público, duración limitada, avisa a alguien cercano. Sigues siendo responsable de tu seguridad.",
+  "SWIVV ne vérifie pas l'identité de chaque membre dans la vie réelle. Le badge Identité confirme qu'une pièce officielle correspond à tes photos, mais ne constitue pas une preuve légale d'identité ; la pièce n'est conservée que le temps de la décision, puis supprimée. Pour un premier rendez-vous : lieu public, durée limitée, préviens un proche. Tu restes responsable de ta sécurité.":
+    "SWIVV no verifica la identidad real de cada miembro. La insignia Identidad confirma que un documento oficial coincide con tus fotos, pero no es una prueba legal de identidad; el documento solo se conserva hasta la decisión y luego se elimina. Para una primera cita: lugar público, duración limitada, avisa a alguien de confianza. Sigues siendo responsable de tu seguridad.",
   "5. Données et suppression": "5. Datos y eliminación",
   "Tes données servent uniquement au fonctionnement du service (profils, compatibilité, modération). Tu peux exporter ou supprimer tes données à tout moment, et supprimer ton compte en 1 clic.":
     "Tus datos se usan solo para el funcionamiento del servicio (perfiles, compatibilidad, moderación). Puedes exportar o eliminar tus datos en cualquier momento y eliminar tu cuenta con un clic.",
@@ -215,7 +264,6 @@ export const es: Record<EnKey, string> = {
     "Para cualquier duda sobre estas condiciones, escríbenos desde la página de contacto. Versión completa y detallada: consulta las condiciones de uso.",
   "Données et confidentialité :": "Datos y privacidad:",
   "centre de confidentialité": "centro de privacidad",
-
   // ── photo guide ──────────────────────────────────────────────────────────
   "Photo acceptée": "Foto aprobada",
   "Photo refusée": "Foto rechazada",
@@ -260,7 +308,14 @@ export const es: Record<EnKey, string> = {
   "avant de publier.": "antes de publicar.",
   "Vérifier mes photos avec un selfie": "Verificar mis fotos con un selfie",
   "Modifier mes photos": "Editar mis fotos",
-
+  "Badge Identité": "Insignia Identidad",
+  "En plus du badge photos, tu peux vérifier ton identité avec une pièce officielle. La comparaison du visage se fait dans ton navigateur : si elle correspond, aucune pièce n'est envoyée ni stockée. En cas de doute, la pièce est conservée en privé pour la modération et supprimée dès la décision.":
+    "Además de la insignia de fotos, puedes verificar tu identidad con un documento oficial. La comparación del rostro se hace en tu navegador: si coincide, no se envía ni se guarda ningún documento. En caso de duda, el documento se guarda en privado para moderación y se elimina en cuanto hay una decisión.",
+  "Vérifier mon identité": "Verificar mi identidad",
+  "Vérifier mon profil": "Verificar mi perfil",
+  "Badges Photos et Identité : comment ça marche et quelles données sont conservées.":
+    "Insignias Fotos e Identidad: cómo funcionan y qué datos se conservan.",
+  "Question sur la vérification d'identité": "Pregunta sobre la verificación de identidad",
   // ── testimonial ──────────────────────────────────────────────────────────
   "Partager votre témoignage": "Comparte vuestra historia",
   "Vous vous êtes dit oui grâce à SWIVV ? Racontez votre histoire, elle inspirera les prochains couples.":
@@ -277,7 +332,6 @@ export const es: Record<EnKey, string> = {
   "Photo de couple {n}": "Foto de pareja {n}",
   "Retirer la photo {n}": "Quitar la foto {n}",
   "Envoyer notre témoignage": "Enviar nuestra historia",
-
   // ── blog index ───────────────────────────────────────────────────────────
   "Le blog SWIVV": "El blog de SWIVV",
   "Conseils rencontres, mariage, idées de sorties et témoignages de couples.":
@@ -285,7 +339,6 @@ export const es: Record<EnKey, string> = {
   "Rechercher un article…": "Buscar un artículo.",
   "Rechercher un article": "Buscar un artículo",
   "Aucun article trouvé.": "No se han encontrado artículos.",
-
   // ── verification ─────────────────────────────────────────────────────────
   "Vérifie ton profil": "Verifica tu perfil",
   "Prends un selfie : on le compare à ta photo de profil, sur ton appareil uniquement. Rien n'est envoyé ni stocké.":
@@ -316,7 +369,39 @@ export const es: Record<EnKey, string> = {
     "¡Eres tú! Tu perfil ya muestra la insignia de verificado.",
   "Ce selfie ne correspond à aucune de tes photos. Si c'est bien toi aujourd'hui, utilise-le comme nouvelle photo de profil.":
     "Este selfie no coincide con ninguna de tus fotos. Si eres tú hoy, úsalo como nueva foto de perfil.",
-
+  "Vérification d'identité": "Verificación de identidad",
+  "Prends ta pièce d'identité en photo : le visage est comparé à tes photos directement sur ton appareil. Le document n'est envoyé que si un contrôle humain est nécessaire.":
+    "Haz una foto de tu documento de identidad: el rostro se compara con tus fotos directamente en tu dispositivo. El documento solo se envía si hace falta una revisión humana.",
+  "Identité vérifiée — le badge est actif sur ton profil.":
+    "Identidad verificada: la insignia ya está activa en tu perfil.",
+  "Pièce reçue — l'équipe l'examine sous 48 h. Aucun document n'est conservé après la décision.":
+    "Documento recibido: el equipo lo revisa en 48 h. No se conserva nada tras la decisión.",
+  "Pièce refusée": "Documento rechazado",
+  "Tu peux réessayer avec une photo plus nette.": "Puedes volver a intentarlo con una foto más nítida.",
+  "Contrôle automatique…": "Comprobación automática…",
+  "Prendre ma pièce en photo": "Hacer una foto de mi documento",
+  "Vérifie d'abord tes photos ci-dessus.": "Verifica primero tus fotos de arriba.",
+  "Aucune donnée de la pièce n'est conservée : elle est supprimée après la décision, seuls le badge et sa date restent.":
+    "No se conserva ningún dato del documento: se elimina tras la decisión; solo quedan la insignia y su fecha.",
+  "Identité vérifiée": "Identidad verificada",
+  "Image trop lourde (8 Mo max).": "Imagen demasiado grande (8 MB máx.).",
+  "Envoi impossible. Réessaie.": "No se pudo enviar. Inténtalo de nuevo.",
+  "Retour": "Volver",
+  "Retour au site": "Volver al sitio",
+  "Continuer": "Continuar",
+  "Capturer": "Capturar",
+  "Ton selfie": "Tu selfie",
+  "Prendre un selfie": "Tomar un selfie",
+  "Reprendre le selfie": "Repetir el selfie",
+  "Changer de photo de référence": "Cambiar la foto de referencia",
+  "Utiliser ce selfie comme photo de profil": "Usar este selfie como foto de perfil",
+  "Résultat par photo": "Resultado por foto",
+  "Trouve un endroit bien éclairé": "Busca un lugar bien iluminado",
+  "Évite les reflets et les ombres": "Evita reflejos y sombras",
+  "Garde tout ton visage dans le cadre": "Mantén todo tu rostro en el encuadre",
+  "Assure-toi que les quatre coins sont visibles": "Asegúrate de que se vean las cuatro esquinas",
+  "La comparaison se fait sur ton appareil. Aucune photo n'est envoyée ni conservée.":
+    "La comparación se hace en tu dispositivo. No se envía ni se guarda ninguna foto.",
   // ── faq ──────────────────────────────────────────────────────────────────
   "Inscription & compte": "Registro y cuenta",
   "Matching & messages": "Matching y mensajes",
@@ -330,6 +415,13 @@ export const es: Record<EnKey, string> = {
   "Que veut dire le score de compatibilité ?": "¿Qué significa la puntuación de compatibilidad?",
   "Je n'ai pas de réponse à mon message, que faire ?": "No tengo respuesta a mi mensaje, ¿qué hago?",
   "Puis-je discuter avant un match ?": "¿Puedo hablar antes de un match?",
+  "Comment envoyer une demande de connexion ?": "¿Cómo envío una solicitud de conexión?",
+  "Oui. Créer ton profil, parcourir les profils, liker et matcher est gratuit et sans limite. Envoyer une demande de connexion et discuter avec les membres qui l'acceptent est gratuit aussi.":
+    "Sí. Crear tu perfil, explorar perfiles, dar likes y hacer match es gratis y sin límite. Enviar una solicitud de conexión y hablar con los miembros que la aceptan también es gratis.",
+  "Oui, grâce à la demande de connexion : tu peux contacter n'importe quel membre en lui envoyant un premier message. S'il accepte, les messages texte s'ouvrent. Les vocaux et les pièces jointes restent désactivés par défaut : l'autre membre peut les autoriser, et chacun peut les révoquer à tout moment.":
+    "Sí, mediante una solicitud de conexión: puedes contactar con cualquier miembro enviándole un primer mensaje. Si acepta, se abren los mensajes de texto. Las notas de voz y los archivos adjuntos siguen desactivados por defecto: el otro miembro puede autorizarlos y cualquiera puede revocarlos en cualquier momento.",
+  "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser. Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée.":
+    "En el perfil de un miembro, pulsa «Mensaje», escribe un primer mensaje (500 caracteres máx.) y luego «Enviar solicitud». El miembro la recibe en Mensajes y puede aceptarla o rechazarla. Tras un rechazo podrás volver a intentarlo a los 7 días. Un match mutuo no desbloquea la conversación: también hace falta una solicitud aceptada.",
   "SWIVV convient-il pour trouver un mariage ?": "¿SWIVV sirve para encontrar matrimonio?",
   "Puis-je impliquer ma famille ?": "¿Puedo implicar a mi familia?",
   "Comment reconnaître un faux profil ?": "¿Cómo reconozco un perfil falso?",
@@ -348,6 +440,22 @@ export const es: Record<EnKey, string> = {
   "SWIVV n'accepte que les vraies photos : ni dessins, ni illustrations, ni photos de célébrités. Ajoute des photos réelles et récentes pour être validé. Les erreurs les plus fréquentes sont listées":
     "SWIVV solo acepta fotos reales: ni dibujos, ni ilustraciones, ni fotos de famosos. Añade fotos reales y recientes para que te validen. Los errores más frecuentes están en",
   "dans cet article": "este artículo",
+  "Tu likes les profils qui te plaisent. Quand l'intérêt est réciproque, cela devient un match : les deux membres reçoivent une notification et une annonce à l'écran. Pour discuter, envoie une demande de connexion : les messages texte s'ouvrent quand elle est acceptée, puis l'autre membre peut autoriser les vocaux et les pièces jointes. Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
+    "Das like a los perfiles que te gustan. Cuando el interés es mutuo se convierte en un match: ambos miembros reciben una notificación y un aviso en pantalla. Para hablar, envía una solicitud de conexión: los mensajes de texto se abren cuando se acepta y luego el otro miembro puede autorizar notas de voz y archivos adjuntos. Cada perfil muestra una puntuación de compatibilidad calculada a partir de la ciudad, la edad, los intereses, la religión y las intenciones.",
+  "Tu likes les profils qui te plaisent. Quand l'intérêt est réciproque, cela devient un match : les deux membres reçoivent une notification et une annonce à l'écran. Pour discuter, envoie une demande de connexion : l'autre membre choisit alors ce qu'il autorise (messages texte, vocaux et pièces jointes). Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
+    "Das like a los perfiles que te gustan. Cuando el interés es mutuo se convierte en un match: ambos miembros reciben una notificación y un aviso en pantalla. Para hablar, envía una solicitud de conexión: el otro miembro elige entonces lo que autoriza (mensajes de texto, notas de voz y archivos adjuntos). Cada perfil muestra una puntuación de compatibilidad calculada a partir de la ciudad, la edad, los intereses, la religión y las intenciones.",
+  "Oui, grâce à la demande de connexion : tu peux contacter n'importe quel membre en lui envoyant un premier message. S'il accepte, il choisit aussi ce qu'il autorise : messages texte, vocaux et pièces jointes. Tout reste désactivé par défaut et peut être révoqué à tout moment.":
+    "Sí, mediante una solicitud de conexión: puedes contactar con cualquier miembro enviándole un primer mensaje. Si acepta, también elige lo que autoriza: mensajes de texto, notas de voz y archivos adjuntos. Todo sigue desactivado por defecto y puede revocarse en cualquier momento.",
+  "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser, en choisissant les communications qu'il autorise (texte, vocaux, pièces jointes). Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée.":
+    "En el perfil de un miembro, pulsa «Mensaje», escribe un primer mensaje (500 caracteres máx.) y luego «Enviar solicitud». El miembro la recibe en Mensajes y puede aceptarla o rechazarla, eligiendo qué comunicaciones autoriza (texto, notas de voz, archivos adjuntos). Tras un rechazo podrás volver a intentarlo a los 7 días. Un match mutuo no desbloquea la conversación: también hace falta una solicitud aceptada.",
+  "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser, en choisissant les communications qu'il autorise (texte, vocaux, pièces jointes). Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée. Dès qu'il répond, une fenêtre s'affiche sur ton écran, où que tu sois sur le site, avec sa décision et les fonctionnalités qu'il a autorisées.":
+    "En el perfil de un miembro, pulsa «Mensaje», escribe un primer mensaje (500 caracteres máx.) y luego «Enviar solicitud». El miembro la recibe en Mensajes y puede aceptarla o rechazarla, eligiendo qué comunicaciones autoriza (texto, notas de voz, archivos adjuntos). Tras un rechazo podrás volver a intentarlo a los 7 días. Un match mutuo no desbloquea la conversación: también hace falta una solicitud aceptada. En cuanto responda, aparecerá una ventana en tu pantalla, estés donde estés en el sitio, con su decisión y las funciones que autoriza.",
+  "Like les profils qui te plaisent. Quand l'intérêt est réciproque, un match est annoncé aux deux membres par une notification et un message à l'écran. Pour discuter, envoie une demande de connexion : le texte, les vocaux et les pièces jointes ne s'ouvrent qu'après acceptation, chaque option devant être autorisée par l'autre membre.":
+    "Da like a los perfiles que te gustan. Cuando el interés es mutuo, ambos miembros reciben una notificación y un aviso en pantalla del match. Para hablar, envía una solicitud de conexión: el texto, las notas de voz y los archivos solo se abren tras la aceptación, y cada opción debe ser autorizada por el otro miembro.",
+  "Le texte, les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit ce qu'il autorise. Chaque permission peut être révoquée à tout moment.":
+    "El texto, las notas de voz y los archivos adjuntos no se abren automáticamente, ni siquiera entre matches: envía una solicitud de conexión y el otro miembro elige lo que autoriza. Cada permiso puede revocarse en cualquier momento.",
+  "Le texte, les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit ce qu'il autorise. Chaque permission peut être révoquée à tout moment. Quand l'autre membre répond, une fenêtre t'annonce sa décision et les fonctionnalités qu'il a autorisées, où que tu sois sur le site.":
+    "El texto, las notas de voz y los archivos adjuntos no se abren automáticamente, ni siquiera entre matches: envía una solicitud de conexión y el otro miembro elige lo que autoriza. Cada permiso puede revocarse en cualquier momento. Cuando la otra persona responda, una ventana te dirá su decisión y las funciones que autoriza, estés donde estés en el sitio.",
   "Tu likes les profils qui te plaisent et tu peux déjà leur écrire. Quand l'intérêt est réciproque, cela devient un match et les vocaux et les photos se débloquent. Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
     "Das like a los perfiles que te gustan y ya puedes escribirles. Cuando el interés es mutuo se convierte en match y se desbloquean las notas de voz y las fotos. Cada perfil muestra una puntuación de compatibilidad calculada a partir de la ciudad, la edad, los intereses, la religión y las intenciones.",
   "Comprendre le matching": "Entender el matching",
@@ -367,7 +475,13 @@ export const es: Record<EnKey, string> = {
     "Claro. Tras unos cuantos mensajes para comprobar la compatibilidad, puedes presentar a la persona a tu familia antes de ir más lejos. Incluso es recomendable para un proyecto de matrimonio.",
   "Méfie-toi des photos trop parfaites sans vie quotidienne, des bios vides, des demandes rapides de changer d'application et surtout de toute demande d'argent. Les 8 signaux d'alerte sont détaillés":
     "Desconfía de las fotos demasiado perfectas sin vida cotidiana, de las bios vacías, de las peticiones rápidas de cambiar de aplicación y, sobre todo, de cualquier petición de dinero. Las 8 señales de alerta están detalladas",
-  ". Privilégie les profils avec le badge vérifié.": ". Prioriza los perfiles con la insignia de verificado.",
+  ". Privilégie les profils avec le badge Photos vérifiées ou Identité vérifiée.":
+    ". Prioriza los perfiles con la insignia Fotos verificadas o Identidad verificada.",
+  "Comment vérifier mon identité et que devient ma pièce ?":
+    "¿Cómo verifico mi identidad y qué pasa con mi documento?",
+  "Prends une photo de ta pièce d'identité depuis la page Vérification : le visage est comparé à tes photos dans ton navigateur. S'il correspond, le badge Identité s'affiche tout de suite et la pièce n'est ni envoyée ni conservée. En cas de doute, elle part dans un espace privé réservé à la modération, puis est supprimée dès la décision. Seuls le badge et sa date restent ; aucune donnée de la pièce n'est conservée.":
+    "Haz una foto de tu documento de identidad desde la página Verificación: el rostro se compara con tus fotos en tu navegador. Si coincide, la insignia Identidad aparece de inmediato y el documento no se envía ni se guarda. En caso de duda, va a un espacio privado reservado a moderación y se elimina en cuanto hay una decisión. Solo quedan la insignia y su fecha; no se guarda ningún dato del documento.",
+  "Détails dans le centre de confidentialité": "Detalles en el centro de privacidad",
   "Sur chaque profil et chaque conversation, utilise le bouton de signalement, ou":
     "En cada perfil y en cada conversación, usa el botón de denuncia, o",
   "écris-nous via la page contact": "escríbenos desde la página de contacto",
@@ -389,10 +503,9 @@ export const es: Record<EnKey, string> = {
   "Toujours bloqué ?": "¿Sigues atascado?",
   "L'équipe SWIVV répond en général sous 1 à 2 jours ouvrés.":
     "El equipo de SWIVV suele responder en 1 o 2 días laborables.",
-
   // ── how it works ─────────────────────────────────────────────────────────
-  "Inscription, profil, photos, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.":
-    "Registro, perfil, fotos, matching, seguridad y seguimiento de tu progreso: todo lo que necesitas para empezar bien en SWIVV y hacer grandes encuentros con confianza.",
+  "Inscription, profil, photos, vérification d'identité, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.":
+    "Registro, perfil, fotos, verificación de identidad, matching, seguridad y seguimiento de tu progreso: todo lo que necesitas para empezar bien en SWIVV y hacer grandes encuentros con confianza.",
   "Voir les profils": "Ver los perfiles",
   "Créer mon profil gratuit": "Crear mi perfil gratis",
   "1. Compte en 2 minutes, profil à ton rythme": "1. Una cuenta en 2 minutos, un perfil a tu ritmo",
@@ -453,6 +566,22 @@ export const es: Record<EnKey, string> = {
     "Desliza, descubre, da like: recorres perfiles seleccionados, das like a los que te gustan y algunos se convierten en matches.",
   "Parcours les profils par ville, âge, intention et centres d'intérêt.":
     "Explora los perfiles por ciudad, edad, intención e intereses.",
+  "Like les profils qui te plaisent. Quand l'intérêt est réciproque, un match est annoncé aux deux membres par une notification et un message à l'écran. Pour discuter, envoie une demande de connexion : les textes, vocaux et pièces jointes ne s'ouvrent qu'après acceptation.":
+    "Da like a los perfiles que te gustan. Cuando el interés es mutuo, ambos miembros reciben una notificación y un aviso en pantalla del match. Para hablar, envía una solicitud de conexión: los textos, notas de voz y archivos solo se abren tras la aceptación.",
+  "Les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit d'autoriser les vocaux et les fichiers. Les textes sont inclus dès l'acceptation, et chaque autorisation peut être révoquée à tout moment.":
+    "Las notas de voz y los archivos adjuntos no se abren automáticamente, ni siquiera entre matches: envía una solicitud de conexión y el otro miembro decide si autoriza voces y archivos. El texto se incluye desde la aceptación y cada permiso puede revocarse en cualquier momento.",
+  "Réagir compte aussi comme un like : ton intérêt est transmis au membre. S'il te like ou réagit en retour, vous êtes en match et vous recevez une notification. Pour discuter, envoyez-vous une demande de connexion.":
+    "Reaccionar también cuenta como like: tu interés llega al miembro. Si te da like o reacciona de vuelta, hacéis match y ambos recibís una notificación. Para hablar, envíaos una solicitud de conexión.",
+  "Match mutuel — envoie une demande de connexion pour discuter.": "Match mutuo: envía una solicitud de conexión para hablar.",
+  "Choisis ce que tu autorises :": "Elige lo que autorizas:",
+  "Texte": "Texto",
+  "Autoriser": "Permitir",
+  "Fonctionnalités autorisées": "Funciones permitidas",
+  "Les messages texte ne sont pas encore autorisés. Active-les ci-dessus.": "Los mensajes de texto aún no están permitidos. Actívalos arriba.",
+  "Les messages texte ne sont pas encore autorisés par ce membre.": "Este miembro aún no permite los mensajes de texto.",
+  "Les messages texte ne sont pas encore autorisés. Autorise-les pour discuter.": "Los mensajes de texto aún no están permitidos. Permítelos para hablar.",
+  "Les messages texte ne sont pas encore autorisés par {name}.": "{name} aún no permite los mensajes de texto.",
+  "Autoriser les messages texte": "Permitir mensajes de texto",
   "Like les profils qui te plaisent et écris-leur librement. Quand l'intérêt est réciproque, cela devient un match et les vocaux et les photos se débloquent.":
     "Da like a los perfiles que te gustan y escríbeles libremente. Cuando el interés es mutuo se convierte en match y se desbloquean las notas de voz y las fotos.",
   "Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.":
@@ -471,6 +600,7 @@ export const es: Record<EnKey, string> = {
   "Fais confiance à ton instinct : un malaise suffit à écourter ou annuler, sans justification.":
     "Confía en tu instinto: sentirte incómodo basta para acortar o cancelar, sin justificarte.",
   "8. Messages vocaux et envoi d'images": "8. Notas de voz y envío de imágenes",
+  "8. Messages texte, vocaux et envoi d'images": "8. Mensajes de texto, voz e imágenes",
   "Les vocaux et les images se débloquent avec un match : tu dois liker et être liké(e) en retour. Tant que ce n'est pas réciproque, seuls les messages écrits sont possibles. Pour parler de vive voix, échange ton numéro quand tu es prêt(e).":
     "Las notas de voz y las imágenes se desbloquean con un match: tienes que dar like y que te lo devuelvan. Mientras no sea mutuo, solo son posibles los mensajes escritos. Para hablar en voz alta, intercambia tu número cuando estés listo/a.",
   "Messages vocaux : dans la conversation (popup sur le profil ou page Messages), touche le micro pour enregistrer, ■ pour envoyer, ✕ pour annuler. Tes vocaux sont écoutables des deux côtés, sur téléphone comme sur ordinateur.":
@@ -541,7 +671,21 @@ export const es: Record<EnKey, string> = {
     "Ninguna imagen se envía al servidor para la comparación: solo se guarda la insignia de verificado.",
   "Photos trop anciennes, floues ou retouchées : la comparaison peut échouer, même si c'est bien toi.":
     "Fotos demasiado antiguas, borrosas o retocadas: la comparación puede fallar, aunque seas tú.",
-
+  "13. Vérifier ton identité (badge Identité)": "13. Verificar tu identidad (insignia Identidad)",
+  "En plus du badge photos, tu peux obtenir le badge Identité : il confirme qu'une pièce d'identité avec photo correspond à ton profil. La comparaison du visage se fait dans ton navigateur.":
+    "Además de la insignia de fotos, puedes obtener la insignia Identidad: confirma que un documento con foto coincide con tu perfil. La comparación del rostro se hace en tu navegador.",
+  "Depuis la page Vérification, prends en photo ta pièce d'identité (recto, portrait visible). Le visage est comparé à tes photos de profil directement sur ton appareil.":
+    "Desde la página Verificación, haz una foto de tu documento de identidad (anverso, retrato visible). El rostro se compara con tus fotos de perfil directamente en tu dispositivo.",
+  "Si le visage correspond, le badge Identité s'affiche immédiatement : aucune pièce n'est envoyée ni conservée.":
+    "Si el rostro coincide, la insignia Identidad aparece de inmediato: no se envía ni se guarda ningún documento.",
+  "Si le contrôle automatique est douteux (photo floue, portrait peu visible), la pièce est envoyée dans un espace privé réservé à la modération, le temps de la décision.":
+    "Si la comprobación automática es dudosa (foto borrosa, retrato poco visible), el documento se envía a un espacio privado reservado a moderación mientras se decide.",
+  "La pièce est supprimée dès la décision, validée ou refusée. Seuls le badge, sa date et le motif de la décision restent enregistrés.":
+    "El documento se elimina en cuanto hay una decisión, aprobada o rechazada. Solo quedan la insignia, su fecha y el motivo de la decisión.",
+  "Aucune donnée lisible sur la pièce (numéro, date de naissance, adresse) n'est extraite ni conservée, et la pièce n'est jamais partagée avec les autres membres.":
+    "No se extrae ni se guarda ningún dato legible del documento (número, fecha de nacimiento, dirección), y nunca se comparte con otros miembros.",
+  "Le badge Identité est un signal de confiance, pas une preuve légale d'identité : reste prudent lors des rencontres.":
+    "La insignia Identidad es una señal de confianza, no una prueba legal de identidad: mantén la prudencia en las citas.",
   // ── contact ──────────────────────────────────────────────────────────────
   Contact: "Contacto",
   "Parlons-nous": "Hablemos",
@@ -648,10 +792,30 @@ export const es: Record<EnKey, string> = {
   "SWIVV Swipe": "SWIVV Swipe",
   "Je transmets aux humains ! Utilise le formulaire ci-dessous, l'équipe SWIVV répond en général sous 1 à 2 jours ouvrés.":
     "¡Te paso con los humanos! Usa el formulario de abajo: el equipo de SWIVV suele responder en 1 o 2 días laborables.",
-
   // ── terms of sale (CGV) ──────────────────────────────────────────────────
   "Conditions Générales de Vente et de Services — SWIVV": "Condiciones Generales de Venta y de Servicios — SWIVV",
-  "Dernière mise à jour : 22 septembre 2026.": "Última actualización: 22 de septiembre de 2026.",
+  "Dernière mise à jour : 3 novembre 2026.": "Última actualización: 3 de noviembre de 2026.",
+  "17. ÉDITEUR, HÉBERGEUR ET MENTIONS LÉGALES": "17. EDITOR, ALOJAMIENTO Y AVISO LEGAL",
+  "Éditeur du service : SWIVV MATCH — 10 Rue Thureau Dangin, 75015 Paris, France — Téléphone : +33 (0)6 60 36 82 20 — contact@swivvmatch.com.":
+    "Editor del servicio: SWIVV MATCH — 10 Rue Thureau Dangin, 75015 Paris, Francia — Teléfono: +33 (0)6 60 36 82 20 — contact@swivvmatch.com.",
+  "Hébergeur : Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis — vercel.com.":
+    "Alojamiento: Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, Estados Unidos — vercel.com.",
+  "Ces informations sont également publiées sur la page Mentions légales.":
+    "Esta información también se publica en la página Aviso legal.",
+  "18. MÉDIATEUR DE LA CONSOMMATION": "18. MEDIADOR DE CONSUMO",
+  "Pendant la phase actuelle, entièrement gratuite, SWIVV ne conclut aucune vente avec les utilisateurs : la médiation de la consommation n'est donc pas applicable.":
+    "Durante la fase actual, totalmente gratuita, SWIVV no celebra ninguna venta con los usuarios: por tanto, no se aplica la mediación de consumo.",
+  "Avant la mise en place de tout service payant, SWIVV désignera un médiateur de la consommation conformément à l'article L612-1 du Code de la consommation et publiera ses coordonnées sur cette page ainsi que sur la page Mentions légales.":
+    "Antes de lanzar cualquier servicio de pago, SWIVV designará un mediador de consumo conforme al artículo L612-1 del Código de Consumo francés y publicará sus datos en esta página y en la página Aviso legal.",
+  "En cas de réclamation, l'utilisateur est invité à contacter SWIVV en priorité via la page contact afin de rechercher une solution amiable.":
+    "En caso de reclamación, se invita al usuario a contactar primero con SWIVV desde la página de contacto para buscar una solución amistosa.",
+  "19. DROIT DE RÉTRACTATION ET RÉSILIATION (SERVICES PAYANTS À VENIR)": "19. DERECHO DE DESISTIMIENTO Y CANCELACIÓN (FUTUROS SERVICIOS DE PAGO)",
+  "Aucun service payant n'étant proposé actuellement, aucun droit de rétractation ni abonnement n'est applicable à ce jour.":
+    "Como actualmente no se ofrece ningún servicio de pago, no se aplica ningún derecho de desistimiento ni suscripción.",
+  "Lorsque des services payants seront proposés, l'utilisateur consommateur disposera d'un délai de 14 jours pour se rétracter, sauf renoncement express à ce droit en cas d'accès immédiat au service numérique, conformément à la réglementation applicable.":
+    "Cuando se ofrezcan servicios de pago, el usuario consumidor dispondrá de 14 días para desistir, salvo renuncia expresa a ese derecho en caso de acceso inmediato al servicio digital, conforme a la normativa aplicable.",
+  "Les abonnements payants, s'ils sont mis en place, pourront être résiliés en ligne à tout moment, sans frais, au moyen d'une procédure simple et accessible. Les modalités de renouvellement, de résiliation et de remboursement seront communiquées avant toute souscription.":
+    "Las suscripciones de pago, si se implantan, podrán cancelarse en línea en cualquier momento, sin coste, mediante un procedimiento sencillo y accesible. Las condiciones de renovación, cancelación y reembolso se comunicarán antes de cualquier suscripción.",
   "Bienvenue sur SWIVV, une plateforme de rencontre et de mise en relation permettant aux personnes majeures de découvrir d'autres utilisateurs, d'échanger et de faire de nouvelles rencontres.":
     "Bienvenido a SWIVV, una plataforma de citas y contacto que permite a las personas adultas descubrir a otros usuarios, conversar y hacer nuevos encuentros.",
   "Les présentes Conditions Générales de Vente et de Services (« CGV ») définissent les conditions applicables aux services proposés par SWIVV.":
@@ -662,6 +826,7 @@ export const es: Record<EnKey, string> = {
   "Le service est exploité sous le nom :": "El servicio se explota bajo el nombre:",
   "Adresse : 10 Rue Thureau Dangin — 75015 Paris — France.": "Dirección: 10 Rue Thureau Dangin — 75015 París — Francia.",
   "Téléphone : +33 (0)6 60 36 82 20.": "Teléfono: +33 (0)6 60 36 82 20.",
+  "E-mail : contact@swivvmatch.com.": "Correo: contact@swivvmatch.com.",
   "SWIVV est actuellement lancé sous la forme d'un MVP (Minimum Viable Product).":
     "SWIVV se lanza actualmente como MVP (Minimum Viable Product).",
   "2. SERVICE GRATUIT": "2. SERVICIO GRATUITO",
@@ -767,9 +932,8 @@ export const es: Record<EnKey, string> = {
   "16. CONTACT": "16. CONTACTO",
   "Pour toute question concernant les présentes conditions ou le fonctionnement de SWIVV :":
     "Para cualquier pregunta sobre estas Condiciones o el funcionamiento de SWIVV:",
-  "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20.":
-    "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — Francia — Teléfono: +33 (0)6 60 36 82 20.",
-
+  "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20 — E-mail : contact@swivvmatch.com.":
+    "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — Francia — Teléfono: +33 (0)6 60 36 82 20 — Correo: contact@swivvmatch.com.",
   // ── privacy centre ───────────────────────────────────────────────────────
   "Tes données t'appartiennent. Voici ce que SWIVV collecte, pourquoi, et comment reprendre le contrôle.":
     "Tus datos son tuyos. Esto es lo que recoge SWIVV, por qué y cómo recuperar el control.",
@@ -788,7 +952,6 @@ export const es: Record<EnKey, string> = {
   "Généré !": "¡Generado!",
   "Télécharger en PDF": "Descargar en PDF",
   "Connecte-toi pour télécharger tes données": "Inicia sesión para descargar tus datos",
-  "Format JSON": "Formato JSON",
   "Aller aux Paramètres": "Ir a los Ajustes",
   "En résumé": "En resumen",
   "Pas de publicité ciblée avec tes données de rencontres.":
@@ -808,20 +971,23 @@ export const es: Record<EnKey, string> = {
   "Ton profil public (photos, prénom, âge, ville, bio) est visible par les membres connectés uniquement. Ton e-mail, ta position exacte et tes signalements restent strictement privés. Seule ta ville et une distance approximative en km sont affichées.":
     "Tu perfil público (fotos, nombre, edad, ciudad, bio) solo lo ven los miembros conectados. Tu correo, tu ubicación exacta y tus denuncias siguen siendo estrictamente privados. Solo se muestran tu ciudad y una distancia aproximada en km.",
   "4. Conservation": "4. Conservación",
-  "Tes données sont conservées tant que ton compte est actif. Après suppression du compte, ton profil public, tes photos et tes conversations sont effacés, sous réserve des durées légales (ex. journaux de modération en cas d'abus).":
-    "Tus datos se conservan mientras tu cuenta esté activa. Tras eliminar la cuenta, tu perfil público, tus fotos y tus conversaciones se borran, sin perjuicio de los plazos legales (p. ej. registros de moderación en caso de abuso).",
-  "5. Tes droits": "5. Tus derechos",
+  "Tes données sont conservées tant que ton compte est actif. Les messages sont conservés 3 mois, lus ou non. Après suppression du compte, ton profil public, tes photos et tes conversations sont effacés, sous réserve des durées légales (ex. journaux de modération en cas d'abus).":
+    "Tus datos se conservan mientras tu cuenta esté activa. Los mensajes se conservan 3 meses, leídos o no. Tras eliminar la cuenta, tu perfil público, tus fotos y tus conversaciones se borran, sin perjuicio de los plazos legales (p. ej. registros de moderación en caso de abuso).",
+  "5. Vérification d'identité": "5. Verificación de identidad",
+  "Le badge Identité atteste qu'une pièce d'identité avec photo correspond à tes photos de profil. Le contrôle du visage est réalisé dans ton navigateur : si le visage correspond, aucune pièce n'est envoyée ni stockée. En cas de doute, la photo de la pièce est transmise dans un espace de stockage privé, accessible uniquement à l'équipe de modération, puis supprimée dès la décision (validation ou refus). Aucune donnée lisible sur la pièce (numéro, date de naissance, adresse) n'est extraite ni conservée. Seuls le badge, sa date et le motif de la décision restent enregistrés. La pièce n'est jamais visible par les autres membres et n'est jamais utilisée à d'autres fins.":
+    "La insignia Identidad acredita que un documento con foto coincide con tus fotos de perfil. La comprobación del rostro se realiza en tu navegador: si el rostro coincide, no se envía ni se guarda ningún documento. En caso de duda, la foto del documento se transmite a un espacio de almacenamiento privado, accesible solo al equipo de moderación, y se elimina en cuanto hay una decisión (aprobación o rechazo). No se extrae ni se conserva ningún dato legible del documento (número, fecha de nacimiento, dirección). Solo quedan guardados la insignia, su fecha y el motivo de la decisión. El documento nunca es visible para otros miembros y nunca se usa para otros fines.",
+  "6. Tes droits": "6. Tus derechos",
   "Accès, rectification, export, suppression : écris-nous via la page contact en précisant ta demande et l'e-mail de ton compte. Réponse sous 30 jours. Tu peux aussi supprimer ton compte toi-même en 1 clic depuis ton profil.":
     "Acceso, rectificación, exportación, supresión: escríbenos desde la página de contacto indicando tu solicitud y el correo de tu cuenta. Respuesta en 30 días. También puedes eliminar tu cuenta tú mismo en 1 clic desde tu perfil.",
-  "6. Cookies": "6. Cookies",
+  "7. Cookies": "7. Cookies",
   "SWIVV utilise uniquement des cookies techniques (session, préférences, sécurité). Aucun cookie publicitaire. Détails sur la page cookies.":
     "SWIVV solo usa cookies técnicas (sesión, preferencias, seguridad). Ninguna cookie publicitaria. Detalles en la página de cookies.",
-  "7. Sécurité": "7. Seguridad",
+  "8. Sécurité": "8. Seguridad",
   "Connexions chiffrées, mots de passe jamais stockés en clair, accès internes limités. En cas de faille avérée, les membres concernés sont informés conformément à la réglementation.":
     "Conexiones cifradas, contraseñas nunca almacenadas en claro, accesos internos limitados. En caso de brecha confirmada, se informa a los miembros afectados conforme a la normativa.",
-  "8. Contact": "8. Contacto",
-  "Pour exercer tes droits ou poser une question : page contact, objet « Supprimer mes données » ou « Question confidentialité ».":
-    "Para ejercer tus derechos o hacer una pregunta: página de contacto, asunto «Eliminar mis datos» o «Pregunta de privacidad».",
+  "9. Contact": "9. Contacto",
+  "Pour exercer tes droits ou poser une question : page contact, objet « Supprimer mes données ».":
+    "Para ejercer tus derechos o hacer una pregunta: página de contacto, asunto «Eliminar mis datos».",
   "Mes données SWIVV": "Mis datos SWIVV",
   "Mes données": "Mis datos",
   "Exporté le {date}": "Exportado el {date}",
@@ -845,7 +1011,6 @@ export const es: Record<EnKey, string> = {
   Religion: "Religión",
   Langues: "Idiomas",
   "Centres d'intérêt": "Intereses",
-
   // ── browse ───────────────────────────────────────────────────────────────
   Intention: "Busco",
   Toutes: "Todas",
@@ -898,7 +1063,6 @@ export const es: Record<EnKey, string> = {
   "Original(e)": "Original",
   "Relation amoureuse": "Relación amorosa",
   "Belle histoire": "Una bonita historia",
-
   // ── blog ─────────────────────────────────────────────────────────────────
   Conseils: "Consejos",
   Sorties: "Planes",
@@ -938,7 +1102,6 @@ export const es: Record<EnKey, string> = {
   "Lien copié !": "¡Enlace copiado!",
   Partager: "Compartir",
   "Articles similaires": "Artículos similares",
-
   // ── my profile ───────────────────────────────────────────────────────────
   "Connexion perdue": "Conexión perdida",
   "Impossible de charger ton profil sans connexion. Tes données sont en sécurité — réessaie quand internet revient.":
@@ -958,7 +1121,6 @@ export const es: Record<EnKey, string> = {
     "¡Toca Mis Matches para definir tu Swivv perfecto!",
   "Connecte-toi ou inscris-toi pour voir à quel point tu matches avec {name}.":
     "Inicia sesión o regístrate para ver lo bien que encajas con {name}.",
-
   // ── profile fields / sections ────────────────────────────────────────────
   "Photos vérifiées": "Fotos verificadas",
   Nouveau: "Nuevo",
@@ -1032,7 +1194,6 @@ export const es: Record<EnKey, string> = {
   "Date de naissance": "Fecha de nacimiento",
   Genre: "Género",
   Nom: "Nombre",
-
   // ── access logs ──────────────────────────────────────────────────────────
   "Mon accès et mes relevés": "Mi acceso y mis recibos",
   "Formule actuelle": "Plan actual",
@@ -1054,7 +1215,6 @@ export const es: Record<EnKey, string> = {
   "Si des options payantes voient le jour, elles feront l'objet de factures séparées.":
     "Si aparecen opciones de pago, se facturarán por separado.",
   "Voir les conditions tarifaires (CGV)": "Ver las condiciones tarifarias (Condiciones de venta)",
-
   // ── settings ─────────────────────────────────────────────────────────────
   "Connecte-toi pour gérer tes paramètres.": "Inicia sesión para gestionar tus ajustes.",
   Compte: "Cuenta",
@@ -1106,7 +1266,6 @@ export const es: Record<EnKey, string> = {
   "Ancien mot de passe incorrect.": "La contraseña actual es incorrecta.",
   "Mot de passe mis à jour.": "Contraseña actualizada.",
   "La suppression a échoué, réessaie dans un instant.": "No se pudo eliminar, inténtalo de nuevo en un momento.",
-
   // ── notifications ────────────────────────────────────────────────────────
   "Non lues": "No leídas",
   Messages: "Mensajes",
@@ -1153,7 +1312,6 @@ export const es: Record<EnKey, string> = {
   "E-mails marketing": "Correos de marketing",
   "Reçois occasionnellement nos nouveautés, conseils et offres SWIVV MATCH. Désinscription possible à tout moment ici.":
     "Recibe de vez en cuando nuestras novedades, consejos y ofertas de SWIVV MATCH. Puedes darte de baja aquí cuando quieras.",
-
   // ── matches ──────────────────────────────────────────────────────────────
   "Connecte-toi pour découvrir tes matches.": "Inicia sesión para descubrir tus matches.",
   "Sélectionne tes critères puis sauvegarde : ils définissent ton % de compatibilité partout sur le site, et les profils correspondants s'affichent ci-dessous, meilleurs en premier.":
@@ -1196,7 +1354,6 @@ export const es: Record<EnKey, string> = {
   "Déménagement accepté": "Dispuesto a mudarse",
   "Niveau d'études": "Nivel de estudios",
   "L'essentiel": "Lo esencial",
-
   // ── swivv progress ───────────────────────────────────────────────────────
   "Succès débloqué : {name}": "Logro desbloqueado: {name}",
   "{n} succès débloqués": "{n} logros desbloqueados",
@@ -1297,7 +1454,6 @@ export const es: Record<EnKey, string> = {
   "Le module de sensibilisation au respect et à la sécurité en ligne arrive bientôt.":
     "El módulo de concienciación sobre el respeto y la seguridad en línea llegará pronto.",
   "Terminer le parcours respect et sécurité en ligne": "Completar el curso de respeto y seguridad en línea",
-
   // ── messaging ────────────────────────────────────────────────────────────
   "Conversations ({total} · {unread} non lu{s})": "Conversaciones ({total} · {unread} sin leer)",
   "Les messages de plus de 3 mois sont supprimés automatiquement, lus ou non.":
@@ -1350,7 +1506,6 @@ export const es: Record<EnKey, string> = {
   "Envoyer quand même": "Enviar de todos modos",
   "Voir profil de {name}": "Ver el perfil de {name}",
   "Dis bonjour à {name} !": "¡Saluda a {name}!",
-
   // ── statistics ───────────────────────────────────────────────────────────
   "Connecte-toi pour voir tes statistiques.": "Inicia sesión para ver tus estadísticas.",
   "Membre supprimé": "Miembro eliminado",
@@ -1517,7 +1672,6 @@ export const es: Record<EnKey, string> = {
   Amitié: "Amistad",
   "Mes Likes": "Mis Likes",
   "Profils likés": "Perfiles con like",
-
   // ── notification templates (stored French copy) ──────────────────────────
   "Nouveau message": "Nuevo mensaje",
   "Nouveau message vocal": "Nuevo mensaje de voz",
@@ -1749,4 +1903,63 @@ export const es: Record<EnKey, string> = {
   "Ronde": "Con curvas",
   "Corpulent": "Corpulento",
   "Corpulente": "Corpulenta",
+  "Contacter {name}": "Contactar con {name}",
+  "Demande de connexion": "Solicitud de conexión",
+  "Impossible de contacter ce membre pour le moment.": "No puedes contactar con este miembro por ahora.",
+  "Demande envoyée": "Solicitud enviada",
+  "Nouvelle demande de connexion": "Nueva solicitud de conexión",
+  "En attente de sa réponse. Tu peux annuler tant qu'elle n'a pas répondu.": "Esperando su respuesta. Puedes cancelar mientras no responda.",
+  "Annuler la demande": "Cancelar solicitud",
+  "Accepter ou refuser dans Messages": "Aceptar o rechazar en Mensajes",
+  "Cette personne a refusé la demande. Tu pourras réessayer dans {n} jour(s).": "Esta persona rechazó la solicitud. Podrás intentarlo de nuevo en {n} día(s).",
+  "Présente-toi en quelques lignes…": "Preséntate en unas líneas…",
+  "Ton premier message": "Tu primer mensaje",
+  "Un seul message, lisible avant acceptation.": "Solo un mensaje, legible antes de aceptar.",
+  "Envoyer la demande": "Enviar solicitud",
+  "Demandes de connexion": "Solicitudes de conexión",
+  "Membre SWIVV": "Miembro SWIVV",
+  "Souhaites-tu te connecter avec cette personne ?": "¿Quieres conectar con esta persona?",
+  "Les messages texte sont inclus. Active ce que tu acceptes en plus :": "Los mensajes de texto están incluidos. Activa lo que aceptas además:",
+  "Vocaux": "Notas de voz",
+  "Pièces jointes": "Archivos adjuntos",
+  "Autorisé": "Permitido",
+  "Refusé": "Rechazado",
+  "Refuser la demande": "Rechazar solicitud",
+  "Accepter la demande": "Aceptar solicitud",
+  "Texte activé": "Texto activado",
+  "Activé": "Activado",
+  "Demandé": "Solicitado",
+  "Non autorisé": "No permitido",
+  "Révoquer": "Revocar",
+  "Refuser": "Rechazar",
+  "Accepter": "Aceptar",
+  "Demander": "Solicitar",
+  "Cette demande attend ta réponse ci-dessus.": "Esta solicitud espera tu respuesta arriba.",
+  "Demande envoyée — en attente de sa réponse.": "Solicitud enviada: esperando su respuesta.",
+  "Demande refusée. Tu pourras réessayer dans {n} jour(s).": "Solicitud rechazada. Podrás intentarlo de nuevo en {n} día(s).",
+  "Envoie une demande de connexion depuis le profil pour commencer à discuter.": "Envía una solicitud de conexión desde el perfil para empezar a chatear.",
+  "Choisir une pièce jointe": "Elegir un archivo adjunto",
+  "Envoyer une pièce jointe": "Enviar un archivo adjunto",
+  "Envoyer cette pièce jointe ?": "¿Enviar este archivo?",
+  "Un seul fichier par message, 2 Mo max. Formats : JPG, PNG, WebP, PDF, TXT.": "Un solo archivo por mensaje, 2 MB máx. Formatos: JPG, PNG, WebP, PDF, TXT.",
+  "Aperçu de la pièce jointe": "Vista previa del archivo",
+  "Retirer la pièce jointe": "Quitar el archivo",
+  "Envoi de la pièce jointe…": "Enviando el archivo…",
+  "1 pièce jointe par message, 2 Mo max : JPG, JPEG, PNG, WebP, PDF ou TXT. Les vocaux sont limités à 5 Mo. Les fichiers exécutables, scripts et archives sont refusés.": "1 archivo adjunto por mensaje, 2 MB máx.: JPG, JPEG, PNG, WebP, PDF o TXT. Las notas de voz se limitan a 5 MB. Se rechazan ejecutables, scripts y archivos comprimidos.",
+  "Je certifie avoir 18 ans ou plus et que la date de naissance fournie est exacte. J'accepte les": "Confirmo que tengo 18 años o más y que la fecha de nacimiento indicada es exacta. Acepto las",
+  "SWIVV MATCH est exclusivement réservé aux adultes de 18 ans et plus.": "SWIVV MATCH está exclusivamente reservado a adultos de 18 años o más.",
+  "Désolé, SWIVV MATCH est réservé aux personnes de 18 ans et plus. Tu ne peux pas créer de compte pour le moment.": "Lo sentimos, SWIVV MATCH está disponible exclusivamente para personas de 18 años o más. No puedes crear una cuenta en este momento.",
+  "Indique une date de naissance valide.": "Indica una fecha de nacimiento válida.",
+  "Utilisateur suspecté d'être mineur": "Usuario sospechoso de ser menor de edad",  "Mot de passe oublié ?": "¿Has olvidado tu contraseña?",
+  "Si un compte existe pour cet e-mail, un lien de réinitialisation vient d'être envoyé.": "Si existe una cuenta con este correo, se acaba de enviar un enlace de restablecimiento.",
+  "Impossible d'envoyer l'e-mail pour le moment.": "No se ha podido enviar el correo en este momento.",
+  "Réinitialise ton mot de passe": "Restablece tu contraseña",
+  "Choisis un nouveau mot de passe.": "Elige una contraseña nueva.",
+  "Vérification du lien…": "Comprobando el enlace…",
+  "Ce lien de réinitialisation a expiré ou n'est pas valide.": "Este enlace de restablecimiento ha caducado o no es válido.",
+  "Demander un nouveau lien": "Solicitar un enlace nuevo",
+  "Impossible de mettre à jour le mot de passe. Demande un nouveau lien.": "No se ha podido actualizar la contraseña. Solicita un enlace nuevo.",
+  "Ton nouveau mot de passe": "Tu nueva contraseña",
+  "Enregistrer": "Guardar",
+
 };

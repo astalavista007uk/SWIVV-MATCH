@@ -13,8 +13,8 @@ import {
   BarChart3,
   Trophy,
 } from "lucide-react";
-import { getLikes, getSettings, setSetting, subscribe, toggleLike, isNativeApp } from "@/lib/swivv-store";
-import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
+import { getLikes, subscribe, toggleLike, isNativeApp } from "@/lib/swivv-store";
+import { SWIVV_PROFILES, nameAge, type SwivvProfile } from "@/lib/swivv-data";
 import { displayPct, load, MatchLoginPrompt } from "@/lib/match-score";
 import { realDistance, useMyCity } from "@/lib/location-distance";
 import { useAuth } from "@/hooks/use-auth";
@@ -72,9 +72,15 @@ function HeroCardInfo({ p, compact }: { p: SwivvProfile; compact?: boolean }) {
   return (
     <div className={`absolute inset-x-2.5 bottom-2.5 text-white ${compact ? "" : "md:inset-x-3 md:bottom-3"}`}>
       <p className={`flex items-center gap-1 font-medium leading-tight ${compact ? "text-[11px]" : "text-sm"}`}>
-        {p.name}, {p.age}
+        {nameAge(p)}
         {p.verified && (
           <BadgeCheck className={`text-[#ff7aa8] ${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`} />
+        )}
+        {p.idVerified && (
+          <ShieldCheck
+            aria-label="Identité vérifiée"
+            className={`text-[#ff7aa8] ${compact ? "h-3 w-3" : "h-3.5 w-3.5"}`}
+          />
         )}
       </p>
       <p className={`text-white/70 ${compact ? "text-[9px]" : "text-[11px]"}`}>{p.city}</p>
@@ -139,10 +145,16 @@ function HeroStorySlider({ profiles }: { profiles: SwivvProfile[] }) {
             <ImageIcon className="h-3 w-3" />
             photo
           </span>
+          {p.demo && (
+            <span className="absolute right-3 top-9 rounded-full bg-black/75 px-2.5 py-1 text-[11px] font-bold text-white">
+              {t("Démo")}
+            </span>
+          )}
           <div className="absolute inset-x-3 bottom-3 text-white">
             <p className="flex items-center gap-1 text-lg font-bold leading-tight">
-              {p.name}, {p.age}
+              {nameAge(p)}
               {p.verified && <BadgeCheck className="h-4 w-4 text-[#ff7aa8]" />}
+              {p.idVerified && <ShieldCheck aria-label={t("Identité vérifiée")} className="h-4 w-4 text-[#ff7aa8]" />}
             </p>
             <p className="text-xs text-white/70">{p.city}</p>
             <p className="mt-2 flex flex-wrap gap-1">
@@ -194,7 +206,7 @@ const FEATURE_SLIDES: {
 }[] = [
   {
     icon: UserPlus,
-    title: "Rejoins SWIVV en 2 minutes",
+    title: "Rejoins SWIVV\nen 2 minutes",
     text: "Compte gratuit en 2 minutes — complète ton profil à ton rythme.",
     items: [
       { icon: UserPlus, title: "Crée ton profil" },
@@ -204,7 +216,7 @@ const FEATURE_SLIDES: {
   },
   {
     icon: Sparkles,
-    title: "Un matching qui a du sens",
+    title: "Un matching\nqui a du sens",
     text: "On te montre d'abord les personnes vraiment compatibles.",
     items: [
       { icon: Sparkles, title: "Score de compatibilité" },
@@ -216,7 +228,7 @@ const FEATURE_SLIDES: {
   {
     icon: Mic,
     title: "Entends sa voix avant le premier rendez-vous",
-    text: "Réservés aux matchs : quand l'intérêt est réciproque, passe du texte à la voix.",
+    text: "Après une demande de connexion acceptée, passe du texte à la voix si l'autre membre l'autorise.",
     items: [
       { icon: ImageIcon, title: "Partage de photos" },
       { icon: Mic, title: "Messages vocaux" },
@@ -224,7 +236,7 @@ const FEATURE_SLIDES: {
   },
   {
     icon: BarChart3,
-    title: "Suis tes chiffres et ta progression",
+    title: "Suis tes chiffres\net ta progression",
     text: "Des repères concrets sur ton activité, sans classement ni pression.",
     items: [
       { icon: BarChart3, title: "Statistiques" },
@@ -236,6 +248,14 @@ const FEATURE_SLIDES: {
 // ponytail: one tilted photo stack reused by every photo slide (seed shifts the picks); bespoke art only if the deck grows
 function FeaturePhotos({ seed, voice }: { seed: number; voice?: boolean }) {
   const t = useT();
+  const [seconds, setSeconds] = useState(12);
+  // ponytail: 1s tick loops back to 12 at zero — the slider moves on after 5s, so the wrap only appears if autoplay ever pauses
+  useEffect(() => {
+    if (!voice) return;
+    setSeconds(12);
+    const id = setInterval(() => setSeconds((s) => (s > 0 ? s - 1 : 12)), 1000);
+    return () => clearInterval(id);
+  }, [voice]);
   const picks = [0, 1, 2].map((n) => HERO_FEATURED[(seed * 2 + n) % HERO_FEATURED.length]);
   return (
     <div className="relative mx-auto h-[300px] w-full max-w-[420px] md:h-[400px]">
@@ -244,26 +264,65 @@ function FeaturePhotos({ seed, voice }: { seed: number; voice?: boolean }) {
           <figure
             key={p.id}
             className="absolute overflow-hidden rounded-2xl border border-white/15 shadow-2xl"
-            style={{ left: `${i * 27}%`, top: `${[12, 0, 18][i]}%`, width: "46%", height: "80%", zIndex: 3 - i }}
+            style={{
+              left: `${i * 27}%`,
+              top: `${[12, 0, 18][i]}%`,
+              width: "46%",
+              height: "80%",
+              zIndex: 3 - i,
+              animation: seed === 0 ? `swivvPop 520ms cubic-bezier(.2,.8,.2,1) ${i * 160}ms both` : undefined,
+            }}
           >
             <img src={p.photo} alt={t("Profil de {name}", { name: p.name })} loading="lazy" className="h-full w-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
             <figcaption className="absolute bottom-2 left-2 flex items-center gap-1 text-[11px] font-semibold text-white">
-              {p.name}, {p.age}
+              {nameAge(p)}
               {p.verified && <BadgeCheck className="h-3 w-3 text-[#ff7aa8]" />}
+              {p.idVerified && <ShieldCheck aria-label={t("Identité vérifiée")} className="h-3 w-3 text-[#ff7aa8]" />}
             </figcaption>
           </figure>
         ))}
       </div>
+      {seed === 1 && (
+        <>
+          {[
+            { left: "38%", top: "20%", size: "h-4 w-4", delay: 320 },
+            { left: "62%", top: "14%", size: "h-3 w-3", delay: 480 },
+            { left: "60%", top: "56%", size: "h-5 w-5", delay: 640 },
+          ].map((h, i) => (
+            <Heart
+              key={i}
+              aria-hidden="true"
+              fill="currentColor"
+              className={`pointer-events-none absolute z-20 text-[#e60050] drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)] ${h.size}`}
+              style={{
+                left: h.left,
+                top: h.top,
+                animation: `swivvPop 380ms ease-out ${h.delay}ms both, swivvFloat 2400ms ease-in-out ${h.delay + 380}ms infinite`,
+              }}
+            />
+          ))}
+          <span
+            className="pointer-events-none absolute bottom-2 right-2 z-20 inline-flex items-center gap-1 rounded-full bg-[#e60050] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-xl"
+            style={{ animation: "swivvPop 420ms cubic-bezier(.2,.8,.2,1) 1000ms both" }}
+          >
+            <Heart className="h-3 w-3" fill="currentColor" aria-hidden="true" /> {t("Match")}
+          </span>
+        </>
+      )}
       {voice && (
         <div className="absolute bottom-2 left-0 z-10 flex items-center gap-1.5 rounded-full border border-white/15 bg-[#101a2b]/95 px-3 py-2 shadow-xl">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#e60050]">
             <Mic className="h-3.5 w-3.5 text-white" />
           </span>
           {[6, 12, 8, 16, 10, 14, 7, 11].map((h, i) => (
-            <span key={i} className="w-0.5 rounded-full bg-white/60" style={{ height: h }} />
+            <span
+              key={i}
+              className="w-0.5 origin-center rounded-full bg-white/60"
+              style={{ height: h, animation: `swivvWave 900ms ease-in-out ${i * 90}ms infinite` }}
+            />
           ))}
-          <span className="ml-1 text-[11px] text-white/70">0:12</span>
+          <span className="ml-1 text-[11px] tabular-nums text-white/70">0:{String(seconds).padStart(2, "0")}</span>
         </div>
       )}
     </div>
@@ -274,6 +333,28 @@ function FeaturePhotos({ seed, voice }: { seed: number; voice?: boolean }) {
 function FeatureChart() {
   const t = useT();
   const bars = [42, 68, 55, 88, 74, 96, 63];
+  // ponytail: rAF count-up from the deck's 72% to 100% (turns green at the end); "Messages lus" drifts up with it but stops short by design
+  const [profilePct, setProfilePct] = useState(72);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProfilePct(100);
+      return;
+    }
+    let raf = 0;
+    const start = performance.now();
+    const step = (now: number) => {
+      const k = Math.min(1, (now - start) / 2200);
+      setProfilePct(72 + 28 * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const profileDone = profilePct >= 99.9;
+  const rows = [
+    { label: t("Profil complété"), pct: profilePct, green: profileDone },
+    { label: t("Messages lus"), pct: 48 + ((profilePct - 72) / 28) * 8, green: false },
+  ];
   return (
     <div className="relative mx-auto h-[300px] w-full max-w-[420px] md:h-[400px]">
       <div className="absolute inset-0 -rotate-[5deg] rounded-3xl border border-white/10 bg-[#0b1420]/95 p-5 shadow-2xl">
@@ -287,14 +368,17 @@ function FeatureChart() {
           ))}
         </div>
         <div className="mt-5 space-y-3">
-          {[[t("Profil complété"), 72], [t("Messages lus"), 48]].map(([label, pct]) => (
-            <div key={label as string}>
+          {rows.map(({ label, pct, green }) => (
+            <div key={label}>
               <div className="flex justify-between text-[11px] text-white/60">
                 <span>{label}</span>
-                <span>{pct}%</span>
+                <span className={green ? "font-semibold text-emerald-400" : undefined}>{Math.round(pct)}%</span>
               </div>
               <div className="mt-1 h-1.5 rounded-full bg-white/10">
-                <div className="h-full rounded-full bg-[#e60050]" style={{ width: `${pct}%` }} />
+                <div
+                  className={`h-full rounded-full transition-colors duration-300 ${green ? "bg-emerald-500" : "bg-[#e60050]"}`}
+                  style={{ width: `${pct}%` }}
+                />
               </div>
             </div>
           ))}
@@ -313,51 +397,56 @@ function FeatureSlider() {
     return () => clearTimeout(t);
   }, [index]);
 
-  const slide = FEATURE_SLIDES[index];
-
   return (
     <section aria-label={t("Fonctionnalités SWIVV")} className="bg-black py-8">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="relative overflow-hidden rounded-3xl border border-[#e60050] bg-gradient-to-br from-[#0d1626] via-[#0b1320] to-[#101014] px-6 py-8 md:min-h-[520px] md:px-12 md:py-12">
+        <div className="relative overflow-hidden rounded-3xl border border-[#e60050] bg-gradient-to-br from-[#0d1626] via-[#0b1320] to-[#101014] px-6 py-8 md:px-12 md:py-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#e60050]/10 blur-3xl"
         />
         <div
           key={index}
-          className="relative grid animate-[swivvFeatureIn_400ms_ease-out] items-center gap-8 md:grid-cols-2"
+          className="relative grid animate-[swivvFeatureIn_400ms_ease-out] items-center gap-8 md:grid-cols-[1.25fr_1fr]"
         >
-          {/* ponytail: oversized title bleeds over the visual — z-20 + negative margin, tune -mr if the copy gets longer */}
+          {/* ponytail: oversized title bleeds over the visual — z-20 + negative margin, tune -mr if the copy gets longer.
+              All four copies stack in one grid cell so the panel keeps the tallest height and the page stops jumping between slides. */}
           <div className="relative z-20 md:-mr-16">
-            <p className="text-xs font-bold tracking-[0.2em] text-[#e60050]">
-              {String(index + 1).padStart(2, "0")} / {String(FEATURE_SLIDES.length).padStart(2, "0")}
-            </p>
-            <h2 className="mt-4 text-4xl font-black leading-[0.95] tracking-tight text-white md:text-6xl lg:text-[5.5rem]">
-              {t(slide.title)}
-            </h2>
-            <p className="mt-4 max-w-md text-sm text-white/70 md:text-base">{t(slide.text)}</p>
-            <button
-              type="button"
-              onClick={() => openAuthModal("account", "signup")}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#e60050] px-6 py-3 font-bold text-white transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e60050]"
-            >
-              {t("Commence à Swivver")}
-              <span aria-hidden>→</span>
-            </button>
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {slide.items.map((item) => {
-                const ItemIcon = item.icon;
-                return (
-                  <li
-                    key={item.title}
-                    className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/70"
+            <div className="grid items-center">
+              {FEATURE_SLIDES.map((s, i) => (
+                <div key={s.title} className={`col-start-1 row-start-1 ${i === index ? "" : "invisible"}`} aria-hidden={i !== index}>
+                  <p className="text-xs font-bold tracking-[0.2em] text-[#e60050]">
+                    {String(i + 1).padStart(2, "0")} / {String(FEATURE_SLIDES.length).padStart(2, "0")}
+                  </p>
+                  <h2 className="mt-4 whitespace-pre-line text-4xl font-black leading-[0.95] tracking-tight text-white md:text-6xl lg:text-[4.5rem]">
+                    {t(s.title)}
+                  </h2>
+                  <p className="mt-4 max-w-md text-sm text-white/70 md:text-base">{t(s.text)}</p>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal("account", "signup")}
+                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#e60050] px-6 py-3 font-bold text-white transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e60050]"
                   >
-                    <ItemIcon className="h-3.5 w-3.5 text-[#e60050]" aria-hidden="true" />
-                    {t(item.title)}
-                  </li>
-                );
-              })}
-            </ul>
+                    {t("Commence à Swivver")}
+                    <span aria-hidden>→</span>
+                  </button>
+                  <ul className="mt-6 flex flex-wrap gap-2">
+                    {s.items.map((item) => {
+                      const ItemIcon = item.icon;
+                      return (
+                        <li
+                          key={item.title}
+                          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-white/70"
+                        >
+                          <ItemIcon className="h-3.5 w-3.5 text-[#e60050]" aria-hidden="true" />
+                          {t(item.title)}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="relative md:-ml-28">
             {index === 3 ? <FeatureChart /> : <FeaturePhotos seed={index} voice={index === 2} />}
@@ -431,7 +520,11 @@ function ProfileCard({ p, liked, onLike, eager }: { p: SwivvProfile; liked: bool
             className={`h-4 w-4 ${isLiked ? "fill-red-500 text-red-500" : "text-[#555]"}`}
           />
         </button>
-        {p.online && (
+        {p.demo ? (
+          <span className="absolute left-2 top-2 rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-medium text-white">
+            {t("Démo")}
+          </span>
+        ) : p.online && (
           <span className="absolute left-2 top-2 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-medium text-white">
             {t("En ligne")}
           </span>
@@ -439,20 +532,23 @@ function ProfileCard({ p, liked, onLike, eager }: { p: SwivvProfile; liked: bool
       </div>
       <Link to="/member/$id" params={{ id: p.id }} className="block p-2.5">
         <p className="flex items-center gap-1 text-[15px] font-medium text-[#333]">
-          {p.name}, {p.age}
+          {nameAge(p)}
           {p.verified && <BadgeCheck className="h-3.5 w-3.5 text-[#e60050]" />}
+          {p.idVerified && <ShieldCheck aria-label={t("Identité vérifiée")} className="h-3.5 w-3.5 text-[#e60050]" />}
         </p>
-        <p className="text-[13px] text-[#999]">
-          {p.city} · {realDistance(viewer.city, viewer.country, p)} km
+        <p className="text-[13px] text-[#6b6b73]">
+          {p.city}{p.demo ? "" : ` · ${realDistance(viewer.city, viewer.country, p)} km`}
         </p>
-        <p className="text-[12px] text-[#999]">
-          {t("Membre depuis le {date}", {
-            date: new Date(p.joinedAt).toLocaleDateString(dateLocale, {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            }),
-          })}
+        <p className="text-[12px] text-[#6b6b73]">
+          {p.demo
+            ? t("Profil de démonstration")
+            : t("Membre depuis le {date}", {
+                date: new Date(p.joinedAt).toLocaleDateString(dateLocale, {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }),
+              })}
         </p>
         <p className="mt-0.5 line-clamp-1 text-[13px] text-[#555]">{p.tagline}</p>
         {authLoading || user ? (
@@ -508,29 +604,44 @@ function Rail({
   );
 }
 
-function AppDownloadSection({ onDismiss }: { onDismiss?: () => void } = {}) {
+const FLYER = {
+  fr: "/Swivv Match_ Your Story Begins FR.png",
+  en: "/Swivv Match_ Your Story Begins EN.png",
+  es: "/Swivv Match_ Your Story Begins SP.png",
+} as const;
+
+function AppDownloadSection() {
   const t = useT();
   const lang = useLang();
   return (
-    <section id="telecharger" aria-label={t("Télécharger l'application")} className="w-full scroll-mt-4 bg-[#F7F7F8] py-10">
+    <section id="telecharger" aria-label={t("Télécharger l'application")} className="w-full scroll-mt-4 overflow-hidden bg-[#F7F8FA] py-10">
       <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 md:grid-cols-2">
         <a
           href="/inscription"
           aria-label={t("Créer mon profil")}
-          className="mx-auto block w-full max-w-md rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e60050]"
+          className="relative isolate mx-auto block w-full max-w-md rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e60050]"
         >
-          {/* ponytail: one square flyer per language (public/swivv-match-download-{en,es}.png); onError keeps the FR art if a file is missing */}
+          {/* ponytail: background spans mirror the flyer edges; the image mask feathers all four sides into them */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 -top-10 -bottom-[100vh] -z-10 hidden bg-[linear-gradient(90deg,#F2F3F5_0%,#FCFCFD_50%,#F7F8FA_100%)] md:block"
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -top-10 -bottom-[100vh] right-full -z-10 hidden w-screen bg-[#F2F3F5] md:block"
+          />
+          {/* ponytail: full-size PNG flyers per language (1–2 MB) — compress/convert to WebP if LCP matters; onError keeps the FR art if a file is missing */}
           <img
-            src={lang === "fr" ? "/swivv-match-download.png" : `/swivv-match-download-${lang}.png`}
-            onError={(e) => { e.currentTarget.src = "/swivv-match-download.png"; }}
+            src={encodeURI(FLYER[lang])}
+            onError={(e) => { e.currentTarget.src = encodeURI(FLYER.fr); }}
             alt={t("Aperçu de l'application SWIVV MATCH sur mobile")}
             loading="lazy"
-            className="w-full rounded-xl transition hover:brightness-105"
+            className="flyer-feather w-full"
           />
         </a>
         <div>
           <h2 className="text-2xl font-medium text-[#333]">{t("SWIVV MATCH dans ta poche")}</h2>
-          <p className="mt-2 text-sm text-[#777]">{t("Emporte tes matchs partout et commence à Swivver en quelques secondes.")}</p>
+          <p className="mt-2 text-sm text-[#5c5c66]">{t("Emporte tes matchs partout et commence à Swivver en quelques secondes.")}</p>
           <button
             type="button"
             onClick={() => openAuthModal("account", "signup")}
@@ -538,15 +649,18 @@ function AppDownloadSection({ onDismiss }: { onDismiss?: () => void } = {}) {
           >
             {t("Commence à Swivver")}
           </button>
-          {onDismiss && (
-            <button
-              type="button"
-              onClick={onDismiss}
-              className="mt-4 text-sm font-medium text-[#777] underline transition hover:text-[#333]"
-            >
-              {t("Déjà téléchargé ? Ne plus afficher")}
-            </button>
-          )}
+          {/* ponytail: stores aren't live yet — greyed logos pinned to the strip edges, copy centered between them; swap for real badges when the apps ship */}
+          <div className="relative mt-5 overflow-hidden rounded-xl bg-white/70">
+            <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-3 flex items-center opacity-[0.18]">
+              <img src="/google-play.svg" alt="" className="h-8 w-8" />
+            </span>
+            <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center opacity-[0.18]">
+              <img src="/app-store.svg" alt="" className="h-8 w-8" />
+            </span>
+            <p className="relative px-14 py-4 text-center text-sm font-medium text-[#555]">
+              {t("Bientôt disponible sur Google Play et l'App Store")}
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -617,7 +731,7 @@ function SwivvHome() {
   const effSeeking = seeking ?? cachedSeeking ?? (ownGender ? (ownGender === "woman" ? "man" : "woman") : "all");
   const base = effSeeking === "all" ? filtered : filtered.filter((p) => p.gender === effSeeking);
   const dist = (p: SwivvProfile) => realDistance(me?.city, me?.country, p);
-  const loggedRows: { title: EnKey; profiles: SwivvProfile[] }[] = [
+  const loggedRows = ([
     { title: "Près de moi", profiles: [...base].sort((a, b) => dist(a) - dist(b)).slice(0, 8) },
     { title: "En ligne", profiles: base.filter((p) => p.online) },
     { title: "Nouveaux profils", profiles: base.filter((p) => p.isNew) },
@@ -625,7 +739,7 @@ function SwivvHome() {
     { title: "Relation sérieuse", profiles: base.filter((p) => p.lookingFor.includes("Relation sérieuse")) },
     { title: "Photos récentes", profiles: [...base].sort((a, b) => (b.joinedAt ?? "").localeCompare(a.joinedAt ?? "")).slice(0, 8) },
     { title: "Profils populaires", profiles: [...base].sort((a, b) => b.compatibility - a.compatibility).slice(0, 8) },
-  ];
+  ] satisfies { title: EnKey; profiles: SwivvProfile[] }[]).filter((row) => row.profiles.length > 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -799,7 +913,7 @@ function SwivvHome() {
               <Rail key={row.title} title={row.title} profiles={row.profiles} likedIds={likedIds} onLike={like} viewAll eager={i === 0} />
             ))}
             {loggedRows.every((row) => row.profiles.length === 0) && (
-              <p className="mt-2 text-sm text-[#777]">
+              <p className="mt-2 text-sm text-[#5c5c66]">
                 {t("Aucun profil trouvé. Essaie un autre genre.")}
               </p>
             )}
@@ -820,19 +934,8 @@ function SwivvHome() {
           </section>
         </>
       )}
-      {/* ponytail: store links still 404 until the apps ship — section shows for all visitors, dismiss only for logged-in; footer « Application mobile » restores it */}
-      {!getSettings().appPromoDismissed && !isNativeApp() && (
-        <AppDownloadSection
-          onDismiss={
-            authUser
-              ? () => {
-                  setSetting("appPromoDismissed", true);
-                  force((x) => x + 1);
-                }
-              : undefined
-          }
-        />
-      )}
+      {/* ponytail: app promo is for logged-out visitors only — the apps aren't live, so the badge strip says "coming soon" */}
+      {!authUser && !isNativeApp() && <AppDownloadSection />}
       <SwivvFooter />
     </div>
   );

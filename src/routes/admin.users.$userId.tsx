@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { audit, useAdminRole } from "@/lib/admin";
 import { reactionOf } from "@/lib/swivv-reactions";
 import { profileCompleteness, REQUIRED_PROFILE_FIELDS } from "@/lib/swivv-auth";
+import { displayKind } from "@/lib/admin-verify";
 import { SwivvVoicePlayer } from "@/components/swivv-voice-player";
 import { useSignedMediaMap } from "@/lib/swivv-store";
 import { notifySuspended } from "@/lib/admin";
@@ -266,7 +267,7 @@ function AdminUserDetail() {
     for (const r of reports) ev.push({ at: r.created_at, kind: "reports", label: r.reporter_id === userId ? `Signalement envoyé (${r.category})` : `Signalé (${r.category})` });
     for (const c of cases) ev.push({ at: c.created_at, kind: "moderation", label: `Cas modération (${c.status})` });
     for (const t of tickets) ev.push({ at: t.created_at, kind: "support", label: `Ticket « ${t.subject ?? t.category} » (${t.status})` });
-    for (const x of verif) ev.push({ at: x.created_at, kind: "verification", label: `Vérification ${x.kind} (${x.status})` });
+    for (const x of verif) ev.push({ at: x.created_at, kind: "verification", label: `${displayKind(x.kind)} (${x.status})` });
     for (const a of auditTrail) ev.push({ at: a.created_at, kind: "moderation", label: `Admin: ${a.action}` });
     for (const l of sentAll) ev.push({ at: l.at ?? updatedAt ?? d.joinedAt, kind: "likes", label: `Like vers ${nm(l.id)}${l.approx ? " (navigateur, date inconnue)" : ""}` });
     for (const l of recvAll) ev.push({ at: l.at ?? updatedAt ?? d.joinedAt, kind: "likes", label: `Like reçu de ${nm(l.id)}${l.approx ? " (navigateur, date inconnue)" : ""}` });
@@ -374,12 +375,12 @@ function AdminUserDetail() {
   const riskCls = risk.level === "FAIBLE" ? "bg-green-100 text-green-800" : risk.level === "MOYEN" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800";
   const stat = (k: string, v: number | string) => (
     <div className="rounded-xl bg-white p-3 shadow-sm">
-      <p className="text-xs uppercase text-[#999]">{k}</p>
+      <p className="text-xs uppercase text-[#6b6b73]">{k}</p>
       <p className="text-xl font-medium text-[#333]">{v}</p>
     </div>
   );
   const rows = (items: any[], render: (x: any, i: number) => React.ReactNode, empty: string) => (
-    <ul className="mt-2 space-y-1 text-sm">{items.length ? items.map(render) : <li className="text-[#999]">{empty}</li>}</ul>
+    <ul className="mt-2 space-y-1 text-sm">{items.length ? items.map(render) : <li className="text-[#6b6b73]">{empty}</li>}</ul>
   );
 
   return (
@@ -390,14 +391,14 @@ function AdminUserDetail() {
           {(d.photos ?? [])[0] ? <img src={d.photos[0]} alt="" className="h-14 w-14 rounded-full object-cover" /> : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e60050] text-xl text-white">{(d.name ?? "?").charAt(0)}</span>}
           <div className="min-w-0">
             <h1 className="truncate text-xl font-medium text-[#333]">{d.name ?? userId}{d.age ? `, ${d.age}` : ""}{d.city ? ` · ${d.city}` : ""}</h1>
-            <p className="truncate font-mono text-xs text-[#999]">{userId}</p>
+            <p className="truncate font-mono text-xs text-[#6b6b73]">{userId}</p>
             <p className="mt-0.5 flex flex-wrap gap-1 text-xs">
               <span className={`rounded-full px-2 py-0.5 ${status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>● {status.toUpperCase()}</span>
               <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-[#555]">{verif.some((x) => x.status === "approved") ? "✓ vérifié" : "non vérifié"}</span>
               <span className={`rounded-full px-2 py-0.5 ${riskCls}`}>⚠ risque {risk.level}</span>
               <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-[#555]">Premium : non collecté</span>
             </p>
-            <p className="mt-0.5 text-xs text-[#999]">Membre depuis le {fmtDate(d.joinedAt)} · actif : {d.lastActive ? fmtDate(d.lastActive) : "—"} · complétion {completeness.pct} %{email ? ` · ${email}` : ""}</p>
+            <p className="mt-0.5 text-xs text-[#6b6b73]">Membre depuis le {fmtDate(d.joinedAt)} · actif : {d.lastActive ? fmtDate(d.lastActive) : "—"} · complétion {completeness.pct} %{email ? ` · ${email}` : ""}</p>
           </div>
           <div className="ml-auto flex flex-wrap gap-2">
             {canAct && (
@@ -459,13 +460,13 @@ function AdminUserDetail() {
 
       {tab === "Profil" && (
         <section className="mt-3 rounded-xl bg-white p-4 shadow-sm">
-          {d.tagline ? <p className="text-sm italic text-[#777]">« {d.tagline} »</p> : null}
+          {d.tagline ? <p className="text-sm italic text-[#5c5c66]">« {d.tagline} »</p> : null}
           {d.bio ? <p className="mt-2 text-sm text-[#555]">{d.bio}</p> : null}
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm lg:grid-cols-3">
             {Object.entries(d).filter(([k, v]) => !["photo", "photos", "likes", "matches", "tagline", "bio"].includes(k) && v !== "" && v != null).map(([k, v]) => {
               // ponytail: cap rendered length (a stray dataURL in any future field can't page-stretch again) — full value stays one DB query away
               const s = Array.isArray(v) ? v.join(", ") : String(v);
-              return <div key={k}><dt className="text-[#999]">{k}</dt><dd className="break-words text-[#333]">{s.length > 120 ? `${s.slice(0, 120)}… (${s.length} caractères)` : s}</dd></div>;
+              return <div key={k}><dt className="text-[#6b6b73]">{k}</dt><dd className="break-words text-[#333]">{s.length > 120 ? `${s.slice(0, 120)}… (${s.length} caractères)` : s}</dd></div>;
             })}
           </dl>
           <p className="mt-3 text-sm text-[#555]">Complétion : {completeness.pct} % · photos : {completeness.photos}{completeness.missing.length ? ` · manque : ${completeness.missing.join(", ")}` : ""}</p>
@@ -493,7 +494,7 @@ function AdminUserDetail() {
               </div>
             ))}
           </div>
-          {(d.photos ?? []).length === 0 && <p className="text-sm text-[#999]">Aucune photo.</p>}
+          {(d.photos ?? []).length === 0 && <p className="text-sm text-[#6b6b73]">Aucune photo.</p>}
         </section>
       )}
 
@@ -501,7 +502,7 @@ function AdminUserDetail() {
         <section className="mt-3 grid gap-2 lg:grid-cols-2">
           <div className="rounded-xl bg-white p-4 shadow-sm">
             <h2 className="font-medium text-[#333]">Envoyés ({sentAll.length})</h2>
-            {rows(sentAll, (x, i) => <li key={i} className="text-[#555]"><MemberLink id={x.id} name={nm(x.id)} /> · {x.at ? fmtDate(x.at) : "date inconnue"} {x.approx ? <em className="text-xs text-[#999]">(navigateur)</em> : null}</li>, missing ? "Non collecté." : "Aucun.")}
+            {rows(sentAll, (x, i) => <li key={i} className="text-[#555]"><MemberLink id={x.id} name={nm(x.id)} /> · {x.at ? fmtDate(x.at) : "date inconnue"} {x.approx ? <em className="text-xs text-[#6b6b73]">(navigateur)</em> : null}</li>, missing ? "Non collecté." : "Aucun.")}
           </div>
           <div className="rounded-xl bg-white p-4 shadow-sm">
             <h2 className="font-medium text-[#333]">Reçus ({recvAll.length})</h2>
@@ -520,23 +521,23 @@ function AdminUserDetail() {
       {tab === "Matchs" && (
         <section className="mt-3 rounded-xl bg-white p-4 shadow-sm">
           <h2 className="font-medium text-[#333]">Matchs ({matchAll.length}) — consentement mutuel réel</h2>
-          {rows(matchAll, (x, i) => <li key={i} className="text-[#555]"><MemberLink id={x.id} name={nm(x.id)} /> · {x.at ? `depuis le ${fmtDate(x.at)}` : "date inconnue"} {x.approx ? <em className="text-xs text-[#999]">(navigateur)</em> : null}</li>, missing ? "Non collecté." : "Aucun.")}
+          {rows(matchAll, (x, i) => <li key={i} className="text-[#555]"><MemberLink id={x.id} name={nm(x.id)} /> · {x.at ? `depuis le ${fmtDate(x.at)}` : "date inconnue"} {x.approx ? <em className="text-xs text-[#6b6b73]">(navigateur)</em> : null}</li>, missing ? "Non collecté." : "Aucun.")}
         </section>
       )}
 
       {tab === "Messages" && (
         <section className="mt-3 rounded-xl bg-white p-4 shadow-sm">
           <h2 className="font-medium text-[#333]">Conversations ({messages.length} messages récents)</h2>
-          <p className="text-xs text-[#999]">{canReadMsgs ? "Accès tracé dans l'audit — n'ouvrir que pour une enquête." : "Contenus réservés aux modérateurs (niveau 50+)."}</p>
+          <p className="text-xs text-[#6b6b73]">{canReadMsgs ? "Accès tracé dans l'audit — n'ouvrir que pour une enquête." : "Contenus réservés aux modérateurs (niveau 50+)."}</p>
           <ul className="mt-2 max-h-96 space-y-1 overflow-y-auto text-sm">
             {messages.map((m: any, i: number) => (
               <li key={`${m.created_at}-${i}`} className="text-[#555]">
                 <span className={`font-medium ${m.sender === "me" ? "text-[#e60050]" : "text-[#333]"}`}>{m.sender === "me" ? "→" : "←"}</span> <MemberLink id={m.peer_id} name={nm(m.peer_id)} />{" "}
-                {canReadMsgs ? (m.audio_url ? <SwivvVoicePlayer src={signed[m.audio_url] ?? m.audio_url} /> : (m.body || "—")) : <em className="text-[#999]">[contenu masqué]</em>}{" "}
-                <span className="text-xs text-[#999]">· {new Date(m.created_at).toLocaleString("fr-FR")}</span>
+                {canReadMsgs ? (m.audio_url ? <SwivvVoicePlayer src={signed[m.audio_url] ?? m.audio_url} /> : (m.body || "—")) : <em className="text-[#6b6b73]">[contenu masqué]</em>}{" "}
+                <span className="text-xs text-[#6b6b73]">· {new Date(m.created_at).toLocaleString("fr-FR")}</span>
               </li>
             ))}
-            {messages.length === 0 && <li className="text-[#999]">Aucun.</li>}
+            {messages.length === 0 && <li className="text-[#6b6b73]">Aucun.</li>}
           </ul>
         </section>
       )}
@@ -589,7 +590,7 @@ function AdminUserDetail() {
 
       {tab === "Vérification" && (
         <section className="mt-3 rounded-xl bg-white p-4 shadow-sm">
-          <p className="text-xs text-[#999]">Le badge « vérifié » du profil est auto-déclaré côté client — seules les demandes ci-dessous font foi.</p>
+          <p className="text-xs text-[#6b6b73]">Badge photos : auto-déclaré côté client. Badge identité : {profile?.idVerified ? "actif" : "inactif"} — une demande approuvée ici l'active automatiquement (trigger), un rejet le retire.</p>
           {canMod && (
             <button
               type="button"
@@ -612,23 +613,23 @@ function AdminUserDetail() {
               Demander une vérification
             </button>
           )}
-          {rows(verif, (x, i) => <li key={i} className="text-[#555]">{x.kind} · {x.status} · {fmtDate(x.created_at)}</li>, "Aucune demande.")}
+          {rows(verif, (x, i) => <li key={i} className="text-[#555]">{displayKind(x.kind)} · {x.status}{x.auto_note ? ` · ${x.auto_note}` : ""} · {fmtDate(x.created_at)}</li>, "Aucune demande.")}
         </section>
       )}
 
       {tab === "Confiance" && (
         <div className="mt-3 grid gap-2 lg:grid-cols-2">
           <section className="rounded-xl bg-white p-4 shadow-sm">
-            <h2 className="font-medium text-[#333]">Risque : <span className={`rounded-full px-2 py-0.5 text-sm ${riskCls}`}>{risk.level}</span> <span className="text-xs text-[#999]">(score {risk.score})</span></h2>
-            <ul className="mt-2 space-y-1 text-sm">{risk.reasons.length ? risk.reasons.map((r, i) => <li key={i} className="text-[#555]">⚠ {r}</li>) : <li className="text-[#999]">Aucun signal.</li>}</ul>
-            <p className="mt-2 text-xs text-[#999]">Indicateurs opérationnels uniquement — jamais une preuve, jamais basé sur des attributs sensibles.</p>
+            <h2 className="font-medium text-[#333]">Risque : <span className={`rounded-full px-2 py-0.5 text-sm ${riskCls}`}>{risk.level}</span> <span className="text-xs text-[#6b6b73]">(score {risk.score})</span></h2>
+            <ul className="mt-2 space-y-1 text-sm">{risk.reasons.length ? risk.reasons.map((r, i) => <li key={i} className="text-[#555]">⚠ {r}</li>) : <li className="text-[#6b6b73]">Aucun signal.</li>}</ul>
+            <p className="mt-2 text-xs text-[#6b6b73]">Indicateurs opérationnels uniquement — jamais une preuve, jamais basé sur des attributs sensibles.</p>
           </section>
           <section className="rounded-xl bg-white p-4 shadow-sm">
             <h2 className="font-medium text-[#333]">Comptes potentiellement liés ({related.length})</h2>
-            <p className="text-xs text-[#999]">Via signaleurs communs — à investiguer, jamais un motif de ban automatique.</p>
+            <p className="text-xs text-[#6b6b73]">Via signaleurs communs — à investiguer, jamais un motif de ban automatique.</p>
             {rows(related, (r) => <li key={r.id} className="text-[#555]"><MemberLink id={r.id} name={nm(r.id)} /> · {r.sharedReporters} signaleur(s) en commun</li>, "Aucun.")}
             <h2 className="mt-3 font-medium text-[#333]">Sécurité</h2>
-            <p className="mt-1 text-sm text-[#999]">Sessions, appareils, IPs, historique de connexion : non collectés à ce jour. Statut : {status}.</p>
+            <p className="mt-1 text-sm text-[#6b6b73]">Sessions, appareils, IPs, historique de connexion : non collectés à ce jour. Statut : {status}.</p>
           </section>
         </div>
       )}
@@ -647,7 +648,7 @@ function AdminUserDetail() {
                 const { data } = await (supabase as any).from("swivv_support_messages").select("body,is_staff,created_at").eq("ticket_id", t.id).order("created_at");
                 setTicketMsgs((m) => ({ ...m, [t.id]: data ?? [] }));
               }} className="text-xs text-[#e60050] hover:underline">{ticketMsgs[t.id] ? "Masquer" : "Voir"}</button>
-              {ticketMsgs[t.id]?.map((m: any, i: number) => <span key={i} className="block pl-3 text-[13px] text-[#777]">{m.is_staff ? "Équipe" : "Membre"} : {m.body}</span>)}
+              {ticketMsgs[t.id]?.map((m: any, i: number) => <span key={i} className="block pl-3 text-[13px] text-[#5c5c66]">{m.is_staff ? "Équipe" : "Membre"} : {m.body}</span>)}
             </li>
           ), "Aucun.")}
           {canAct && (
@@ -675,7 +676,7 @@ function AdminUserDetail() {
           </form>
           <ul className="mt-2 space-y-2">
             {notes.map((n: any) => (
-              <li key={n.id} className="rounded-lg bg-[#f7f7f7] p-2 text-sm text-[#555]">{n.body}<span className="block text-xs text-[#999]">{new Date(n.created_at).toLocaleString("fr-FR")}</span></li>
+              <li key={n.id} className="rounded-lg bg-[#f7f7f7] p-2 text-sm text-[#555]">{n.body}<span className="block text-xs text-[#6b6b73]">{new Date(n.created_at).toLocaleString("fr-FR")}</span></li>
             ))}
           </ul>
         </section>
@@ -690,8 +691,8 @@ function AdminUserDetail() {
             </select>
           </div>
           <ul className="mt-2 max-h-96 space-y-1 overflow-y-auto text-sm">
-            {timeline.map((e, i) => <li key={i} className="text-[#555]"><span className="text-xs text-[#999]">{new Date(e.at).toLocaleString("fr-FR")}</span> — {e.label}</li>)}
-            {timeline.length === 0 && <li className="text-[#999]">Aucun événement.</li>}
+            {timeline.map((e, i) => <li key={i} className="text-[#555]"><span className="text-xs text-[#6b6b73]">{new Date(e.at).toLocaleString("fr-FR")}</span> — {e.label}</li>)}
+            {timeline.length === 0 && <li className="text-[#6b6b73]">Aucun événement.</li>}
           </ul>
         </section>
       )}

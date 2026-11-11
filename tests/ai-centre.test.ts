@@ -68,7 +68,7 @@ describe("rules", () => {
   });
   test("failedNotify keeps failures only", () => {
     const out = failedNotify([
-      { status: "failed", to: "a@b.c", created_at: "2026-10-12T10:00:00Z" },
+      { status: "failed", template: "message", created_at: "2026-10-12T10:00:00Z" },
       { status: "sent", created_at: "2026-10-12T10:00:00Z" },
     ]);
     expect(out).toHaveLength(1);

@@ -85,7 +85,7 @@ function Toggle({ label, desc, checked, onChange }: { label: string; desc: strin
     <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-white p-3 shadow-sm">
       <span>
         <span className="block text-[15px] font-medium text-[#333]">{t(label)}</span>
-        <span className="block text-sm text-[#777]">{t(desc)}</span>
+        <span className="block text-sm text-[#5c5c66]">{t(desc)}</span>
       </span>
       <input
         type="checkbox"
@@ -228,20 +228,20 @@ function NotificationsPage() {
           {failed && notifs === null ? (
             <p className="text-sm text-[#555]">{t("Impossible de charger tes notifications.")} <button type="button" onClick={() => { setFailed(false); setNotifs(null); listNotifs(100, 0).then(setNotifs, () => setFailed(true)); }} className="font-medium text-[#e60050] hover:underline">{t("Réessayer")}</button></p>
           ) : notifs === null ? (
-            <p className="text-sm text-[#777]">{t("Chargement…")}</p>
+            <p className="text-sm text-[#5c5c66]">{t("Chargement…")}</p>
           ) : visible.length === 0 ? (
-            <p className="text-sm text-[#777]">{t("Tu es à jour ! Aucune nouvelle notification pour le moment.")}</p>
+            <p className="text-sm text-[#5c5c66]">{t("Tu es à jour ! Aucune nouvelle notification pour le moment.")}</p>
           ) : (
             visible.slice(0, shown).map((n) => {
               const Icon = ICONS[n.type] ?? Bell;
               return (
               <article key={n.id} className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2 shadow-sm ${n.read ? "bg-white" : "bg-[#ececee]"}`}>
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.read ? "bg-[#f2f2f2] text-[#999]" : "bg-[#e60050] text-white"}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${n.read ? "bg-[#f2f2f2] text-[#6b6b73]" : "bg-[#e60050] text-white"}`}>
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm"><span className="font-medium text-[#333]">{notifText(t, n.title)}</span>{n.message && <span className="text-[#555]"> — {notifText(t, n.message)}</span>}</p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#999]">
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#6b6b73]">
                     <span>{new Date(n.created_at).toLocaleString(dateLocale)}</span>
                     {/* ponytail: SPA navigation instead of a plain href - a full page load cancelled the mark-read write, so "Voir" came back as unread */}
                     {n.link && validLink(n.link) && (
@@ -258,7 +258,7 @@ function NotificationsPage() {
                       </a>
                     )}
                     {!n.read && <button type="button" onClick={() => markOne(n.id)} className="font-medium text-[#555] hover:underline">{t("Marquer comme lu")}</button>}
-                    <button type="button" onClick={() => dismiss(n.id)} aria-label={t("Supprimer cette notification")} className="font-medium text-[#999] hover:underline">{t("Supprimer")}</button>
+                    <button type="button" onClick={() => dismiss(n.id)} aria-label={t("Supprimer cette notification")} className="font-medium text-[#6b6b73] hover:underline">{t("Supprimer")}</button>
                   </p>
                 </div>
               </article>
@@ -300,7 +300,7 @@ function NotificationsPage() {
             <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-white p-3 shadow-sm">
               <span>
                 <span className="block text-[15px] font-medium text-[#333]">{t("Fréquence du résumé")}</span>
-                <span className="block text-sm text-[#777]">{t("Un e-mail récapitulatif, seulement en cas d'activité réelle.")}</span>
+                <span className="block text-sm text-[#5c5c66]">{t("Un e-mail récapitulatif, seulement en cas d'activité réelle.")}</span>
               </span>
               <select value={digest} onChange={(e) => { setDigest(e.target.value); void persist(settings, marketing, e.target.value); }} className="shrink-0 rounded-md border border-border bg-white px-3 py-2 text-sm" aria-label={t("Fréquence du résumé")}>
                 <option value="daily">{t("Quotidien")}</option>
@@ -321,7 +321,7 @@ function NotificationsPage() {
             />
           </div>
         </section>
-        {saving && <p className="mt-3 text-xs text-[#999]">{t("Enregistrement…")}</p>}
+        {saving && <p className="mt-3 text-xs text-[#6b6b73]">{t("Enregistrement…")}</p>}
       </main>
       <SwivvFooter />
     </div>

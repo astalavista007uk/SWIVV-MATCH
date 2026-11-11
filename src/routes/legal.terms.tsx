@@ -25,7 +25,7 @@ function LegalTermsRedirect() {
 
 // ponytail: full legal wording lives here (not in the short /terms-and-conditions page) because the signup CGU dialog renders it — move it if the dialog ever reads from elsewhere
 export const ARTICLES: [string, string][] = [
-  ["1. IDENTIFICATION DE SWIVV", "Le service est exploité sous le nom :\n\nSWIVV MATCH\n\nAdresse :\n10 Rue Thureau Dangin\n75015 Paris\nFrance\n\nTéléphone :\n+33 (0)6 60 36 82 20\n\nSWIVV est actuellement proposé dans le cadre d'une phase initiale de développement sous la forme d'un MVP (Minimum Viable Product).\n\nLe service est actuellement gratuit."],
+  ["1. IDENTIFICATION DE SWIVV", "Le service est exploité sous le nom :\n\nSWIVV MATCH\n\nAdresse : 10 Rue Thureau Dangin, 75015 Paris, France\n\nTéléphone : +33 (0)6 60 36 82 20\n\nE-mail : contact@swivvmatch.com\n\nSWIVV est actuellement proposé dans le cadre d'une phase initiale de développement sous la forme d'un MVP (Minimum Viable Product).\n\nLe service est actuellement gratuit."],
   ["2. OBJET DU SERVICE", "SWIVV est une plateforme numérique destinée à faciliter les rencontres et les échanges entre personnes majeures.\n\nSelon les fonctionnalités disponibles, SWIVV peut notamment permettre aux utilisateurs de :\n\n• créer un profil ;\n• ajouter des photographies ;\n• présenter leurs centres d'intérêt ;\n• rechercher ou découvrir d'autres utilisateurs ;\n• indiquer leur intérêt pour un autre profil ;\n• recevoir des suggestions de profils ;\n• obtenir une correspondance (« Match ») ;\n• communiquer avec d'autres utilisateurs ;\n• utiliser différentes fonctionnalités destinées à faciliter les rencontres.\n\nSWIVV est une plateforme de mise en relation et ne constitue pas une agence matrimoniale ni un service garantissant une relation sentimentale.\n\nSWIVV ne garantit aucun résultat particulier, notamment aucune rencontre, relation, compatibilité ou mariage."],
   ["3. ACCÈS AU SERVICE", "L'utilisation de SWIVV est actuellement gratuite.\n\nCertaines fonctionnalités peuvent nécessiter la création d'un compte.\n\nSWIVV peut faire évoluer, modifier, suspendre ou supprimer certaines fonctionnalités afin d'améliorer le service, sa sécurité ou son fonctionnement."],
   ["4. CONDITIONS D'ACCÈS", "L'utilisation de SWIVV est exclusivement réservée aux personnes âgées de 18 ans ou plus.\n\nEn utilisant SWIVV, l'utilisateur déclare :\n\n• être âgé d'au moins 18 ans ;\n• disposer de la capacité nécessaire pour accepter les présentes CGU ;\n• fournir des informations exactes et sincères ;\n• ne pas usurper l'identité d'une autre personne ;\n• respecter les présentes CGU et les lois applicables.\n\nLes personnes mineures ne sont pas autorisées à utiliser SWIVV."],
@@ -57,12 +57,33 @@ export const ARTICLES: [string, string][] = [
   ["30. PUBLICITÉ ET SERVICES TIERS", "SWIVV pourra ultérieurement intégrer de la publicité ou des services fournis par des partenaires tiers.\n\nLorsque cela sera applicable, les services tiers pourront être soumis à leurs propres conditions d'utilisation et politiques de confidentialité."],
   ["31. MODIFICATION DU SERVICE", "SWIVV peut à tout moment faire évoluer le service, notamment :\n\n• ajouter de nouvelles fonctionnalités ;\n• modifier certaines fonctionnalités ;\n• supprimer certaines fonctionnalités ;\n• modifier l'interface ;\n• améliorer les systèmes de sécurité ;\n• mettre à jour les technologies utilisées.\n\nCes modifications peuvent être nécessaires pour assurer le développement et l'amélioration de SWIVV."],
   ["32. MODIFICATION DES CONDITIONS D'UTILISATION", "SWIVV peut modifier les présentes CGU afin de tenir compte notamment :\n\n• de l'évolution du service ;\n• de l'ajout de nouvelles fonctionnalités ;\n• de changements législatifs ou réglementaires ;\n• de considérations de sécurité.\n\nLa version applicable est celle publiée sur le site au moment de l'utilisation du service.\n\nLorsque la réglementation l'exige, SWIVV informera les utilisateurs des modifications importantes."],
-  ["33. RÉCLAMATIONS ET CONTACT", "Pour toute question, demande ou réclamation concernant SWIVV, l'utilisateur peut contacter :\n\nSWIVV MATCH\n\n10 Rue Thureau Dangin\n75015 Paris\nFrance\n\nTéléphone : +33 (0)6 60 36 82 20\n\nSWIVV s'efforcera de traiter les demandes dans un délai raisonnable."],
+  ["33. RÉCLAMATIONS ET CONTACT", "Pour toute question, demande ou réclamation concernant SWIVV, l'utilisateur peut contacter :\n\nSWIVV MATCH\n\nAdresse : 10 Rue Thureau Dangin, 75015 Paris, France\n\nTéléphone : +33 (0)6 60 36 82 20\n\nE-mail : contact@swivvmatch.com\n\nSWIVV s'efforcera de traiter les demandes dans un délai raisonnable."],
   ["34. DROIT APPLICABLE", "Les présentes Conditions Générales d'Utilisation sont soumises au droit français, sous réserve des dispositions impératives qui pourraient être applicables à l'utilisateur en raison de son pays de résidence."],
   ["35. RÈGLEMENT DES LITIGES", "En cas de différend concernant l'utilisation de SWIVV, les parties sont invitées à rechercher en priorité une solution amiable.\n\nÀ défaut d'accord amiable, les règles de compétence juridictionnelle applicables détermineront la juridiction compétente."],
   ["36. NULLITÉ PARTIELLE", "Si une disposition des présentes CGU est déclarée nulle ou inapplicable, les autres dispositions demeureront applicables dans la mesure permise par la loi."],
   ["37. ABSENCE DE RENONCIATION", "Le fait pour SWIVV de ne pas exercer immédiatement un droit prévu par les présentes CGU ne constitue pas une renonciation à ce droit."],
+  ["38. VÉRIFICATION D'IDENTITÉ ET CONTRÔLE DES ANTÉCÉDENTS", "La vérification d'identité est facultative. Le badge Identité atteste qu'une pièce officielle avec photo correspond aux photos de profil de l'utilisateur, sur la base d'une comparaison réalisée dans son navigateur. Il ne constitue pas une preuve légale d'identité et ne garantit pas que l'utilisateur est la personne qu'il prétend être dans la vie réelle.\n\nSWIVV ne réalise aucun contrôle des antécédents judiciaires, du casier judiciaire ou des registres de délinquants sexuels, et n'impose aucune vérification d'identité obligatoire. Aucun badge ne constitue une garantie de sécurité.\n\nEn cas de doute lors du contrôle automatique, la photo de la pièce peut être transmise à la modération dans un espace privé, puis supprimée dès la décision. Aucune donnée lisible de la pièce n'est conservée : seuls le badge, sa date et le motif de la décision sont enregistrés."],
+  ["39. MODÉRATION, RECOURS ET DROITS DES UTILISATEURS", "SWIVV peut modérer les contenus et les comptes, y compris au moyen d'outils automatisés complétés par une revue humaine lorsque cela est nécessaire.\n\nLorsqu'une décision de modération restreint un contenu ou un compte, SWIVV informe l'utilisateur concerné et indique, lorsque la loi l'exige, les motifs de la décision.\n\nL'utilisateur peut contester une décision de modération via la page contact, en précisant les éléments utiles. SWIVV examine la contestation dans un délai raisonnable.\n\nLes utilisateurs résidant dans l'Union européenne disposent également des droits prévus par le règlement sur les services numériques (DSA), notamment la possibilité de recourir à un organisme de règlement extrajudiciaire des litiges et de saisir l'autorité de régulation compétente.\n\nLes signalements manifestement infondés, abusifs ou répétés peuvent entraîner des restrictions."],
+  ["40. ACCEPTATION DES CONDITIONS", "En créant un compte ou en utilisant SWIVV, l'utilisateur confirme avoir lu et accepté les présentes Conditions Générales d'Utilisation, la Politique de confidentialité et la Politique cookies.\n\nSi l'utilisateur n'accepte pas tout ou partie de ces documents, il doit cesser d'utiliser le service.\n\nL'acceptation peut être matérialisée lors de l'inscription par une case à cocher ou toute autre modalité équivalente."],
 ];
+
+export function LegalArticleBody({ body }: { body: string }) {
+  return (
+    <>
+      {body.split("\n\n").map((b, i) =>
+        b.split("\n").every((l) => l.startsWith("•")) ? (
+          <ul key={i} className="mt-1 list-disc space-y-1 pl-5 text-sm leading-relaxed text-[#555]">
+            {b.split("\n").map((l) => (
+              <li key={l}>{l.replace(/^•\s*/, "")}</li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i} className="mt-1 whitespace-pre-line text-sm leading-relaxed text-[#555]">{b}</p>
+        ),
+      )}
+    </>
+  );
+}
 
 // ponytail: the old page's community-rules strip was dropped with the redirect (its substance lives in short-page sections 2–3) — restore it here if moderation ever needs a linkable rules anchor
 

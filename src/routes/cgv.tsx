@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { FileText, ReceiptText, Scale, ShieldCheck } from "lucide-react";
+import { LEGAL_CARD, LEGAL_PILL, LegalHero } from "@/components/swivv-legal-hero";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
@@ -25,6 +27,7 @@ const SECTIONS: { t: string; body: string[] }[] = [
       "SWIVV MATCH",
       "Adresse : 10 Rue Thureau Dangin — 75015 Paris — France.",
       "Téléphone : +33 (0)6 60 36 82 20.",
+      "E-mail : contact@swivvmatch.com.",
       "SWIVV est actuellement lancé sous la forme d'un MVP (Minimum Viable Product).",
     ],
   },
@@ -104,7 +107,7 @@ const SECTIONS: { t: string; body: string[] }[] = [
     t: "9. RÉCLAMATIONS",
     body: [
       "Pour toute question, demande ou réclamation concernant SWIVV, l'utilisateur peut contacter :",
-      "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20.",
+      "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20 — E-mail : contact@swivvmatch.com.",
       "SWIVV s'efforcera de traiter les demandes dans un délai raisonnable.",
     ],
   },
@@ -157,7 +160,31 @@ const SECTIONS: { t: string; body: string[] }[] = [
     t: "16. CONTACT",
     body: [
       "Pour toute question concernant les présentes conditions ou le fonctionnement de SWIVV :",
-      "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20.",
+      "SWIVV MATCH — 10 Rue Thureau Dangin — 75015 Paris — France — Téléphone : +33 (0)6 60 36 82 20 — E-mail : contact@swivvmatch.com.",
+    ],
+  },
+  {
+    t: "17. ÉDITEUR, HÉBERGEUR ET MENTIONS LÉGALES",
+    body: [
+      "Éditeur du service : SWIVV MATCH — 10 Rue Thureau Dangin, 75015 Paris, France — Téléphone : +33 (0)6 60 36 82 20 — contact@swivvmatch.com.",
+      "Hébergeur : Vercel Inc. — 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis — vercel.com.",
+      "Ces informations sont également publiées sur la page Mentions légales.",
+    ],
+  },
+  {
+    t: "18. MÉDIATEUR DE LA CONSOMMATION",
+    body: [
+      "Pendant la phase actuelle, entièrement gratuite, SWIVV ne conclut aucune vente avec les utilisateurs : la médiation de la consommation n'est donc pas applicable.",
+      "Avant la mise en place de tout service payant, SWIVV désignera un médiateur de la consommation conformément à l'article L612-1 du Code de la consommation et publiera ses coordonnées sur cette page ainsi que sur la page Mentions légales.",
+      "En cas de réclamation, l'utilisateur est invité à contacter SWIVV en priorité via la page contact afin de rechercher une solution amiable.",
+    ],
+  },
+  {
+    t: "19. DROIT DE RÉTRACTATION ET RÉSILIATION (SERVICES PAYANTS À VENIR)",
+    body: [
+      "Aucun service payant n'étant proposé actuellement, aucun droit de rétractation ni abonnement n'est applicable à ce jour.",
+      "Lorsque des services payants seront proposés, l'utilisateur consommateur disposera d'un délai de 14 jours pour se rétracter, sauf renoncement express à ce droit en cas d'accès immédiat au service numérique, conformément à la réglementation applicable.",
+      "Les abonnements payants, s'ils sont mis en place, pourront être résiliés en ligne à tout moment, sans frais, au moyen d'une procédure simple et accessible. Les modalités de renouvellement, de résiliation et de remboursement seront communiquées avant toute souscription.",
     ],
   },
 ];
@@ -170,7 +197,7 @@ function SectionBody({ ps }: { ps: string[] }) {
   const flush = () => {
     if (!run.length) return;
     out.push(
-      <ul key={out.length} className="mt-1 list-disc space-y-1 pl-5 text-sm leading-relaxed text-[#555]">
+      <ul key={out.length} className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-[#6b6b6b]">
         {run.map((b, j) => (
           <li key={j}>{t(b)}</li>
         ))}
@@ -183,7 +210,7 @@ function SectionBody({ ps }: { ps: string[] }) {
     else {
       flush();
       out.push(
-        <p key={out.length} className="mt-1 text-sm leading-relaxed text-[#555]">
+        <p key={out.length} className="mt-2 text-sm leading-relaxed text-[#6b6b6b]">
           {t(p)}
         </p>,
       );
@@ -204,28 +231,39 @@ function CgvPage() {
         </div>
       </header>
       <SwivvCategoryNav />
+      <LegalHero
+        title={t("Conditions Générales de Vente et de Services — SWIVV")}
+        subtitle={t("Le cadre du service : gratuité actuelle, responsabilités et règles prévues pour les services payants à venir.")}
+        icon={ReceiptText}
+      />
 
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-3xl font-medium text-[#333]">{t("Conditions Générales de Vente et de Services — SWIVV")}</h1>
-        <p className="mt-2 text-[#777]">{t("Dernière mise à jour : 22 septembre 2026.")}</p>
-        <p className="mt-4 text-[15px] leading-relaxed text-[#555]">
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <p className="text-[#5c5c66]">{t("Dernière mise à jour : 3 novembre 2026.")}</p>
+        <p className="mt-4 text-[15px] leading-relaxed text-[#6b6b6b]">
           {t("Bienvenue sur SWIVV, une plateforme de rencontre et de mise en relation permettant aux personnes majeures de découvrir d'autres utilisateurs, d'échanger et de faire de nouvelles rencontres.")}
         </p>
-        <p className="mt-2 text-[15px] leading-relaxed text-[#555]">
+        <p className="mt-2 text-[15px] leading-relaxed text-[#6b6b6b]">
           {t("Les présentes Conditions Générales de Vente et de Services (« CGV ») définissent les conditions applicables aux services proposés par SWIVV.")}
         </p>
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 grid gap-3">
           {SECTIONS.map((s) => (
-            <section key={s.t} className="rounded-xl bg-white p-5">
-              <h2 className="font-medium text-[#333]">{t(s.t)}</h2>
+            <section key={s.t} className={LEGAL_CARD}>
+              <h2 className="font-extrabold tracking-[-0.01em] text-[#111]">{t(s.t)}</h2>
               <SectionBody ps={s.body} />
             </section>
           ))}
         </div>
-        <p className="mt-6 text-sm text-[#777]">
-          {t("Document lié :")}{" "}<Link to="/terms-and-conditions" className="text-[#e60050] underline">{t("conditions d'utilisation")}</Link> ·{" "}
-          <Link to="/legal/privacy" className="text-[#e60050] underline">{t("politique de confidentialité")}</Link>
-        </p>
+        <div className="mt-8 flex flex-wrap gap-2">
+          <Link to="/terms-and-conditions" className={LEGAL_PILL}>
+            <Scale className="h-4 w-4" aria-hidden="true" /> {t("conditions d'utilisation")}
+          </Link>
+          <Link to="/privacy-centre" className={LEGAL_PILL}>
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" /> {t("politique de confidentialité")}
+          </Link>
+          <Link to="/mentions-legales" className={LEGAL_PILL}>
+            <FileText className="h-4 w-4" aria-hidden="true" /> {t("mentions légales")}
+          </Link>
+        </div>
       </main>
       <SwivvFooter />
     </div>

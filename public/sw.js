@@ -1,5 +1,5 @@
 /**
- * PET BASE service worker — handles Web Push notifications for the PWA.
+ * SWIVV MATCH service worker ÔÇö handles Web Push notifications for the PWA.
  * Registered from the client so the app can deliver lock-screen
  * notifications even when the site is not open.
  */
@@ -18,7 +18,7 @@ self.addEventListener("push", (event) => {
   } catch {
     // ignore malformed payload, use defaults
   }
-  const title = payload.title || "PET BASE";
+  const title = payload.title || "SWIVV MATCH";
   const options = {
     body: payload.message || "",
     icon: payload.icon || "/favicon.png",

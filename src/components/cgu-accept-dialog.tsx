@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ARTICLES } from "@/routes/legal.terms";
+import { ARTICLES, LegalArticleBody } from "@/routes/legal.terms";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function CguAcceptDialog({ open, onOpenChange, onAccept }: { open: boolean; onOpenChange: (v: boolean) => void; onAccept: () => void }) {
@@ -22,21 +22,11 @@ export function CguAcceptDialog({ open, onOpenChange, onAccept }: { open: boolea
           {ARTICLES.map(([t, d]) => (
             <article key={t} className="mb-4">
               <h2 className="font-medium text-[#333]">{t}</h2>
-              {d.split("\n\n").map((b, i) =>
-                b.split("\n").every((l) => l.startsWith("•")) ? (
-                  <ul key={i} className="mt-1 list-disc space-y-1 pl-5 text-sm leading-relaxed text-[#555]">
-                    {b.split("\n").map((l) => (
-                      <li key={l}>{l.replace(/^•\s*/, "")}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p key={i} className="mt-1 whitespace-pre-line text-sm leading-relaxed text-[#555]">{b}</p>
-                ),
-              )}
+              <LegalArticleBody body={d} />
             </article>
           ))}
         </div>
-        <p className="text-xs text-[#777]">{atBottom ? "Tu as tout lu — tu peux accepter." : "Fais défiler jusqu'en bas pour pouvoir accepter."}</p>
+        <p className="text-xs text-[#5c5c66]">{atBottom ? "Tu as tout lu — tu peux accepter." : "Fais défiler jusqu'en bas pour pouvoir accepter."}</p>
         <button type="button" disabled={!atBottom} onClick={() => { onAccept(); onOpenChange(false); }} className="rounded-md bg-[#e60050] px-6 py-3 font-medium text-white disabled:opacity-40">
           Accepter
         </button>

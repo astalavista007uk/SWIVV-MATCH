@@ -36,9 +36,18 @@ dist-ssr
 .vercel
 .env*
 
+# Playwright artifacts
+test-results/
+playwright-report/
+e2e/.auth/
+
 # QA test-account credentials manifest (never commit)
 secrets/
 
 # Marketing renders and Supabase CLI scratch (211 MB of video, regenerable)
 marketing/
 supabase/.temp/
+
+# Local HTTPS certs moved aside (contains private key)
+.https.off/
+

@@ -12,7 +12,7 @@ export function MessageHeartBadge() {
   return (
     <span
       aria-label={`${n} message${n > 1 ? "s" : ""} non lu${n > 1 ? "s" : ""}`}
-      className="absolute right-1 -top-0.5 flex h-4 w-4 items-center justify-center"
+      className="absolute right-1 -top-1 flex h-4 w-4 items-center justify-center"
     >
       <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
@@ -28,7 +28,7 @@ export function NotifBadge() {
   return (
     <span
       aria-label={`${n} notification${n > 1 ? "s" : ""} non lue${n > 1 ? "s" : ""}`}
-      className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
+      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center"
     >
       <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
@@ -44,7 +44,7 @@ export function LikesRecusBadge() {  const n = useRecusCount();
   return (
     <span
       aria-label={`${n} like${n > 1 ? "s" : ""} reçu${n > 1 ? "s" : ""}`}
-      className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
+      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center"
     >
       <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
@@ -61,7 +61,7 @@ export function MyLikesBadge() {
   return (
     <span
       aria-label={`${n} like${n > 1 ? "s" : ""} donné${n > 1 ? "s" : ""}`}
-      className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center"
+      className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center"
     >
       <Heart className="h-4 w-4" fill="#E60050" strokeWidth={0} aria-hidden="true" />
       <span className="absolute text-[8px] font-bold leading-none text-white">
@@ -92,26 +92,28 @@ export function SwivvTopIcons() {
         type="button"
         onClick={() => requireSwivvAuth("message", () => nav({ to: "/messagerie" }))}
         aria-label="Messages"
-        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-white hover:underline"
+        className="tap-44 group/tip relative whitespace-nowrap font-medium text-white hover:underline"
       >
         <Tip label="Mes Messages" />
         <span className="relative block">
           <Mail className="h-6 w-11" strokeWidth={1.5} />
           {/* ponytail: lucide overlay, custom love-letter SVG if brand wants its own mark */}
           <Heart className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2" fill="currentColor" strokeWidth={0} aria-hidden="true" />
+          {/* ponytail: unread counted live from localStore, server badge if push ever lands */}
+          <MessageHeartBadge />
         </span>
-        {/* ponytail: unread counted live from localStore, server badge if push ever lands */}
-        <MessageHeartBadge />
       </button>
       <Link
         to="/browse"
         search={{ q: "", type: "likes", location: "" }}
         aria-label={t("Profils likés")}
-        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-white hover:underline"
+        className="tap-44 group/tip relative whitespace-nowrap font-medium text-white hover:underline"
       >
         <Tip label={t("Mes Likes")} />
-        <Heart className="h-6 w-6" strokeWidth={1.5} />
-        <MyLikesBadge />
+        <span className="relative block">
+          <Heart className="h-6 w-6" strokeWidth={1.5} />
+          <MyLikesBadge />
+        </span>
       </Link>
       {/* ponytail: bell lives left of the avatar in SwivvAuthButtons (all viewports) — don't re-add a copy here */}
       <Link
@@ -135,11 +137,13 @@ export function SwivvTopIcons() {
         to="/browse"
         search={{ q: "", type: "recus", location: "" }}
         aria-label="Likes reçus"
-        className="group/tip relative whitespace-nowrap p-0.5 font-medium text-white hover:underline"
+        className="tap-44 group/tip relative whitespace-nowrap font-medium text-white hover:underline"
       >
         <Tip label="Likes Reçus" />
-        <Heart className="h-6 w-6 fill-current" strokeWidth={1.5} />
-        <LikesRecusBadge />
+        <span className="relative block">
+          <Heart className="h-6 w-6 fill-current" strokeWidth={1.5} />
+          <LikesRecusBadge />
+        </span>
       </Link>
     </div>
   );

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { audit } from "@/lib/admin";
 import { profileCompleteness } from "@/lib/swivv-auth";
 import { DIR_PAGE_SIZE, filterDir, sortDir, type DirFilter, type DirRow, type DirSort } from "@/lib/admin-users";
+import { adminListAuthUsers } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/admin/users")({
   validateSearch: (s: Record<string, unknown>) => ({ status: typeof s.status === "string" ? s.status : undefined }),
@@ -27,12 +28,13 @@ function AdminUsers() {
     setErr(null);
     (async () => {
       try {
-        const [p, st, vf, rp, cs] = await Promise.all([
+        const [p, st, vf, rp, cs, au] = await Promise.all([
           supabase.from("swivv_profiles").select("user_id,data,updated_at").order("updated_at", { ascending: false }).limit(500),
           supabase.from("swivv_user_status").select("user_id,status"),
           supabase.from("swivv_verification_requests").select("user_id,status"),
           supabase.from("swivv_reports").select("reported_user_id,status"),
           supabase.from("swivv_moderation_cases").select("subject_user_id,status"),
+          adminListAuthUsers().catch(() => []),
         ]);
         if (p.error) {
           setErr(p.error.message);
@@ -44,7 +46,7 @@ function AdminUsers() {
         const rc = new Map<string, number>();
         for (const x of (rp.data ?? []) as any[]) rc.set(x.reported_user_id, (rc.get(x.reported_user_id) ?? 0) + 1);
         const cm = new Set(((cs.data ?? []) as any[]).filter((x) => ["open", "investigating", "waiting"].includes(x.status)).map((x) => x.subject_user_id));
-        setRows(((p.data ?? []) as any[]).map((r) => {
+        const rows = ((p.data ?? []) as any[]).map((r) => {
           const v = vm.get(r.user_id) ?? [];
           return {
             user_id: r.user_id,
@@ -53,10 +55,27 @@ function AdminUsers() {
             status: sm.get(r.user_id) ?? "active",
             completion: profileCompleteness(r.data),
             verified: v.includes("approved") ? "yes" : v.includes("pending") ? "pending" : "no",
+            idVerified: r.data?.idVerified === true,
             reports: rc.get(r.user_id) ?? 0,
             hasCase: cm.has(r.user_id),
           } as DirRow;
-        }));
+        });
+        const seen = new Set(rows.map((r) => r.user_id));
+        for (const u of au as any[]) {
+          if (seen.has(u.id)) continue;
+          rows.push({
+            user_id: u.id,
+            data: { name: u.name || u.email?.split("@")[0] || "Sans nom", email: u.email, joinedAt: u.created_at },
+            updatedAt: u.last_sign_in_at ?? u.created_at ?? null,
+            status: sm.get(u.id) ?? "active",
+            completion: 0,
+            verified: "no",
+            idVerified: false,
+            reports: rc.get(u.id) ?? 0,
+            hasCase: cm.has(u.id),
+          } as DirRow);
+        }
+        setRows(rows);
         audit("admin.users.view");
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Chargement impossible.");
@@ -84,7 +103,12 @@ function AdminUsers() {
 
   return (
     <div>
-      <h1 className="text-2xl font-medium text-[#333]">Utilisateurs ({list.length})</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-medium text-[#333]">Utilisateurs ({list.length})</h1>
+        <button type="button" onClick={() => setTick((t) => t + 1)} className="rounded-md border border-border bg-white px-3 py-1.5 text-sm">
+          Rafraîchir
+        </button>
+      </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <input
           value={f.q}
@@ -142,7 +166,7 @@ function AdminUsers() {
                 {r.data?.name ?? "Sans nom"}{r.data?.age ? `, ${r.data.age}` : ""}
               </span>
               <span className="block truncate font-mono text-[11px] text-[#bbb]">{r.user_id}</span>
-              <span className="block truncate text-xs text-[#999]">
+              <span className="block truncate text-xs text-[#6b6b73]">
                 {[r.data?.city, r.data?.joinedAt ? `inscrit le ${new Date(r.data.joinedAt).toLocaleDateString("fr-FR")}` : null, r.updatedAt ? `actif le ${new Date(r.updatedAt).toLocaleDateString("fr-FR")}` : "jamais actif"].filter(Boolean).join(" · ")}
               </span>
             </span>
@@ -150,20 +174,21 @@ function AdminUsers() {
               <span className={`rounded-full px-2 py-0.5 font-medium ${r.status === "active" ? "bg-green-100 text-green-800" : r.status === "suspended" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>
                 {r.status}
               </span>
-              <span className="text-[#777]">
+              <span className="text-[#5c5c66]">
                 {r.completion} % · {r.verified === "yes" ? "✓ vérifié" : r.verified === "pending" ? "vérif en cours" : "non vérifié"}
+                {r.idVerified && <span className="text-[#e60050]"> · ID ✓</span>}
                 {r.reports > 0 && <span className="text-red-700"> · {r.reports} signalement(s)</span>}
                 {r.hasCase && <span className="text-amber-700"> · cas ouvert</span>}
               </span>
             </span>
           </a>
         ))}
-        {shown.length === 0 && <p className="text-sm text-[#777]">Aucun résultat.</p>}
+        {shown.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun résultat.</p>}
       </div>
       {pages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2 text-sm">
           <button type="button" disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="rounded-md border border-border bg-white px-3 py-1.5 disabled:opacity-40">←</button>
-          <span className="text-[#777]">Page {page + 1} / {pages}</span>
+          <span className="text-[#5c5c66]">Page {page + 1} / {pages}</span>
           <button type="button" disabled={page + 1 >= pages} onClick={() => setPage((p) => p + 1)} className="rounded-md border border-border bg-white px-3 py-1.5 disabled:opacity-40">→</button>
         </div>
       )}

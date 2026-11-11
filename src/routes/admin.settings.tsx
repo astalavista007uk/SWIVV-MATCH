@@ -71,7 +71,7 @@ function AdminSettings() {
 
   const card = "rounded-xl bg-white p-4 text-sm shadow-sm";
   const li = (k: string, v: string) => (
-    <p className="mt-1 text-[#555]"><span className="text-[#999]">{k} : </span>{v}</p>
+    <p className="mt-1 text-[#555]"><span className="text-[#6b6b73]">{k} : </span>{v}</p>
   );
 
   return (
@@ -110,7 +110,7 @@ function AdminSettings() {
                 <button type="button" onClick={() => revoke(r.user_id, r.role)} className="ml-auto text-xs text-red-600 hover:underline">Retirer</button>
               </div>
             ))}
-            {rows.length === 0 && <p className="text-sm text-[#777]">Aucun rôle. Premier super admin via Studio SQL.</p>}
+            {rows.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun rôle. Premier super admin via Studio SQL.</p>}
           </div>
         </>
       )}
@@ -118,7 +118,7 @@ function AdminSettings() {
       {tab === "Permissions" && (
         <div className={`${card} mt-4`}>
           <p className="font-medium text-[#333]">Niveaux appliqués côté serveur (fonction staff_level + RLS) — lecture seule ici.</p>
-          {ROLES.map((r) => <p key={r} className="mt-1 text-[#555]">{r} <span className="text-[#999]">→ niveau {ROLE_LEVEL[r]}</span></p>)}
+          {ROLES.map((r) => <p key={r} className="mt-1 text-[#555]">{r} <span className="text-[#6b6b73]">→ niveau {ROLE_LEVEL[r]}</span></p>)}
           {li("Lecture staff (10+)", "toutes les tables métier")}
           {li("Support (30+)", "notes, tickets, annonces, audit-append")}
           {li("Modération (50+)", "signalements, cas, vérification, décisions")}
@@ -140,8 +140,8 @@ function AdminSettings() {
       {tab === "Modération" && (
         <div className={`${card} mt-4`}>
           <p className="font-medium text-[#333]">Politiques actives ({policies.length}) — édition dans l'onglet Modération.</p>
-          {policies.map((p: any) => <p key={p.name} className="mt-1 text-[#555]">{p.name} <span className="text-[#999]">→ {p.severity} / {p.action}{p.auto_apply ? " (AUTO)" : ""}</span></p>)}
-          {!policies.length && <p className="mt-1 text-[#777]">Table non chargée (migration 20261013000000).</p>}
+          {policies.map((p: any) => <p key={p.name} className="mt-1 text-[#555]">{p.name} <span className="text-[#6b6b73]">→ {p.severity} / {p.action}{p.auto_apply ? " (AUTO)" : ""}</span></p>)}
+          {!policies.length && <p className="mt-1 text-[#5c5c66]">Table non chargée (migration 20261013000000).</p>}
           {li("Approbations", "ban/suppression : humain 80+, double confirmation ; IA ne décide jamais")}
           <p className="mt-2"><Link to="/admin/moderation" className="text-xs text-[#e60050] underline">Ouvrir la modération</Link></p>
         </div>
@@ -162,7 +162,7 @@ function AdminSettings() {
         <div className={`${card} mt-4`}>
           <p className="font-medium text-[#333]">Canaux (état réel, sans interrupteurs factices).</p>
           {li("In-app", "opérationnel (swivv_notifications)")}
-          {li("E-mail", "transactionnel serveur uniquement (Resend) — campagnes non branchées")}
+          {li("E-mail", "transactionnel serveur uniquement (IONOS SMTP) — campagnes non branchées")}
           {li("Push", "aucun fournisseur configuré")}
           {li("Préférences", "toggles appareil-local (paramètres) — pas de magasin serveur opposable")}
         </div>
@@ -174,7 +174,7 @@ function AdminSettings() {
             <p className="font-medium text-[#333]">Supabase : {ping == null ? "non testé" : ping < 0 ? "injoignable" : `${ping} ms`}</p>
             <button type="button" onClick={checkPing} className="rounded border border-border px-2 py-1 text-xs">Tester</button>
           </div>
-          {li("Resend (e-mail)", "configuration déploiement (RESEND_API_KEY, SUPPORT_EMAIL_FROM) — non vérifiable depuis le navigateur")}
+          {li("IONOS SMTP (e-mail)", "configuration déploiement (IONOS_SMTP_USER, IONOS_SMTP_PASS, SUPPORT_EMAIL_FROM) — non vérifiable depuis le navigateur")}
           {li("IA", "aucun fournisseur — résumé/classification indisponibles")}
           {li("Clés API", "jamais affichées ici ; ajout côté serveur/hébergeur uniquement")}
         </div>

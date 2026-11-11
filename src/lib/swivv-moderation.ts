@@ -32,4 +32,4 @@ export function findOffensive(text: string): string[] {
 export const REPORT_REASONS = ["Nudité ou contenu sexuel", "Contenu choquant", "Spam ou arnaque", "Usurpation d'identité", "Autre"];
 
 /** Report reasons for the profile-page dialog (last item opens a free-text field). */
-export const PROFILE_REPORT_REASONS = ["Photo inappropriée", "Langage offensant", "Faux profil", "Me demande de l'argent", "Autre"];
+export const PROFILE_REPORT_REASONS = ["Photo inappropriée", "Langage offensant", "Faux profil", "Me demande de l'argent", "Utilisateur suspecté d'être mineur", "Autre"];

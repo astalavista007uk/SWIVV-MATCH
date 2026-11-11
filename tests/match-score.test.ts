@@ -21,8 +21,13 @@ describe("score", () => {
   test("soft country match scores 100", () => {
     expect(score(p, { country: "France" }).pct).toBe(100);
   });
-  test("soft country mismatch scores 0 but stays hard", () => {
-    expect(score(p, { country: "Espagne" })).toEqual({ pct: 0, hard: true });
+  test("soft country mismatch floors at 1 but stays hard", () => {
+    expect(score(p, { country: "Espagne" })).toEqual({ pct: 1, hard: true });
+  });
+  test("out-of-range age stays visible and non-zero", () => {
+    const r = score(p, { ageMin: "18", ageMax: "25", city: "Paris" });
+    expect(r.hard).toBe(false);
+    expect(r.pct).toBeGreaterThan(0);
   });
 });
 

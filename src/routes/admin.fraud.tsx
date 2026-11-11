@@ -58,7 +58,7 @@ function AdminFraud() {
       supabase.from("profiles").select("created_at").order("created_at", { ascending: false }).limit(1000).then((r: any) => (r.error ? [] : (r.data ?? []).map((x: any) => x.created_at))),
       q.from("swivv_audit_log").select("action,actor_id,created_at").in("action", ["admin.user.suspended", "admin.user.banned", "admin.role.grant", "admin.role.revoke"]).order("created_at", { ascending: false }).limit(50).then((r: any) => (r.error ? [] : (r.data ?? []))),
       q.from("swivv_ai_runs").select("rule_key,error,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(20).then((r: any) => (r.error ? [] : (r.data ?? []))),
-      q.from("swivv_email_log").select("to,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(20).then((r: any) => (r.error ? [] : (r.data ?? []))),
+      q.from("swivv_email_log").select("key,template,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(20).then((r: any) => (r.error ? [] : (r.data ?? []))),
     ]);
     if (rl) {
       setRules(rl);
@@ -208,7 +208,7 @@ function AdminFraud() {
     <div key={s.ref + s.label} className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 text-sm shadow-sm">
       <div className="min-w-0 flex-1">
         <p className="font-medium text-[#333]">{s.label}</p>
-        <p className="text-xs text-[#777]">{s.detail} · cible : {memberLink(/^(burst|pair|url|txt):/.test(s.ref) ? null : s.ref)}</p>
+        <p className="text-xs text-[#5c5c66]">{s.detail} · cible : {memberLink(/^(burst|pair|url|txt):/.test(s.ref) ? null : s.ref)}</p>
       </div>
       {canDecide && <button type="button" onClick={() => openCase(kind, s.ref, [s])} className="rounded border border-border px-2 py-1 text-xs">Ouvrir un cas</button>}
     </div>
@@ -218,7 +218,7 @@ function AdminFraud() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Fraude & sécurité</h1>
-      <p className="mt-1 text-xs text-[#999]">Règles explicables sur signaux disponibles (pas d'IP/appareils/logs d'auth) · jamais d'attributs protégés · sanctions = humain 80+. {!rulesLive && "Règles locales (migration 20261019000000 en attente)."}</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Règles explicables sur signaux disponibles (pas d'IP/appareils/logs d'auth) · jamais d'attributs protégés · sanctions = humain 80+. {!rulesLive && "Règles locales (migration 20261019000000 en attente)."}</p>
       <nav className="mt-3 flex gap-1 overflow-x-auto" aria-label="Fraude">
         {TABS.map((t) => (
           <button key={t} type="button" onClick={() => setTab(t)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === t ? "bg-[#14112b] text-white" : "bg-white text-[#555]"}`}>{t}</button>
@@ -228,36 +228,36 @@ function AdminFraud() {
 
       {tab === "Vue d'ensemble" && (
         <div className="mt-3 grid gap-3 lg:grid-cols-4">
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{openCases.length}</p><p className="mt-1 text-[#777]">Cas ouverts</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{sig.targets.length + sig.bursts.length + sig.spam.length + sig.repeats.length + sig.pairs.length + sig.dupBio.length + sig.postBlock.length}</p><p className="mt-1 text-[#777]">Signaux actifs</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{decided.length ? `${Math.round((100 * fp) / decided.length)} %` : "—"}</p><p className="mt-1 text-[#777]">Faux positifs (rejetés / décidés)</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{rules.filter((r) => r.enabled).length}/{rules.length}</p><p className="mt-1 text-[#777]">Règles actives</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{openCases.length}</p><p className="mt-1 text-[#5c5c66]">Cas ouverts</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{sig.targets.length + sig.bursts.length + sig.spam.length + sig.repeats.length + sig.pairs.length + sig.dupBio.length + sig.postBlock.length}</p><p className="mt-1 text-[#5c5c66]">Signaux actifs</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{decided.length ? `${Math.round((100 * fp) / decided.length)} %` : "—"}</p><p className="mt-1 text-[#5c5c66]">Faux positifs (rejetés / décidés)</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{rules.filter((r) => r.enabled).length}/{rules.length}</p><p className="mt-1 text-[#5c5c66]">Règles actives</p></div>
         </div>
       )}
 
       {tab === "Comptes suspects" && (
         <div className="mt-3 space-y-2">
           {sig.targets.map((s) => sigRow(s, "repeat-targets"))}
-          {!sig.targets.length && <p className="text-sm text-[#777]">Aucun compte multi-signalé au seuil ({th("repeat-targets", 3)} rapporteurs).</p>}
+          {!sig.targets.length && <p className="text-sm text-[#5c5c66]">Aucun compte multi-signalé au seuil ({th("repeat-targets", 3)} rapporteurs).</p>}
         </div>
       )}
 
       {tab === "Spam & liens" && (
         <div className="mt-3 space-y-2">
           {sig.spam.slice(0, 30).map((s) => sigRow(s, "spam-links"))}
-          {!sig.spam.length && <p className="text-sm text-[#777]">Aucun signal de spam dans les bios scannées.</p>}
+          {!sig.spam.length && <p className="text-sm text-[#5c5c66]">Aucun signal de spam dans les bios scannées.</p>}
         </div>
       )}
 
       {tab === "Coordonnés" && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-[#999]">Rafales d'inscriptions, contenus répétés multi-comptes, paires à fort volume. Une source partagée n'identifie jamais une personne.</p>
+          <p className="text-xs text-[#6b6b73]">Rafales d'inscriptions, contenus répétés multi-comptes, paires à fort volume. Une source partagée n'identifie jamais une personne.</p>
           {sig.bursts.map((s) => sigRow(s, "burst-regs"))}
           {sig.repeats.filter((s) => s.severity === "critical").map((s) => sigRow(s, "repeat-content"))}
           {sig.pairs.map((s) => sigRow(s, "pair-volume"))}
           {sig.dupBio.map((s) => sigRow(s, "dup-bio"))}
           {sig.postBlock.map((s) => sigRow(s, "post-block"))}
-          {!sig.bursts.length && !sig.repeats.length && !sig.pairs.length && !sig.dupBio.length && !sig.postBlock.length && <p className="text-sm text-[#777]">Aucun comportement coordonné détecté.</p>}
+          {!sig.bursts.length && !sig.repeats.length && !sig.pairs.length && !sig.dupBio.length && !sig.postBlock.length && <p className="text-sm text-[#5c5c66]">Aucun comportement coordonné détecté.</p>}
         </div>
       )}
 
@@ -265,14 +265,14 @@ function AdminFraud() {
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
           <div className={card}>
             <p className="font-medium text-[#333]">Prise de contrôle / abus d'authentification</p>
-            <p className="mt-1 text-[#777]">Non surveillables : ni logs de connexion, ni échecs d'auth, ni appareils collectés. Tableau Supabase Auth côté dashboard.</p>
+            <p className="mt-1 text-[#5c5c66]">Non surveillables : ni logs de connexion, ni échecs d'auth, ni appareils collectés. Tableau Supabase Auth côté dashboard.</p>
           </div>
           <div className={card}>
             <p className="font-medium text-[#333]">Accès admin sensibles ({adminActs.length})</p>
             {(adminActs as any[]).slice(0, 15).map((a: any, i: number) => (
               <p key={i} className="mt-1 text-xs text-[#555]">{a.action} · par {nm(a.actor_id)} · {new Date(a.created_at).toLocaleString("fr-FR")}</p>
             ))}
-            {!adminActs.length && <p className="mt-1 text-xs text-[#999]">Aucun accès sensible récent.</p>}
+            {!adminActs.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucun accès sensible récent.</p>}
           </div>
         </div>
       )}
@@ -282,12 +282,12 @@ function AdminFraud() {
           <div className={card}>
             <p className="font-medium text-[#333]">Échecs d'intégrations ({failRuns.length + failMail.length})</p>
             {failRuns.map((r: any, i: number) => <p key={i} className="mt-1 text-xs text-[#555]">Automation {r.rule_key} : {r.error ?? "échec"} · {new Date(r.created_at).toLocaleString("fr-FR")}</p>)}
-            {failMail.map((m: any, i: number) => <p key={i} className="mt-1 text-xs text-[#555]">E-mail en échec {m.to ? `à ${m.to}` : ""} · {new Date(m.created_at).toLocaleString("fr-FR")}</p>)}
-            {!failRuns.length && !failMail.length && <p className="mt-1 text-xs text-[#999]">Aucun incident.</p>}
+            {failMail.map((m: any, i: number) => <p key={i} className="mt-1 text-xs text-[#555]">E-mail en échec{m.template ? ` (${m.template})` : ""} · {new Date(m.created_at).toLocaleString("fr-FR")}</p>)}
+            {!failRuns.length && !failMail.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucun incident.</p>}
           </div>
           <div className={card}>
             <p className="font-medium text-[#333]">Compromission suspectée</p>
-            <p className="mt-1 text-[#777]">Aucun signal disponible (pas de logs d'auth) — tout soupçon passe par un cas manuel ci-dessous, avec preuves.</p>
+            <p className="mt-1 text-[#5c5c66]">Aucun signal disponible (pas de logs d'auth) — tout soupçon passe par un cas manuel ci-dessous, avec preuves.</p>
           </div>
         </div>
       )}
@@ -298,14 +298,14 @@ function AdminFraud() {
             <article key={r.key} className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 text-sm shadow-sm">
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-[#333]">{r.name}</p>
-                <p className="text-xs text-[#777]">{r.description}</p>
+                <p className="text-xs text-[#5c5c66]">{r.description}</p>
               </div>
               <label className="flex items-center gap-1 text-xs text-[#555]">Seuil
                 <input type="number" min={1} max={1000} defaultValue={r.threshold} aria-label={`Seuil ${r.name}`}
                   onBlur={(e) => { const v = Number(e.target.value); if (Number.isFinite(v) && v >= 1 && v !== r.threshold) setThreshold(r.key, v); }}
                   disabled={level < 80} className="w-16 rounded border border-border px-2 py-1" />
               </label>
-              <span className="text-xs text-[#999]">{r.enabled ? "active" : "coupée"}{level < 80 ? " (édition 80+)" : ""}</span>
+              <span className="text-xs text-[#6b6b73]">{r.enabled ? "active" : "coupée"}{level < 80 ? " (édition 80+)" : ""}</span>
             </article>
           ))}
         </div>
@@ -319,11 +319,11 @@ function AdminFraud() {
           {cases.map((c: any) => (
             <article key={c.id} className="rounded-xl bg-white p-3 text-sm shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs text-[#999]">{c.id.slice(0, 8)}</span>
+                <span className="font-mono text-xs text-[#6b6b73]">{c.id.slice(0, 8)}</span>
                 <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{c.kind}</span>
                 <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{c.status}</span>
-                <span className="text-xs text-[#777]">cible : {memberLink(c.subject_ref)}</span>
-                <span className="ml-auto text-xs text-[#999]">{new Date(c.created_at).toLocaleString("fr-FR")}{c.decided_at ? ` · décidé le ${new Date(c.decided_at).toLocaleString("fr-FR")}` : ""}</span>
+                <span className="text-xs text-[#5c5c66]">cible : {memberLink(c.subject_ref)}</span>
+                <span className="ml-auto text-xs text-[#6b6b73]">{new Date(c.created_at).toLocaleString("fr-FR")}{c.decided_at ? ` · décidé le ${new Date(c.decided_at).toLocaleString("fr-FR")}` : ""}</span>
               </div>
               {(c.signals ?? []).length > 0 && <p className="mt-1 text-xs text-[#555]">Signaux : {(c.signals as Signal[]).map((s) => s.label).join(" · ")}</p>}
               {c.reason && <p className="mt-1 text-xs text-[#555]">Motif : {c.reason}</p>}
@@ -341,7 +341,7 @@ function AdminFraud() {
               )}
             </article>
           ))}
-          {!cases.length && <p className="text-sm text-[#777]">Aucun cas. Ouvres-en un depuis les signaux ci-dessus.</p>}
+          {!cases.length && <p className="text-sm text-[#5c5c66]">Aucun cas. Ouvres-en un depuis les signaux ci-dessus.</p>}
         </div>
       )}
     </div>

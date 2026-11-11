@@ -43,7 +43,7 @@ function AdminEngage() {
           q.from("swivv_profile_views").select("viewer_id,created_at").gte("created_at", prevStart).order("created_at", { ascending: false }).limit(5000),
           q.from("swivv_photo_reaction_events").select("created_at").gte("created_at", prevStart).limit(5000),
           q.from("swivv_notifications").select("read").eq("type", "announcement").order("created_at", { ascending: false }).limit(1000),
-          q.from("swivv_email_log").select("id", { count: "exact", head: true }).eq("status", "failed"),
+          q.from("swivv_email_log").select("key", { count: "exact", head: true }).eq("status", "failed"),
           q.from("swivv_ai_runs").select("id", { count: "exact", head: true }).eq("status", "failed"),
           q.from("swivv_experiments").select("*").order("created_at", { ascending: false }).limit(50).then((r: any) => (r.error ? [] : (r.data ?? []))),
         ]);
@@ -116,7 +116,7 @@ function AdminEngage() {
   const kpi = (label: string, value: string, def: string, delta?: string) => (
     <div className="rounded-xl bg-white p-4 shadow-sm" title={def}>
       <p className="text-3xl font-bold text-[#333]">{value}</p>
-      <p className="mt-1 text-sm text-[#777]">
+      <p className="mt-1 text-sm text-[#5c5c66]">
         {label}
         {delta && delta !== "—" && (
           <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${delta.startsWith("-") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{delta}</span>
@@ -164,7 +164,7 @@ function AdminEngage() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Engagement & rétention</h1>
-      <p className="mt-1 text-xs text-[#999]">Agrégats uniquement — aucun classement individuel, aucun reciblage auto, plus de messages ≠ meilleur résultat.</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Agrégats uniquement — aucun classement individuel, aucun reciblage auto, plus de messages ≠ meilleur résultat.</p>
       <nav className="mt-3 flex gap-1 overflow-x-auto" aria-label="Engagement">
         {TABS.map((t) => (
           <button key={t} type="button" onClick={() => setTab(t)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === t ? "bg-[#14112b] text-white" : "bg-white text-[#555]"}`}>{t}</button>
@@ -201,14 +201,14 @@ function AdminEngage() {
 
       {tab === "Incomplets" && (
         <div className="mt-3 space-y-1">
-          <p className="text-xs text-[#999]">20 profils les moins complétés — aide à l'onboarding, jamais un score public.</p>
+          <p className="text-xs text-[#6b6b73]">20 profils les moins complétés — aide à l'onboarding, jamais un score public.</p>
           {(d.incomplets ?? []).map((x: any) => (
             <div key={x.id} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
               <Link to="/admin/users/$userId" params={{ userId: x.id }} className="font-medium text-[#e60050] hover:underline">{x.name}</Link>
-              <span className="ml-auto text-xs text-[#777]">{x.pct} %</span>
+              <span className="ml-auto text-xs text-[#5c5c66]">{x.pct} %</span>
             </div>
           ))}
-          {!(d.incomplets ?? []).length && <p className="text-sm text-[#777]">Aucun.</p>}
+          {!(d.incomplets ?? []).length && <p className="text-sm text-[#5c5c66]">Aucun.</p>}
         </div>
       )}
 
@@ -223,11 +223,11 @@ function AdminEngage() {
 
       {tab === "Recommandations" && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-[#999]">Règles sur agrégats, données d'appui affichées — sans modèle, sans reciblage.</p>
+          <p className="text-xs text-[#6b6b73]">Règles sur agrégats, données d'appui affichées — sans modèle, sans reciblage.</p>
           {recos.map((r) => (
             <div key={r.title} className="rounded-xl bg-white p-3 text-sm shadow-sm">
               <p className="font-medium text-[#333]">{r.title}</p>
-              <p className="text-xs text-[#777]">Pourquoi : {r.why}</p>
+              <p className="text-xs text-[#5c5c66]">Pourquoi : {r.why}</p>
               <p className="mt-1"><Link to={r.to as any} className="text-xs text-[#e60050] underline">{r.action}</Link></p>
             </div>
           ))}
@@ -236,7 +236,7 @@ function AdminEngage() {
 
       {tab === "Expériences" && (
         <div className="mt-3 space-y-2">
-          <p className="text-xs text-[#999]">Journal manuel — aucun feature flag câblé, aucun succès sans données ni conclusion écrite.</p>
+          <p className="text-xs text-[#6b6b73]">Journal manuel — aucun feature flag câblé, aucun succès sans données ni conclusion écrite.</p>
           {level >= 80 && (
             <form onSubmit={createExp} className="space-y-2 rounded-xl bg-white p-4 shadow-sm">
               <input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="Titre" maxLength={120} aria-label="Titre" className="w-full rounded-md border border-border px-3 py-2 text-sm" />
@@ -257,7 +257,7 @@ function AdminEngage() {
               <div className="flex flex-wrap items-center gap-2">
                 <strong className="text-[#333]">{x.title}</strong>
                 <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{x.status}</span>
-                <span className="text-xs text-[#999]">{x.audience} · {(x.metrics ?? []).join(", ")}</span>
+                <span className="text-xs text-[#6b6b73]">{x.audience} · {(x.metrics ?? []).join(", ")}</span>
               </div>
               <p className="mt-1 text-xs text-[#555]">Hypothèse : {x.hypothesis}</p>
               {x.conclusion && <p className="mt-1 text-xs text-[#555]">Conclusion : {x.conclusion}</p>}
@@ -270,7 +270,7 @@ function AdminEngage() {
               )}
             </article>
           ))}
-          {!exps.length && <p className="text-sm text-[#777]">Aucune expérience (table absente ou vide — migration 20261020000000).</p>}
+          {!exps.length && <p className="text-sm text-[#5c5c66]">Aucune expérience (table absente ou vide — migration 20261020000000).</p>}
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Eye, Download, Trash2, Lock, Check } from "lucide-react";
+import { Archive, Building2, Check, Cookie, Database, Download, Eye, Globe2, Lock, Mail, Scale, Settings, Share2, ShieldCheck, Trash2, type LucideIcon } from "lucide-react";
+import { LEGAL_CARD, LegalHero } from "@/components/swivv-legal-hero";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons, getMyRawProfile, requireSwivvAuth, useSwivvUser } from "@/lib/swivv-auth";
 import { getBlocked, getLikes, getMatches, getProfileViews } from "@/lib/swivv-store";
@@ -21,15 +22,23 @@ export const Route = createFileRoute("/privacy-centre")({
 });
 
 // ponytail: full policy text lives on this page (moved from the old /legal/privacy, now a redirect) — one privacy page for visitors + SEO
-const POLICY: [string, string][] = [
-  ["1. Données collectées", "Compte : prénom, e-mail, âge, ville. Profil public : photos, bio, centres d'intérêt, intention. Usage : likes, matchs, messages, préférences de recherche. Les messages privés ne sont lisibles que par toi et ton match, plus la modération en cas de signalement."],
-  ["2. Utilisation", "Tes données servent uniquement à : afficher ton profil aux membres, calculer tes compatibilités, assurer la modération et la sécurité, et te contacter pour le support. Aucune revente, aucun partage à des annonceurs, aucune publicité ciblée avec tes données de rencontres."],
-  ["3. Visibilité", "Ton profil public (photos, prénom, âge, ville, bio) est visible par les membres connectés uniquement. Ton e-mail, ta position exacte et tes signalements restent strictement privés. Seule ta ville et une distance approximative en km sont affichées."],
-  ["4. Conservation", "Tes données sont conservées tant que ton compte est actif. Après suppression du compte, ton profil public, tes photos et tes conversations sont effacés, sous réserve des durées légales (ex. journaux de modération en cas d'abus)."],
-  ["5. Tes droits", "Accès, rectification, export, suppression : écris-nous via la page contact en précisant ta demande et l'e-mail de ton compte. Réponse sous 30 jours. Tu peux aussi supprimer ton compte toi-même en 1 clic depuis ton profil."],
-  ["6. Cookies", "SWIVV utilise uniquement des cookies techniques (session, préférences, sécurité). Aucun cookie publicitaire. Détails sur la page cookies."],
-  ["7. Sécurité", "Connexions chiffrées, mots de passe jamais stockés en clair, accès internes limités. En cas de faille avérée, les membres concernés sont informés conformément à la réglementation."],
-  ["8. Contact", "Pour exercer tes droits ou poser une question : page contact, objet « Supprimer mes données » ou « Question confidentialité »."],
+const POLICY: [string, string, LucideIcon][] = [
+  ["1. Responsable du traitement", "Le responsable du traitement est SWIVV MATCH, 10 Rue Thureau Dangin, 75015 Paris, France. Contact pour toute question relative aux données personnelles : contact@swivvmatch.com. Aucun délégué à la protection des données (DPO) n'a été désigné : les demandes sont traitées par l'équipe support.", Building2],
+  ["2. Données collectées", "Compte : prénom, e-mail, âge, ville. Profil public : photos, bio, centres d'intérêt, intention. Usage : likes, matchs, messages, préférences de recherche. Données techniques : adresse IP, journaux de connexion, type d'appareil. Support : messages envoyés à l'équipe. Vérification d'identité : badge, date et motif de décision. Les champs obligatoires sont indiqués lors de la collecte ; les autres sont facultatifs. Les messages privés ne sont lisibles que par toi et ton match, plus la modération en cas de signalement.", Database],
+  ["3. Bases légales", "Nous traitons tes données sur les bases suivantes : exécution du contrat (compte, matching, messagerie), intérêt légitime (sécurité, prévention des abus, amélioration du service), consentement (communications facultatives et tout traceur non essentiel), obligation légale (conservation de certains journaux, réponses aux autorités).", Scale],
+  ["4. Utilisation", "Tes données servent uniquement à : afficher ton profil aux membres, calculer tes compatibilités, assurer la modération et la sécurité, et te contacter pour le support. Aucune revente, aucun partage à des annonceurs, aucune publicité ciblée avec tes données de rencontres.", Settings],
+  ["5. Visibilité", "Ton profil public (photos, prénom, âge, ville, bio) est visible par les membres connectés uniquement. Ton e-mail, ta position exacte et tes signalements restent strictement privés. Seule ta ville et une distance approximative en km sont affichées.", Eye],
+  ["6. Destinataires et sous-traitants", "Accès limité à l'équipe SWIVV et à nos sous-traitants techniques : Supabase (base de données, authentification, stockage des fichiers), Vercel (hébergement et mesure d'audience sans cookie), IONOS (hébergement e-mail et envoi des e-mails transactionnels). Aucune revente de données. Les autorités peuvent recevoir des données sur réquisition légale. En cas de signalement, la modération peut lire les messages concernés.", Share2],
+  ["7. Transferts hors Union européenne", "Certains sous-traitants peuvent traiter des données en dehors de l'Union européenne, notamment aux États-Unis. Ces transferts sont encadrés par les clauses contractuelles types de la Commission européenne et/ou une décision d'adéquation (Data Privacy Framework) lorsqu'elle s'applique. Une copie des garanties peut être demandée via la page contact.", Globe2],
+  ["8. Conservation", "Compte actif : pendant la durée d'utilisation. Messages : 3 mois, lus ou non. Documents de vérification d'identité en attente : jusqu'à la décision, puis suppression ; le badge, sa date et le motif restent tant que le compte existe. Journaux techniques et de modération : jusqu'à 12 mois. Après suppression du compte : effacement ou anonymisation sous 30 jours, sous réserve des obligations légales (ex. conservation de preuves en cas d'abus).", Archive],
+  ["9. Vérification d'identité", "Le badge Identité atteste qu'une pièce d'identité avec photo correspond à tes photos de profil. Le contrôle du visage est réalisé dans ton navigateur : si le visage correspond, aucune pièce n'est envoyée ni stockée. En cas de doute, la photo de la pièce est transmise dans un espace de stockage privé, accessible uniquement à l'équipe de modération, puis supprimée dès la décision (validation ou refus). Aucune donnée lisible sur la pièce (numéro, date de naissance, adresse) n'est extraite ni conservée. Seuls le badge, sa date et le motif de la décision restent enregistrés. La pièce n'est jamais visible par les autres membres et n'est jamais utilisée à d'autres fins.", ShieldCheck],
+  ["10. Matching et décisions automatisées", "Le matching et les suggestions reposent sur des règles et des scores calculés automatiquement à partir des informations et préférences de ton profil. Ils ne produisent pas d'effet juridique et ne constituent pas une décision entièrement automatisée au sens de l'article 22 du RGPD. La comparaison de visage pour le badge Identité est réalisée dans ton navigateur ; en cas de doute, une revue humaine intervient. Tu peux nous contacter pour obtenir des explications sur les critères principaux.", Settings],
+  ["11. Tes droits", "Accès, rectification, effacement, limitation, opposition, portabilité et retrait du consentement : écris-nous via la page contact en précisant ta demande et l'e-mail du compte. Réponse sous 30 jours. Tu peux aussi supprimer ton compte en 1 clic depuis tes Paramètres. Si tu estimes que tes droits ne sont pas respectés, tu peux introduire une réclamation auprès de la CNIL (cnil.fr) ou de l'autorité de protection des données de ton pays.", Scale],
+  ["12. Cookies", "SWIVV utilise uniquement des cookies techniques (session, préférences, sécurité) et une mesure d'audience sans cookie. Aucun cookie publicitaire. Détails, noms et durées sur la page cookies.", Cookie],
+  ["13. Sécurité", "Connexions chiffrées, mots de passe jamais stockés en clair, accès internes limités. En cas de faille avérée, les membres concernés sont informés conformément à la réglementation.", Lock],
+  ["14. Mineurs", "SWIVV est réservé aux personnes âgées de 18 ans ou plus. À l'inscription, ta date de naissance est obligatoire : elle sert uniquement à calculer ton âge et à vérifier que tu as 18 ans ou plus. Ton âge est visible sur ton profil, ta date de naissance ne l'est jamais. Elle est conservée de façon sécurisée, accessible uniquement aux processus techniques et à l'équipe habilitée, et n'est utilisée ni pour la publicité ni pour du profilage. Aucune pièce d'identité n'est demandée par défaut ; si une vérification d'âge est ajoutée, un prestataire indépendant ne renverra que le résultat « 18 ans ou plus », sans document. Si un compte de mineur est signalé, il est restreint le temps de la vérification puis suspendu, et les données concernées sont supprimées.", Scale],
+  ["15. Modifications", "Cette politique peut être mise à jour pour tenir compte de l'évolution du service ou de la réglementation. La date de dernière mise à jour figure en haut de la page. En cas de changement important, les membres sont informés par e-mail ou dans l'application.", Archive],
+  ["16. Contact", "Pour exercer tes droits ou poser une question : page contact, objet « Supprimer mes données » ou par e-mail à contact@swivvmatch.com.", Mail],
 ];
 
 function PrivacyCentrePage() {
@@ -37,28 +46,6 @@ function PrivacyCentrePage() {
   const lang = useLang();
   const [exported, setExported] = useState(false);
   const user = useSwivvUser();
-
-  // ponytail: local data only (profile + likes/matches/blocks/views stored on this device) — server rows join the export if a backend endpoint ever assembles it
-  const exportData = async () => {
-    const profile = await getMyRawProfile().catch(() => null);
-    const data = {
-      exportedAt: new Date().toISOString(),
-      profile: profile ?? null,
-      likes: getLikes(),
-      matches: getMatches(),
-      blocked: getBlocked(),
-      profileViews: getProfileViews(),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "mes-donnees-swivv.json";
-    a.click();
-    URL.revokeObjectURL(url);
-    setExported(true);
-    setTimeout(() => setExported(false), 2500);
-  };
 
   // ponytail: server row + local signup stash/draft (an in-flight flow can hold newer photos than the last push) — deduped so the PDF matches what Mon profil displays
   const collectPhotos = (p: any): string[] => {
@@ -136,12 +123,20 @@ ${photos.length ? `<h2 class="pbreak">${t("Mes photos ({n})", { n: photos.length
         </div>
       </header>
       <SwivvCategoryNav />
+      <LegalHero
+        title={t("Centre de confidentialité")}
+        subtitle={t("Tes données t'appartiennent. Voici ce que SWIVV collecte, pourquoi, et comment reprendre le contrôle.")}
+        icon={ShieldCheck}
+        tall
+      />
 
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-3xl font-medium text-[#333]">{t("Centre de confidentialité")}</h1>
-        <p className="mt-2 text-[#777]">
-          {t("Tes données t'appartiennent. Voici ce que SWIVV collecte, pourquoi, et comment reprendre le contrôle.")}
-        </p>
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <p className="text-sm text-[#6b6b73]">{t("Dernière mise à jour : 3 novembre 2026.")}</p>
+        {lang !== "fr" && (
+          <p className="mt-2 rounded-md border border-border bg-[#f3f3f3] p-3 text-sm text-[#555]">
+            {t("La politique détaillée ci-dessous est fournie en français ; la version française fait foi.")}
+          </p>
+        )}
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {[
@@ -170,15 +165,6 @@ ${photos.length ? `<h2 class="pbreak">${t("Mes photos ({n})", { n: photos.length
                     {exported ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
                     {exported ? t("Généré !") : user ? t("Télécharger en PDF") : t("Connecte-toi pour télécharger tes données")}
                   </button>
-                  {user && (
-                    <button
-                      type="button"
-                      onClick={exportData}
-                      className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
-                    >
-                      {t("Format JSON")}
-                    </button>
-                  )}
                 </span>
               ),
             },
@@ -196,7 +182,7 @@ ${photos.length ? `<h2 class="pbreak">${t("Mes photos ({n})", { n: photos.length
             <div key={c.t} className="rounded-xl bg-white p-5">
               {c.icon}
               <p className="mt-2 font-medium text-[#333]">{t(c.t)}</p>
-              <p className="mt-1 text-sm text-[#777]">{t(c.d)}</p>
+              <p className="mt-1 text-sm text-[#5c5c66]">{t(c.d)}</p>
               {"action" in c && c.action}
             </div>
           ))}
@@ -211,14 +197,30 @@ ${photos.length ? `<h2 class="pbreak">${t("Mes photos ({n})", { n: photos.length
           </ul>
         </div>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-6">
           <h2 className="font-medium text-[#333]">{t("Politique de confidentialité détaillée")}</h2>
-          {POLICY.map(([title, d]) => (
-            <article key={title} className="rounded-xl bg-white p-5">
-              <h3 className="font-medium text-[#333]">{t(title)}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-[#555]">{t(d)}</p>
-            </article>
-          ))}
+          <div className="mt-4 grid gap-3">
+            {POLICY.map(([title, d, Icon]) => (
+              <article key={title} className={LEGAL_CARD}>
+                <Icon className="h-6 w-6 text-[#111]" strokeWidth={1.75} aria-hidden="true" />
+                <h3 className="mt-3 font-extrabold tracking-[-0.01em] text-[#111]">{t(title)}</h3>
+                <div className="mt-2 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                  <p className="text-sm leading-relaxed text-[#6b6b6b]">{t(d)}</p>
+                  {title === "16. Contact" && (
+                    // ponytail: pre-fills the contact form's subject — no separate GDPR request flow
+                    <Link
+                      to="/contact-us"
+                      search={{ subject: "Supprimer mes données" }}
+                      className="mt-3 inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#111] px-4 py-2 text-sm font-medium text-white hover:bg-black sm:mt-0"
+                    >
+                      <Mail className="h-4 w-4" aria-hidden="true" />
+                      {t("Supprimer mes données")}
+                    </Link>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </main>
       <SwivvFooter />

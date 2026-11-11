@@ -5,7 +5,8 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
+import { answerSupport, fuzzyMatches } from "@/lib/support-kb";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/faq")({
@@ -32,7 +33,7 @@ const SECTIONS = (t: (fr: string) => string): { title: string; items: QA[] }[] =
       {
         id: "gratuit",
         q: "SWIVV est-il gratuit ?",
-        a: "Oui. Créer ton profil, parcourir les profils, liker, matcher et discuter est gratuit et sans limite : messages écrits libres, vocaux et photos entre matchs.",
+        a: "Oui. Créer ton profil, parcourir les profils, liker et matcher est gratuit et sans limite. Envoyer une demande de connexion et discuter avec les membres qui l'acceptent est gratuit aussi.",
       },
       {
         id: "creer-profil",
@@ -57,7 +58,7 @@ const SECTIONS = (t: (fr: string) => string): { title: string; items: QA[] }[] =
       {
         id: "fonctionnement-matching",
         q: "Comment fonctionne le matching ?",
-        a: <>{t("Tu likes les profils qui te plaisent et tu peux déjà leur écrire. Quand l'intérêt est réciproque, cela devient un match et les vocaux et les photos se débloquent. Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.")}{" "}<BLOG slug="comprendre-le-matching">{t("Comprendre le matching")}</BLOG>{" "}{t("et")}{" "}<Link to="/comment-ca-marche" className="font-medium text-[#e60050] hover:underline">{t("comment ça marche")}</Link>.</>,
+        a: <>{t("Tu likes les profils qui te plaisent. Quand l'intérêt est réciproque, cela devient un match : les deux membres reçoivent une notification et une annonce à l'écran. Pour discuter, envoie une demande de connexion : l'autre membre choisit alors ce qu'il autorise (messages texte, vocaux et pièces jointes). Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.")}{" "}<BLOG slug="comprendre-le-matching">{t("Comprendre le matching")}</BLOG>{" "}{t("et")}{" "}<Link to="/comment-ca-marche" className="font-medium text-[#e60050] hover:underline">{t("comment ça marche")}</Link>.</>,
       },
       {
         id: "score-compatibilite",
@@ -72,7 +73,17 @@ const SECTIONS = (t: (fr: string) => string): { title: string; items: QA[] }[] =
       {
         id: "discuter-avant-match",
         q: "Puis-je discuter avant un match ?",
-        a: "Oui pour les messages écrits : tu peux écrire à qui tu veux, sans attendre de match. Les vocaux et les photos, eux, se débloquent entre matchs (intérêt réciproque) — c'est ce qui protège les membres des contenus non désirés.",
+        a: "Oui, grâce à la demande de connexion : tu peux contacter n'importe quel membre en lui envoyant un premier message. S'il accepte, il choisit aussi ce qu'il autorise : messages texte, vocaux et pièces jointes. Tout reste désactivé par défaut et peut être révoqué à tout moment.",
+      },
+      {
+        id: "demande-connexion",
+        q: "Comment envoyer une demande de connexion ?",
+        a: "Sur le profil d'un membre, clique sur « Message », écris un premier message (500 caractères max) puis « Envoyer la demande ». Le membre la reçoit dans Messages et peut l'accepter ou la refuser, en choisissant les communications qu'il autorise (texte, vocaux, pièces jointes). Après un refus, tu pourras réessayer après 7 jours. Un match mutuel ne débloque pas la conversation : il faut aussi une demande acceptée. Dès qu'il répond, une fenêtre s'affiche sur ton écran, où que tu sois sur le site, avec sa décision et les fonctionnalités qu'il a autorisées.",
+      },
+      {
+        id: "limites-fichiers",
+        q: "Quels fichiers et vocaux puis-je envoyer ?",
+        a: <>{t("1 pièce jointe par message, 2 Mo max : JPG, JPEG, PNG, WebP, PDF ou TXT. Les vocaux sont limités à 5 Mo. Les fichiers exécutables, scripts et archives sont refusés.")}</>,
       },
     ],
   },
@@ -97,7 +108,12 @@ const SECTIONS = (t: (fr: string) => string): { title: string; items: QA[] }[] =
       {
         id: "faux-profil",
         q: "Comment reconnaître un faux profil ?",
-        a: <>{t("Méfie-toi des photos trop parfaites sans vie quotidienne, des bios vides, des demandes rapides de changer d'application et surtout de toute demande d'argent. Les 8 signaux d'alerte sont détaillés")}{" "}<BLOG slug="arnaques-amoureuses-signaux-alerte">{t("dans cet article")}</BLOG>{t(". Privilégie les profils avec le badge vérifié.")}</>,
+        a: <>{t("Méfie-toi des photos trop parfaites sans vie quotidienne, des bios vides, des demandes rapides de changer d'application et surtout de toute demande d'argent. Les 8 signaux d'alerte sont détaillés")}{" "}<BLOG slug="arnaques-amoureuses-signaux-alerte">{t("dans cet article")}</BLOG>{t(". Privilégie les profils avec le badge Photos vérifiées ou Identité vérifiée.")}</>,
+      },
+      {
+        id: "verification-identite",
+        q: "Comment vérifier mon identité et que devient ma pièce ?",
+        a: <>{t("Prends une photo de ta pièce d'identité depuis la page Vérification : le visage est comparé à tes photos dans ton navigateur. S'il correspond, le badge Identité s'affiche tout de suite et la pièce n'est ni envoyée ni conservée. En cas de doute, elle part dans un espace privé réservé à la modération, puis est supprimée dès la décision. Seuls le badge et sa date restent ; aucune donnée de la pièce n'est conservée.")}{" "}<Link to="/privacy-centre" className="font-medium text-[#e60050] hover:underline">{t("Détails dans le centre de confidentialité")}</Link>.</>,
       },
       {
         id: "signaler-abus",
@@ -120,6 +136,7 @@ const SECTIONS = (t: (fr: string) => string): { title: string; items: QA[] }[] =
 
 function FaqPage() {
   const t = useT();
+  const lang = useLang();
   const allSections = SECTIONS(t);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<string | null>(null);
@@ -135,12 +152,15 @@ function FaqPage() {
     }
   }, []);
 
-  const q = query.trim().toLowerCase();
-  // ponytail: search matches the French source only — translate the index if EN/ES search is ever requested
+  const trimmed = query.trim();
+  const answer = trimmed.length >= 2 ? answerSupport(trimmed, lang) : null;
+  // ponytail: multilingual fuzzy filter — typo/predictive-text tolerant; JSX answers are matched by their question only
   const sections = allSections.map((s) => ({
     ...s,
     items: s.items.filter(
-      (i) => !q || `${i.q} ${typeof i.a === "string" ? i.a : ""}`.toLowerCase().includes(q),
+      (i) =>
+        !trimmed ||
+        fuzzyMatches(`${t(i.q)} ${typeof i.a === "string" ? t(i.a) : ""}`, trimmed),
     ),
   })).filter((s) => s.items.length > 0);
 
@@ -156,20 +176,34 @@ function FaqPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl font-medium text-[#333]">{t("On répond à tout")}</h1>
-        <p className="mt-2 text-[#777]">
+        <p className="mt-2 text-[#5c5c66]">
           {t("Inscription, matching, mariage, sécurité : tout ce qu'il faut savoir sur SWIVV.")}
         </p>
 
         <div className="relative mt-6">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#999]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6b6b73]" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("Rechercher une question…")}
             aria-label={t("Rechercher une question")}
-            className="w-full rounded-md border border-border bg-white py-2.5 pl-9 pr-3 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+            className="w-full rounded-md border border-border bg-white py-2.5 pl-9 pr-3 text-[15px] placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
           />
         </div>
+
+        {answer && (answer.matched || sections.length === 0) && (
+          <div className="mt-4 rounded-xl border border-[#e60050]/25 bg-white p-4 shadow-sm">
+            <p className="text-sm leading-relaxed text-[#333]">{answer.text}</p>
+            {answer.to && (
+              <Link
+                to={answer.to as never}
+                className="mt-2 inline-block text-sm font-medium text-[#e60050] underline"
+              >
+                {answer.link ?? t("Ouvrir")}
+              </Link>
+            )}
+          </div>
+        )}
 
         {sections.map((s) => (
           <section key={s.title} className="mt-8">
@@ -199,8 +233,8 @@ function FaqPage() {
             </div>
           </section>
         ))}
-        {sections.length === 0 && (
-          <p className="mt-6 text-sm text-[#777]">{t("Aucune question trouvée pour « {query} ».", { query })}</p>
+        {sections.length === 0 && !answer && (
+          <p className="mt-6 text-sm text-[#5c5c66]">{t("Aucune question trouvée pour « {query} ».", { query })}</p>
         )}
 
         <div className="mt-8 rounded-xl bg-[#e60050] p-6 text-center text-white">

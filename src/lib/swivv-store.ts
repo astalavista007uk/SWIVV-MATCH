@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/track";
 import { sameMember } from "@/lib/swivv-notify.logic";
 import { blockPing } from "@/lib/notify.functions";
+import { attachmentKind, validateAttachment, validateVoice } from "@/lib/swivv-attachments";
+import { chatKey, pruneRealPeerChats } from "@/lib/swivv-chat-cache";
 
 export type ChatMessage = {
   id: string;
@@ -12,6 +14,8 @@ export type ChatMessage = {
   audio?: string;
   dur?: number;
   image?: string;
+  // ponytail: one attachment per message (single column/row) — a list if multi-file is ever needed
+  file?: { url: string; name: string; type: string; size: number };
   ts?: number;
   // ponytail: sender snapshot rides the cache so re-pushes never strip it (undefined keys drop out of the JSON payload)
   peerName?: string;
@@ -204,7 +208,8 @@ export function toggleLike(id: string): { liked: boolean; matched: boolean } {
     }
   } else {
     likes.add(id);
-    if (!matches.has(id) && autoReciprocates(id)) {
+    // ponytail: only seed/demo ids keep the deterministic stand-in — real members match on the server's reciprocal row (mirrorSocial), never locally
+    if (!matches.has(id) && !isUuid(id.replace(/^u:/, "")) && autoReciprocates(id)) {
       matches.add(id);
       matched = true;
       write(MATCHES_KEY, [...matches]);
@@ -284,7 +289,7 @@ async function mirrorSocial(kind: "like" | "unlike" | "block" | "unblock", targe
   // ponytail: a match row means REAL mutual consent (reverse like exists) — the 1-in-3 auto-match stays a local UX stand-in and never reaches the server
   if (kind === "like") {
     const { data: back } = await q.from("swivv_likes").select("liker_id").eq("liker_id", target).eq("liked_id", uid).maybeSingle();
-    // ponytail: reactions count as likes both ways — a reverse reaction is consent too; the completing device unlocks voice/files at once via the local match below
+    // ponytail: reactions count as likes both ways — a reverse reaction is consent too; the completing device records the mutual match below
     const { data: backRx } = back
       ? { data: null }
       : await q.from("swivv_photo_reactions").select("reactor_id").eq("owner_id", uid).eq("reactor_id", target).limit(1);
@@ -292,13 +297,16 @@ async function mirrorSocial(kind: "like" | "unlike" | "block" | "unblock", targe
       const [a, b] = [uid, target].sort();
       const { error: mErr } = await q.from("swivv_matches").upsert({ user_a: a, user_b: b }, { onConflict: "user_a,user_b" });
       if (mErr) console.warn("[swivv] match mirror skipped", mErr.message ?? mErr);
-      // ponytail: local ids ride "u:"-prefixed — the completing device joins the same list hearts use, so voice/files unlock at once
+      // ponytail: local ids ride "u:"-prefixed so the completing device joins the same match list hearts use
       const mid = `u:${target}`;
       const matches = new Set(getMatches());
       if (!matches.has(mid)) {
         matches.add(mid);
         write(MATCHES_KEY, [...matches]);
         void pushLikes();
+        try {
+          window.dispatchEvent(new CustomEvent("swivv:match", { detail: { id: target } }));
+        } catch {}
       }
     }
   }
@@ -315,14 +323,15 @@ export async function pullLikes(uid: string) {
   const d = (row?.data ?? {}) as { likes?: string[]; matches?: string[] };
   write(LIKES_KEY, [...new Set([...getLikes(), ...(d.likes ?? [])])]);
   write(MATCHES_KEY, [...new Set([...getMatches(), ...(d.matches ?? [])])]);
-  // ponytail: real server matches (mutual completed on ANY device) join the local unlock list — the completing device adds it live via mirrorSocial, everyone else re-syncs here at boot; RLS restricts rows to my own
+  // ponytail: real server matches (mutual completed on ANY device) join the local match list — the completing device adds it live via mirrorSocial, everyone else re-syncs here at boot; RLS restricts rows to my own
   try {
     const { data: mm } = await (supabase as any).from("swivv_matches").select("user_a,user_b").or(`user_a.eq.${uid},user_b.eq.${uid}`).limit(200);
     const counterparts = ((mm ?? []) as { user_a: string; user_b: string }[]).map((m) => (m.user_a === uid ? m.user_b : m.user_a));
     const srv = new Set(counterparts.map((c) => `u:${c}`));
     // ponytail: prune local-only matches with no outgoing like (pre-fix unlikes left them behind) — server rows re-merge regardless of device
+    // Real peers: the server match table is authoritative; a local like alone no longer keeps a ghost match.
     const liked = new Set(getLikes());
-    write(MATCHES_KEY, [...new Set([...getMatches().filter((m) => liked.has(m) || srv.has(m)), ...srv])]);
+    write(MATCHES_KEY, [...new Set([...getMatches().filter((m) => (m.startsWith("u:") ? srv.has(m) : liked.has(m))), ...srv])]);
   } catch {}
   await pushLikes();
 }
@@ -371,7 +380,7 @@ export function isLikedBack(id: string): boolean {
   return getMatches().includes(id);
 }
 
-/** Full match (call + voice unlocked): mutual like. */
+/** Full match (mutual like). Announced in-app; it no longer unlocks messages — a connection request is still required. */
 export function isMatch(id: string): boolean {
   return getMatches().includes(id);
 }
@@ -508,11 +517,21 @@ function isRecent(m: ChatMessage): boolean {
 /** Drop expired threads locally + server-side. Runs on boot; readers also filter. */
 export async function pruneOldChats(uid: string): Promise<void> {
   try {
+    const expiredMedia: string[] = [];
     if (typeof localStorage !== "undefined") {
       const chats = read<Record<string, ChatMessage[]>>(CHATS_KEY, {});
       let changed = false;
       for (const [id, msgs] of Object.entries(chats)) {
-        const kept = msgs.filter(isRecent);
+        const kept = msgs.filter((m) => {
+          const recent = isRecent(m);
+          if (!recent) {
+            for (const url of [m.audio, m.image, m.file?.url]) {
+              const path = storagePathOf(url);
+              if (path) expiredMedia.push(path);
+            }
+          }
+          return recent;
+        });
         if (kept.length !== msgs.length) {
           changed = true;
           if (kept.length) chats[id] = kept;
@@ -521,7 +540,21 @@ export async function pruneOldChats(uid: string): Promise<void> {
       }
       if (changed) write(CHATS_KEY, chats);
     }
-    await (supabase as any).from("swivv_chats").delete().eq("user_id", uid).lt("created_at", new Date(Date.now() - RETENTION_MS).toISOString());
+    // Retention includes media: expired chat rows drop their objects too (bucket is private).
+    const cutoff = new Date(Date.now() - RETENTION_MS).toISOString();
+    const { data: oldRows } = await (supabase as any)
+      .from("swivv_chats")
+      .select("audio_url,image_url,file_url")
+      .eq("user_id", uid)
+      .lt("created_at", cutoff);
+    for (const row of (oldRows ?? []) as { audio_url: string | null; image_url: string | null; file_url: string | null }[]) {
+      for (const url of [row.audio_url, row.image_url, row.file_url]) {
+        const path = storagePathOf(url);
+        if (path) expiredMedia.push(path);
+      }
+    }
+    if (expiredMedia.length) await supabase.storage.from("swivv-voice").remove([...new Set(expiredMedia)]);
+    await (supabase as any).from("swivv_chats").delete().eq("user_id", uid).lt("created_at", cutoff);
   } catch {}
 }
 
@@ -623,9 +656,11 @@ export async function pushMatchCriteria(form: Record<string, string>) {
     .select("data")
     .eq("user_id", uid)
     .maybeSingle();
+  // ponytail: keep the onboarding preference aligned with the explicit search gender so feed surfaces never disagree with Mes Matches
+  const seeking = form.gender === "Homme" ? "man" : form.gender === "Femme" ? "woman" : undefined;
   await (supabase as any)
     .from("swivv_profiles")
-    .upsert({ user_id: uid, data: { ...(row?.data ?? {}), matchCriteria: { form, savedAt: at } } });
+    .upsert({ user_id: uid, data: { ...(row?.data ?? {}), ...(seeking ? { seeking } : {}), matchCriteria: { form, savedAt: at } } });
 }
 
 /** Returns server criteria if strictly newer than this browser's, else null. Uploads local first-saves that predate sync. */
@@ -753,7 +788,7 @@ async function pushMessage(peerId: string, msg: ChatMessage) {
   if (!uid) return; // logged out: local only, uploaded on next login via pullAndPush
   // ponytail: warn (don't throw — offline-first) so the console shows which half failed; recipient shape also enforced by the "deliver to peer" policy
   await (supabase as any).from("swivv_chats").upsert(
-    { user_id: uid, peer_id: peerId, msg_id: msg.id, sender: msg.from, body: msg.text, audio_url: msg.audio ?? null, duration_s: msg.dur ?? null, image_url: msg.image ?? null },
+    { user_id: uid, peer_id: peerId, msg_id: msg.id, sender: msg.from, body: msg.text, audio_url: msg.audio ?? null, duration_s: msg.dur ?? null, image_url: msg.image ?? null, file_url: msg.file?.url ?? null, file_name: msg.file?.name ?? null, file_type: msg.file?.type ?? null, file_size: msg.file?.size ?? null },
     { onConflict: "user_id,msg_id" },
   ).then((r: { error: unknown }) => { if (r.error) throw r.error; }).catch((e: unknown) => console.warn("[swivv] own chat copy failed", e));
   // ponytail: recipient copies use plain INSERT (upsert would demand SELECT on their row, which must stay private) — messages are immutable so no-update is correct
@@ -762,23 +797,41 @@ async function pushMessage(peerId: string, msg: ChatMessage) {
   if (!toUid || toUid === uid) return;
   const snap = await senderSnapshot(uid);
   await (supabase as any).from("swivv_chats").insert(
-    { user_id: toUid, peer_id: `u:${uid}`, msg_id: msg.id, sender: msg.from === "me" ? "them" : "me", body: msg.text, audio_url: msg.audio ?? null, duration_s: msg.dur ?? null, image_url: msg.image ?? null, peer_name: snap.name, peer_photo: snap.photo },
+    { user_id: toUid, peer_id: `u:${uid}`, msg_id: msg.id, sender: msg.from === "me" ? "them" : "me", body: msg.text, audio_url: msg.audio ?? null, duration_s: msg.dur ?? null, image_url: msg.image ?? null, file_url: msg.file?.url ?? null, file_name: msg.file?.name ?? null, file_type: msg.file?.type ?? null, file_size: msg.file?.size ?? null, peer_name: snap.name, peer_photo: snap.photo },
   ).then((r: { error: unknown }) => { if (r.error) throw r.error; }).catch((e: unknown) => console.warn("[swivv] recipient chat copy failed", e));
+}
+
+/** Upload through the validate-upload Edge Function (size, MIME, signature, quota, permission). */
+async function uploadValidated(
+  peerId: string,
+  msgId: string,
+  file: Blob,
+  kind: "voice" | "attachment",
+  fileName: string,
+): Promise<{ url: string } | { error: string }> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return { error: "Connecte-toi pour envoyer un fichier." };
+  const form = new FormData();
+  form.set("peer", peerId);
+  form.set("kind", kind);
+  form.set("msgId", msgId);
+  form.set("file", file, fileName);
+  // ponytail: indeterminate progress (functions.invoke/fetch expose no upload %) — signed-URL XHR if a % bar is required
+  const { data: res, error } = await supabase.functions.invoke("validate-upload", { body: form });
+  if (error) return { error: "Envoi refusé — vérifie le format et la taille du fichier." };
+  const payload = res as { path?: string; error?: string } | null;
+  if (!payload?.path) return { error: payload?.error ?? "Envoi impossible. Réessaie." };
+  return { url: supabase.storage.from("swivv-voice").getPublicUrl(payload.path).data.publicUrl };
 }
 
 /** Upload a voice blob, returns its stored URL (private bucket — render via signedMediaUrl). */
 export async function uploadVoice(peerId: string, msgId: string, blob: Blob): Promise<string | null> {
-  const { data } = await supabase.auth.getSession();
-  const uid = data.session?.user.id;
-  if (!uid) return null;
   const ext = blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm";
-  const path = `${uid}/${peerId}/${msgId}.${ext}`;
-  const { error } = await supabase.storage.from("swivv-voice").upload(path, blob, { upsert: true });
-  if (error) return null;
-  return supabase.storage.from("swivv-voice").getPublicUrl(path).data.publicUrl;
+  const up = await uploadValidated(peerId, msgId, blob, "voice", `vocal.${ext}`);
+  return "url" in up ? up.url : null;
 }
 
-type ChatRow = { peer_id: string; msg_id: string; sender: "me" | "them"; body: string; audio_url: string | null; duration_s: number | null; image_url: string | null; peer_name: string; peer_photo: string; created_at: string };
+type ChatRow = { peer_id: string; msg_id: string; sender: "me" | "them"; body: string; audio_url: string | null; duration_s: number | null; image_url: string | null; file_url: string | null; file_name: string | null; file_type: string | null; file_size: number | null; peer_name: string; peer_photo: string; created_at: string };
 
 function rowToMessage(r: ChatRow): ChatMessage {
   // ponytail: incoming copies carry the sender snapshot — feeds the peer directory so real threads render with name + photo
@@ -791,6 +844,7 @@ function rowToMessage(r: ChatRow): ChatMessage {
     ts: new Date(r.created_at).getTime(),
     ...(r.audio_url ? { audio: r.audio_url, dur: r.duration_s ?? undefined } : {}),
     ...(r.image_url ? { image: r.image_url } : {}),
+    ...(r.file_url ? { file: { url: r.file_url, name: r.file_name ?? "pièce-jointe", type: r.file_type ?? "", size: r.file_size ?? 0 } } : {}),
     ...(r.sender === "them" && r.peer_name ? { peerName: r.peer_name, peerPhoto: r.peer_photo } : {}),
   };
 }
@@ -824,7 +878,7 @@ async function senderSnapshot(uid: string): Promise<{ name: string; photo: strin
 async function pullAndPush(uid: string) {
   const { data: rows } = await (supabase as any)
     .from("swivv_chats")
-    .select("peer_id,msg_id,sender,body,audio_url,duration_s,image_url,peer_name,peer_photo,created_at")
+    .select("peer_id,msg_id,sender,body,audio_url,duration_s,image_url,file_url,file_name,file_type,file_size,peer_name,peer_photo,created_at")
     .eq("user_id", uid);
   if (rows) {
     const chats = read<Record<string, ChatMessage[]>>(CHATS_KEY, {});
@@ -835,12 +889,15 @@ async function pullAndPush(uid: string) {
       if (!list.some((m) => m.id === r.msg_id)) list.push(rowToMessage(r));
       chats[r.peer_id] = list;
     }
-    write(CHATS_KEY, chats);
+    // Server is authoritative for real peers: stale local history self-heals on boot.
+    const serverKeys = new Set((rows as ChatRow[]).map((r) => chatKey(r.peer_id, r.msg_id)));
+    const pruned = pruneRealPeerChats(chats, serverKeys);
+    write(CHATS_KEY, pruned.cache);
   }
   const cache = read<Record<string, ChatMessage[]>>(CHATS_KEY, {});
   const all = Object.entries(cache).flatMap(([peerId, msgs]) =>
     // ponytail: '' not null (peer_name/photo are NOT NULL server-side) — undefined would 400 the whole bulk upsert and strand every message local-only
-    msgs.map((m) => ({ user_id: uid, peer_id: peerId, msg_id: m.id, sender: m.from, body: m.text, audio_url: m.audio ?? null, duration_s: m.dur ?? null, image_url: m.image ?? null, peer_name: m.peerName ?? "", peer_photo: m.peerPhoto ?? "" })),
+    msgs.map((m) => ({ user_id: uid, peer_id: peerId, msg_id: m.id, sender: m.from, body: m.text, audio_url: m.audio ?? null, duration_s: m.dur ?? null, image_url: m.image ?? null, file_url: m.file?.url ?? null, file_name: m.file?.name ?? null, file_type: m.file?.type ?? null, file_size: m.file?.size ?? null, peer_name: m.peerName ?? "", peer_photo: m.peerPhoto ?? "" })),
   );
   if (all.length > 0) {
     await (supabase as any).from("swivv_chats").upsert(all, { onConflict: "user_id,msg_id" });
@@ -850,42 +907,49 @@ async function pullAndPush(uid: string) {
 /** Record-then-send voice note. Returns an error message, or null on success. */
 export async function sendVoice(peerId: string, blob: Blob, dur: number): Promise<string | null> {
   if (isThreadBlocked(peerId)) return "Message non envoyé — ce membre est bloqué.";
+  const invalid = await validateVoice(blob);
+  if (invalid) return invalid;
   const msgId = `${Date.now()}-v`;
-  const url = await uploadVoice(peerId, msgId, blob);
-  if (!url) return "Envoi impossible. Réessaie.";
+  const up = await uploadValidated(peerId, msgId, blob, "voice", `vocal.${blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm"}`);
+  if ("error" in up) return up.error;
   saveMessage(peerId, {
     id: msgId,
     from: "me",
     text: "",
     at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), ts: Date.now(),
-    audio: url,
+    audio: up.url,
     dur,
   });
+  void trackEvent("attachment_upload", { kind: "voice", bytes: blob.size });
   return null;
 }
 
-/** Send an image (mutual matches only — caller gates). Returns an error message, or null on success. */
-export async function sendImage(peerId: string, file: File): Promise<string | null> {
+/**
+ * Send one attachment (image or document). One per message, 2 MB, validated again
+ * server-side by the Edge Function. Returns an error message, or null on success.
+ */
+export async function sendAttachment(peerId: string, file: File): Promise<string | null> {
   if (isThreadBlocked(peerId)) return "Message non envoyé — ce membre est bloqué.";
-  // ponytail: same voice-note pipeline + bucket, images under images/ — dedicated bucket + client resize if 5 Mo ever blocks real photos
-  if (file.size > 5_000_000) return "Image trop lourde (5 Mo max).";
+  const invalid = await validateAttachment(file);
+  if (invalid) return invalid;
   const msgId = `${Date.now()}-i`;
-  const { data } = await supabase.auth.getSession();
-  const uid = data.session?.user.id;
-  if (!uid) return "Connecte-toi pour envoyer une image.";
-  const ext = file.type.includes("png") ? "png" : file.type.includes("webp") ? "webp" : file.type.includes("gif") ? "gif" : "jpg";
-  const path = `${uid}/${peerId}/images/${msgId}.${ext}`;
-  const { error } = await supabase.storage.from("swivv-voice").upload(path, file, { upsert: true });
-  if (error) return "Envoi impossible. Réessaie.";
-  const url = supabase.storage.from("swivv-voice").getPublicUrl(path).data.publicUrl;
+  const up = await uploadValidated(peerId, msgId, file, "attachment", file.name);
+  if ("error" in up) return up.error;
+  const image = attachmentKind(file.type) === "image";
   saveMessage(peerId, {
     id: msgId,
     from: "me",
     text: "",
     at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), ts: Date.now(),
-    image: url,
+    ...(image ? { image: up.url } : { file: { url: up.url, name: file.name, type: file.type, size: file.size } }),
   });
+  void trackEvent("attachment_upload", { kind: image ? "image" : "file", bytes: file.size });
   return null;
+}
+
+/** Back-compat alias. */
+export async function sendImage(peerId: string, file: File): Promise<string | null> {
+  return sendAttachment(peerId, file);
 }
 
 /** Photo feedback (reactions/reports/downloads) keyed by message id. */

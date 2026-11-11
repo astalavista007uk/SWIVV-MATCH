@@ -96,7 +96,7 @@ function AdminHealth() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Santé technique</h1>
-      <p className="mt-1 text-xs text-[#999]">Mesuré depuis le navigateur (sondes, timing réel). L'instrumentation serveur (HTTP, usage stockage, jobs) n'existe pas et s'affiche comme telle.</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Mesuré depuis le navigateur (sondes, timing réel). L'instrumentation serveur (HTTP, usage stockage, jobs) n'existe pas et s'affiche comme telle.</p>
       <nav className="mt-3 flex gap-1 overflow-x-auto" aria-label="Santé">
         {TABS.map((t) => (
           <button key={t} type="button" onClick={() => setTab(t)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === t ? "bg-[#14112b] text-white" : "bg-white text-[#555]"}`}>{t}</button>
@@ -106,14 +106,14 @@ function AdminHealth() {
 
       {tab === "Services" && (
         <div className="mt-3 grid gap-3 lg:grid-cols-4">
-          <div className={card}><p className="font-medium text-[#333]">Application</p><div className="mt-1">{badge("healthy")}</div><p className="mt-1 text-xs text-[#999]">Cette page chargée = disponible.</p></div>
+          <div className={card}><p className="font-medium text-[#333]">Application</p><div className="mt-1">{badge("healthy")}</div><p className="mt-1 text-xs text-[#6b6b73]">Cette page chargée = disponible.</p></div>
           {Object.values(probes).map((p) => {
             const s = evaluate(p);
             return (
               <div key={p.label} className={card}>
                 <p className="font-medium text-[#333]">{p.label}</p>
                 <div className="mt-1">{badge(s)}</div>
-                <p className="mt-1 text-xs text-[#999]">{p.ms == null ? "—" : `${p.ms} ms`} · seuil dégradé &gt; 2000 ms</p>
+                <p className="mt-1 text-xs text-[#6b6b73]">{p.ms == null ? "—" : `${p.ms} ms`} · seuil dégradé &gt; 2000 ms</p>
               </div>
             );
           })}
@@ -123,11 +123,11 @@ function AdminHealth() {
       {tab === "Erreurs" && (
         <div className={`${card} mt-3`}>
           <p className="font-medium text-[#333]">Erreurs client admin ({errors.length}, dont {err24} / 24 h)</p>
-          <p className="text-xs text-[#999]">Journal swivv_client_errors (sans mots de passe, tokens ni contenus). Taux 4xx/5xx : non instrumenté côté serveur.</p>
+          <p className="text-xs text-[#6b6b73]">Journal swivv_client_errors (sans mots de passe, tokens ni contenus). Taux 4xx/5xx : non instrumenté côté serveur.</p>
           {errors.slice(0, 30).map((e: any, i: number) => (
-            <p key={i} className="mt-1 text-xs text-[#555]">{e.message} <span className="text-[#999]">· {e.source ?? ""} {e.url ?? ""} · {new Date(e.created_at).toLocaleString("fr-FR")}</span></p>
+            <p key={i} className="mt-1 text-xs text-[#555]">{e.message} <span className="text-[#6b6b73]">· {e.source ?? ""} {e.url ?? ""} · {new Date(e.created_at).toLocaleString("fr-FR")}</span></p>
           ))}
-          {!errors.length && <p className="mt-1 text-xs text-[#999]">Aucune erreur enregistrée (table absente ou vide — migration 20261021000000).</p>}
+          {!errors.length && <p className="mt-1 text-xs text-[#6b6b73]">Aucune erreur enregistrée (table absente ou vide — migration 20261021000000).</p>}
         </div>
       )}
 
@@ -140,11 +140,11 @@ function AdminHealth() {
               <div key={k} className={card}>
                 <p className="font-medium text-[#333]">{k}</p>
                 <div className="mt-1">{badge(s as string)}</div>
-                <p className="mt-1 text-xs text-[#999]">{p?.ms == null ? "—" : `${p.ms} ms`} · requêtes head (latence aller-retour)</p>
+                <p className="mt-1 text-xs text-[#6b6b73]">{p?.ms == null ? "—" : `${p.ms} ms`} · requêtes head (latence aller-retour)</p>
               </div>
             );
           })}
-          <div className={card}><p className="font-medium text-[#333]">Opérations en échec</p><div className="mt-1">{badge("unmonitored")}</div><p className="mt-1 text-xs text-[#999]">Pas de compteur serveur — les échecs visibles remontent dans les messages d'erreur des pages.</p></div>
+          <div className={card}><p className="font-medium text-[#333]">Opérations en échec</p><div className="mt-1">{badge("unmonitored")}</div><p className="mt-1 text-xs text-[#6b6b73]">Pas de compteur serveur — les échecs visibles remontent dans les messages d'erreur des pages.</p></div>
         </div>
       )}
 
@@ -152,7 +152,7 @@ function AdminHealth() {
         <div className={`${card} mt-3`}>
           <p className="font-medium text-[#333]">Buckets ({buckets == null ? "illisible pour ce rôle" : buckets.length})</p>
           {(buckets ?? []).map((b: any) => <p key={b.id} className="mt-1 text-xs text-[#555]">{b.id} {b.public ? "(public)" : "(privé)"}</p>)}
-          <p className="mt-2 text-xs text-[#999]">Usage volumétrique et échecs d'upload : non mesurables côté client (dashboard Supabase). Photos dating hors buckets (data URLs). Voix : bucket public par conception.</p>
+          <p className="mt-2 text-xs text-[#6b6b73]">Usage volumétrique et échecs d'upload : non mesurables côté client (dashboard Supabase). Photos dating hors buckets (data URLs). Voix : bucket public par conception.</p>
           <div className="mt-1">{badge("unmonitored")}</div>
         </div>
       )}
@@ -160,32 +160,32 @@ function AdminHealth() {
       {tab === "Tâches" && (
         <div className={`${card} mt-3`}>
           <p className="font-medium text-[#333]">Aucune tâche planifiée configurée (ni cron, ni worker).</p>
-          <p className="mt-1 text-xs text-[#999]">Envois programmés, relances et files : traitement manuel. Triggers DB (audit sanctions/vérifications) actifs par conception. Rien à relancer, aucune idempotence à gérer.</p>
+          <p className="mt-1 text-xs text-[#6b6b73]">Envois programmés, relances et files : traitement manuel. Triggers DB (audit sanctions/vérifications) actifs par conception. Rien à relancer, aucune idempotence à gérer.</p>
           <div className="mt-1">{badge("unmonitored")}</div>
         </div>
       )}
 
       {tab === "Notifications" && (
         <div className="mt-3 grid gap-3 lg:grid-cols-4">
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{mail ? mail.sent : "…"}</p><p className="mt-1 text-[#777]">E-mails envoyés</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#e60050]">{mail ? mail.failed : "…"}</p><p className="mt-1 text-[#777]">E-mails en échec</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{mail ? mail.queued : "…"}</p><p className="mt-1 text-[#777]">En file</p></div>
-          <div className={card}><p className="text-3xl font-bold text-[#333]">{notifVol ?? "…"}</p><p className="mt-1 text-[#777]">Notifications in-app / 24 h</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{mail ? mail.sent : "…"}</p><p className="mt-1 text-[#5c5c66]">E-mails envoyés</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#e60050]">{mail ? mail.failed : "…"}</p><p className="mt-1 text-[#5c5c66]">E-mails en échec</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{mail ? mail.queued : "…"}</p><p className="mt-1 text-[#5c5c66]">En file</p></div>
+          <div className={card}><p className="text-3xl font-bold text-[#333]">{notifVol ?? "…"}</p><p className="mt-1 text-[#5c5c66]">Notifications in-app / 24 h</p></div>
         </div>
       )}
 
       {tab === "Intégrations" && (
         <div className={`${card} mt-3`}>
-          <p className="font-medium text-[#333]">Resend (e-mail) : configuration déploiement, non vérifiable ici.</p>
+          <p className="font-medium text-[#333]">IONOS SMTP (e-mail) : configuration déploiement, non vérifiable ici.</p>
           <p className="mt-1 text-[#555]">IA : aucun fournisseur. Realtime : voir Services. {msg}</p>
-          <p className="mt-1 text-xs text-[#999]">Clés jamais affichées ; ajout côté serveur/hébergeur.</p>
+          <p className="mt-1 text-xs text-[#6b6b73]">Clés jamais affichées ; ajout côté serveur/hébergeur.</p>
         </div>
       )}
 
       {tab === "Performance" && (
         <div className={`${card} mt-3`}>
           <p className="font-medium text-[#333]">Chargement réel de cette page : {nav ? `DOM ${nav.dcl} ms · complet ${nav.load} ms` : "—"}</p>
-          <p className="text-xs text-[#999]">Navigation Timing (ton navigateur). Latences sondes ci-dessous :</p>
+          <p className="text-xs text-[#6b6b73]">Navigation Timing (ton navigateur). Latences sondes ci-dessous :</p>
           <div className="mt-2 h-48">
             <ResponsiveContainer>
               <BarChart data={latData}>

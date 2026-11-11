@@ -11,3 +11,26 @@ port = 55324
 
 [analytics]
 port = 55327
+
+[auth]
+site_url = "http://localhost:5273"
+additional_redirect_urls = ["http://localhost:5273", "http://127.0.0.1:5273"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+
+# ponytail: local E2E signs up repeatedly; production keeps the provider limit.
+[auth.rate_limit]
+email_sent = 30
+
+# ponytail: IONOS mailbox SMTP handles auth mail. no-reply@ authenticates and
+# is the visible From. Keep Mailpit (:55324) only if this is disabled.
+[auth.email.smtp]
+enabled = true
+host = "smtp.ionos.fr"
+port = 587
+user = "no-reply@swivvmatch.com"
+pass = "env(IONOS_SMTP_PASS)"
+admin_email = "no-reply@swivvmatch.com"
+sender_name = "SWIVV MATCH"

@@ -11,6 +11,7 @@ import {
   trackSave,
 } from "@/lib/swivv-auth";
 import { type SwivvProfile } from "@/lib/swivv-data";
+import { ageCheck, ageFromBirthdate } from "@/lib/swivv-age";
 import { trackEvent } from "@/lib/track";
 import { PW_LEVELS, pwScore } from "@/lib/swivv-password";
 import { MATCH_CRITERIA_KEY } from "@/lib/swivv-store";
@@ -449,14 +450,14 @@ const DRAFT_KEY = "swivv-signup-draft";
 type SignupDraft = { f?: Record<string, string>; photos?: string[]; customPhotos?: string[]; step?: number; phase?: "pre" | "post"; qi?: number };
 
 const inputCls =
-  "w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]";
+  "w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]";
 
 function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
   return (
     <span className="mb-1 block text-sm font-medium text-[#333]">
       {children}{" "}
       {optional ? (
-        <span className="font-normal text-[#999]">(optionnel)</span>
+        <span className="font-normal text-[#6b6b73]">(optionnel)</span>
       ) : (
         <span className="text-[#e60050]">*</span>
       )}
@@ -508,7 +509,7 @@ export function Seg({
           aria-checked={value === o}
           onClick={() => onChange(o)}
           className={`rounded px-2 py-2 text-sm font-medium ${
-            value === o ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"
+            value === o ? "bg-white text-[#e60050] shadow-sm" : "text-[#5c5c66]"
           }`}
         >
           {t(o)}
@@ -537,15 +538,6 @@ const num = (s: string) => {
   const n = parseInt(s, 10);
   return Number.isFinite(n) ? n : NaN;
 };
-function ageFromBirthdate(iso: string): number {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return NaN;
-  const now = new Date();
-  let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-  return age;
-}
 
 function SignupPage() {
   const nav = useNavigate();
@@ -663,7 +655,7 @@ function SignupPage() {
                 localStorage.setItem("swivv-signup-gender", v);
               } catch {}
             }}
-            className={`rounded px-3 py-2 text-sm font-medium ${f.gender === v ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"}`}
+            className={`rounded px-3 py-2 text-sm font-medium ${f.gender === v ? "bg-white text-[#e60050] shadow-sm" : "text-[#5c5c66]"}`}
           >
             {t(label)}
           </button>
@@ -687,7 +679,7 @@ function SignupPage() {
             role="radio"
             aria-checked={f.seeking === v}
             onClick={() => upd("seeking", v)}
-            className={`rounded px-3 py-2 text-sm font-medium ${f.seeking === v ? "bg-white text-[#e60050] shadow-sm" : "text-[#777]"}`}
+            className={`rounded px-3 py-2 text-sm font-medium ${f.seeking === v ? "bg-white text-[#e60050] shadow-sm" : "text-[#5c5c66]"}`}
           >
             {t(label)}
           </button>
@@ -781,7 +773,7 @@ function SignupPage() {
           <Seg value={f.heightUnit} onChange={(v) => upd("heightUnit", v)} options={["cm", "ft"]} />
         </div>
       </div>
-      {heightHint && <p className="mt-1 text-xs text-[#999]">({heightHint})</p>}
+      {heightHint && <p className="mt-1 text-xs text-[#6b6b73]">({heightHint})</p>}
     </div>
   );
   const weightFields = () => (
@@ -799,7 +791,7 @@ function SignupPage() {
           <Seg value={f.weightUnit} onChange={(v) => upd("weightUnit", v)} options={["kg", "st"]} />
         </div>
       </div>
-      {weightHint && <p className="mt-1 text-xs text-[#999]">({weightHint})</p>}
+      {weightHint && <p className="mt-1 text-xs text-[#6b6b73]">({weightHint})</p>}
     </div>
   );
   const langsBlock = () => (
@@ -888,7 +880,7 @@ function SignupPage() {
         {t("+ Ajouter mes photos")}
         <input type="file" accept="image/*" multiple hidden onChange={(e) => { addUploads(e.target.files); e.target.value = ""; }} />
       </label>
-      <p className="mt-1 text-xs text-[#999]">{photos.length}/5 photo(s) — encore {5 - photos.length} possible(s).</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">{photos.length}/5 photo(s) — encore {5 - photos.length} possible(s).</p>
     </div>
   );
   const consentFields = () => (
@@ -910,10 +902,11 @@ function SignupPage() {
           className="mt-1 accent-[#e60050]"
         />
         <span>
-          {t("Je certifie avoir 18 ans ou plus et accepter les")}{" "}
+          {t("Je certifie avoir 18 ans ou plus et que la date de naissance fournie est exacte. J'accepte les")}{" "}
           <Link to="/legal/terms" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">CGU détaillées</Link>,{" "}
           les <Link to="/cgv" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">Conditions Générales de Vente (CGV)</Link>{" "}
-          et l&apos;utilisation des <Link to="/cookies" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">cookies</Link>.
+          et l&apos;utilisation des <Link to="/cookies" onClick={(e) => e.stopPropagation()} className="font-medium text-[#e60050] hover:underline">cookies</Link>.{" "}
+          {t("SWIVV MATCH est exclusivement réservé aux adultes de 18 ans et plus.")}
         </span>
       </label>
       <label className="flex cursor-pointer items-start gap-2 rounded-md border border-border p-3 text-sm text-[#333]">
@@ -950,17 +943,6 @@ function SignupPage() {
   );
   const PRE_Q: QQ[] = [
     {
-      key: "birthdate", title: "Quelle est ta date de naissance ?", sub: "SWIVV est réservé aux 18 ans et plus.",
-      pre: true,
-      render: () => <input type="date" value={f.birthdate} onChange={(e) => upd("birthdate", e.target.value)} className={inputCls} />,
-      validate: () => {
-        const age = ageFromBirthdate(f.birthdate);
-        if (!Number.isFinite(age)) return "Ta date de naissance est obligatoire.";
-        if ((age as number) < 18) return "SWIVV est réservé aux 18 ans et plus.";
-        return null;
-      },
-    },
-    {
       key: "gender", title: "Je suis… je cherche…", sub: "Pour te montrer les bons profils dès le départ.", pre: true,
       render: () => <div className="space-y-4">{genderOnly()}{seekingOnly()}</div>,
       validate: () => {
@@ -994,6 +976,18 @@ function SignupPage() {
       },
     },
     {
+      key: "birthdate", title: "Quelle est ta date de naissance ?", sub: "SWIVV est réservé aux 18 ans et plus.",
+      pre: true,
+      render: () => <input type="date" aria-label="Date de naissance" autoComplete="bday" value={f.birthdate} onChange={(e) => upd("birthdate", e.target.value)} className={inputCls} />,
+      validate: () => {
+        const c = ageCheck(f.birthdate);
+        if (c.ok) return null;
+        return c.reason === "underage"
+          ? "Désolé, SWIVV MATCH est réservé aux personnes de 18 ans et plus. Tu ne peux pas créer de compte pour le moment."
+          : "Indique une date de naissance valide.";
+      },
+    },
+    {
       key: "city", title: "Où habites-tu ?",
       pre: true,
       render: () => (
@@ -1016,7 +1010,7 @@ function SignupPage() {
       key: "email", title: "Quel est ton e-mail ?", sub: "Pour te connecter et recevoir tes invitations.",
       pre: true,
       render: () => (
-        <input type="email" value={f.email} onChange={(e) => upd("email", e.target.value)} placeholder="camille@exemple.fr" autoComplete="email" disabled={emailLocked} className={`${inputCls} disabled:bg-[#f5f5f5] disabled:text-[#777]`} />
+        <input type="email" value={f.email} onChange={(e) => upd("email", e.target.value)} placeholder="camille@exemple.fr" autoComplete="email" disabled={emailLocked} className={`${inputCls} disabled:bg-[#f5f5f5] disabled:text-[#5c5c66]`} />
       ),
       validate: () => (!/.+@.+\..+/.test(f.email.trim()) ? "Un e-mail valide est obligatoire." : null),
     },
@@ -1024,7 +1018,7 @@ function SignupPage() {
       key: "password", title: "Crée ton mot de passe.",
       pre: true,
       when: () => !hasAccount,
-      render: () => passwordFields() ?? <p className="text-sm text-[#777]">Compte déjà créé, on continue.</p>,
+      render: () => passwordFields() ?? <p className="text-sm text-[#5c5c66]">Compte déjà créé, on continue.</p>,
       validate: () => {
         if (hasAccount) return null;
         if (f.password.length < 8) return "Mot de passe : 8 caractères minimum.";
@@ -1045,6 +1039,19 @@ function SignupPage() {
     },
   ];
   const POST_Q: QQ[] = [
+    // ponytail: birthdate is never stored (age is), so editing an account means re-picking the date — shown first for ageless accounts, reachable via ← Retour for everyone else
+    {
+      key: "birthdate", title: "Quelle est ta date de naissance ?", sub: "SWIVV est réservé aux 18 ans et plus.", pre: false,
+      when: () => editing,
+      render: () => <input type="date" aria-label="Date de naissance" autoComplete="bday" value={f.birthdate} onChange={(e) => upd("birthdate", e.target.value)} className={inputCls} />,
+      validate: () => {
+        const c = ageCheck(f.birthdate);
+        if (c.ok) return null;
+        return c.reason === "underage"
+          ? "Désolé, SWIVV MATCH est réservé aux personnes de 18 ans et plus. Tu ne peux pas créer de compte pour le moment."
+          : "Indique une date de naissance valide.";
+      },
+    },
     { key: "country", title: "Ton pays", pre: false, render: () => selQ("country", () => PAYS), validate: () => (!req(f.country) ? "Ton pays est obligatoire." : null) },
     { key: "lookingFor", title: "Que recherches-tu ?", sub: "Cette réponse apparaît sur ton profil.", pre: false, render: () => selQ("lookingFor", () => LOOKING), validate: () => (!f.lookingFor ? "Choisis ce que tu recherches." : null) },
     { key: "maritalStatus", title: "Ton statut matrimonial", pre: false, render: () => selQ("maritalStatus", () => forGender(MARITAL, f.gender)), validate: () => (!f.maritalStatus ? "Ton statut matrimonial est obligatoire." : null) },
@@ -1313,9 +1320,10 @@ function SignupPage() {
     if (s === 1) {
       if (!f.gender) return "Indique si tu es une femme ou un homme.";
       if (!f.seeking) return "Dis si tu veux rencontrer une femme ou un homme.";
-      const age = ageFromBirthdate(f.birthdate);
-      if (!Number.isFinite(age)) return "Ta date de naissance est obligatoire.";
-      if ((age as number) < 18) return "SWIVV est réservé aux 18 ans et plus.";
+      const c = ageCheck(f.birthdate);
+      if (!c.ok) return c.reason === "underage"
+        ? "Désolé, SWIVV MATCH est réservé aux personnes de 18 ans et plus. Tu ne peux pas créer de compte pour le moment."
+        : "Indique une date de naissance valide.";
       if (!req(f.city)) return "Ta ville est obligatoire.";
       if (!req(f.country)) return "Ton pays est obligatoire.";
       if (!f.lookingFor) return "Choisis ce que tu recherches.";
@@ -1415,7 +1423,7 @@ function SignupPage() {
           >
             OK
           </button>
-          <div className="border-t border-border pt-3 text-sm text-[#777]">
+          <div className="border-t border-border pt-3 text-sm text-[#5c5c66]">
             {t("Pas reçu ? Vérifie tes spams, ou")}{" "}
             <button type="button" onClick={resendConfirm} className="font-medium text-[#e60050] hover:underline">
               {t("Renvoyer l'e-mail de confirmation")}
@@ -1661,7 +1669,7 @@ function SignupPage() {
           <p className="text-sm font-medium tabular-nums text-[#e60050]" aria-live="polite">{sel.length}/{ATOUT_MAX}</p>
         </div>
         {sel.length === 0 ? (
-          <p className="rounded-md border border-border bg-[#f7f7f7] px-3 py-2.5 text-sm text-[#999]">Tes choix apparaîtront ici.</p>
+          <p className="rounded-md border border-border bg-[#f7f7f7] px-3 py-2.5 text-sm text-[#6b6b73]">Tes choix apparaîtront ici.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {sel.map((a) => (
@@ -1720,6 +1728,8 @@ function SignupPage() {
   // ponytail: thresholds mirror the validators (tagline 10, bio 20) so the missing-only revisit pass never skips an answer that would fail saving
   const isFilled = (key: string): boolean => {
     if (key === "photos") return photos.length > 0;
+    // ponytail: an account that already has an age counts as answered so editing never starts on the DOB screen — the question stays reachable with ← Retour; a newly picked date is always validated
+    if (key === "birthdate") return req(f.birthdate) || (editing && Number.isFinite(doneProfile?.age));
     if (key === "tagline") return f.tagline.trim().length >= 10;
     if (key === "bio") return f.bio.trim().length >= 20;
     if (key === "consent") return editing || (cguAccepted && consent.age && consent.sensitive);
@@ -1889,7 +1899,7 @@ function SignupPage() {
   if (doneProfile === undefined) {
     return (
       <div className="min-h-screen bg-background">
-        <main className="mx-auto max-w-md px-4 py-16 text-center text-[#777]">{t("Chargement…")}</main>
+        <main className="mx-auto max-w-md px-4 py-16 text-center text-[#5c5c66]">{t("Chargement…")}</main>
       </div>
     );
   }
@@ -1916,10 +1926,10 @@ function SignupPage() {
         </header>
         <main className="mx-auto flex min-h-[78vh] w-full max-w-2xl flex-col justify-center px-4 py-12">
           {phase === "post" && qi === 0 && req(f.name) && (
-            <p className="text-sm text-[#777]">{t("Très bien {name}, parle-nous de toi.", { name: f.name.trim() })}</p>
+            <p className="text-sm text-[#5c5c66]">{t("Très bien {name}, parle-nous de toi.", { name: f.name.trim() })}</p>
           )}
           <h1 className="mt-1 text-2xl font-medium text-[#333]">{t(flowQ.title)}</h1>
-          {flowQ.sub && <p className="mt-1 text-sm text-[#777]">{t(flowQ.sub)}</p>}
+          {flowQ.sub && <p className="mt-1 text-sm text-[#5c5c66]">{t(flowQ.sub)}</p>}
           <div className="mt-4 rounded-2xl bg-white p-5">{flowQ.render()}</div>
           {err && (
             <p role="alert" className="mb-4 mt-4 rounded-md bg-red-50 p-3 text-sm font-medium text-red-700">
@@ -1995,7 +2005,7 @@ function SignupPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6">
-        <p className="mb-4 text-sm text-[#777]">
+        <p className="mb-4 text-sm text-[#5c5c66]">
           Tous les champs marqués <span className="text-[#e60050]">*</span> sont obligatoires, mais tu peux passer
           chaque question avec « Ignorer » et y revenir plus tard. Seules la 2e nationalité, les autres langues
           et les détails sans objet (enfants, animaux) peuvent rester vides définitivement.
@@ -2021,7 +2031,7 @@ function SignupPage() {
                 placeholder="camille@exemple.fr"
                 autoComplete="email"
                 disabled={emailLocked}
-                className={`${inputCls} disabled:bg-[#f5f5f5] disabled:text-[#777]`}
+                className={`${inputCls} disabled:bg-[#f5f5f5] disabled:text-[#5c5c66]`}
               />
             </div>
             {passwordFields()}
@@ -2304,7 +2314,7 @@ function SignupPage() {
           <button
             type="button"
             onClick={() => nav({ to: "/mon-profil" })}
-            className="mt-2 w-full text-center text-sm text-[#777] hover:text-[#333] hover:underline"
+            className="mt-2 w-full text-center text-sm text-[#5c5c66] hover:text-[#333] hover:underline"
           >
             {t("Annuler et retour au profil")}
           </button>

@@ -1,16 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Cookie, FileText, ReceiptText, Scale, ShieldCheck } from "lucide-react";
+import { LEGAL_CARD, LEGAL_PILL, LegalHero } from "@/components/swivv-legal-hero";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
 import { pageHead } from "@/lib/seo";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
+import { ARTICLES, LegalArticleBody } from "@/routes/legal.terms";
 
 export const Route = createFileRoute("/terms-and-conditions")({
   head: () =>
     pageHead(
       "Conditions d'utilisation — SWIVV MATCH",
-      "Conditions d'utilisation de SWIVV MATCH : règles du service, engagements des membres, modération et sécurité.",
+      "Conditions générales d'utilisation de SWIVV MATCH : règles du service, engagements des membres, modération, sécurité et recours.",
       "/terms-and-conditions",
     ),
   component: TermsPage,
@@ -31,20 +34,21 @@ const SECTIONS = [
   },
   {
     t: "4. Rencontres réelles : prudence",
-    d: "SWIVV ne vérifie pas l'identité de chaque membre dans la vie réelle. Pour un premier rendez-vous : lieu public, durée limitée, préviens un proche. Tu restes responsable de ta sécurité.",
+    d: "SWIVV ne vérifie pas l'identité de chaque membre dans la vie réelle. Le badge Identité confirme qu'une pièce officielle correspond à tes photos, mais ne constitue pas une preuve légale d'identité ; la pièce n'est conservée que le temps de la décision, puis supprimée. Pour un premier rendez-vous : lieu public, durée limitée, préviens un proche. Tu restes responsable de ta sécurité.",
   },
   {
     t: "5. Données et suppression",
     d: "Tes données servent uniquement au fonctionnement du service (profils, compatibilité, modération). Tu peux exporter ou supprimer tes données à tout moment, et supprimer ton compte en 1 clic.",
   },
   {
-    t: "6. Contact",
-    d: "Pour toute question sur ces conditions, écris-nous via la page contact. Version complète et détaillée : voir les conditions d'utilisation.",
+    t: "6. Contact et recours",
+    d: "Pour toute question, réclamation ou contestation d'une décision de modération, écris-nous via la page contact. Le texte intégral ci-dessous fait foi et détaille notamment les droits prévus par le DSA pour les membres de l'Union européenne.",
   },
 ];
 
 function TermsPage() {
   const t = useT();
+  const lang = useLang();
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-black text-white">
@@ -54,24 +58,56 @@ function TermsPage() {
         </div>
       </header>
       <SwivvCategoryNav />
+      <LegalHero
+        title={t("Conditions d'utilisation")}
+        subtitle={t("Les règles du jeu, en clair : ce que tu acceptes en créant ton compte et comment SWIVV fonctionne.")}
+        icon={Scale}
+      />
 
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="text-3xl font-medium text-[#333]">{t("Conditions d'utilisation")}</h1>
-        <p className="mt-2 text-[#777]">
-          {t("Les règles du jeu, en langage simple. Dernière mise à jour : septembre 2026.")}
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <p className="text-[#6b6b6b]">
+          {t("Dernière mise à jour : 3 novembre 2026.")}
         </p>
-        <div className="mt-6 space-y-3">
+        {lang !== "fr" && (
+          <p className="mt-2 rounded-md border border-border bg-[#f3f3f3] p-3 text-sm text-[#555]">
+            {t("Ce document juridique est fourni en français ; la version française fait foi.")}
+          </p>
+        )}
+
+        <h2 className="mt-8 font-extrabold tracking-[-0.01em] text-[#111]">{t("L'essentiel")}</h2>
+        <div className="mt-3 grid gap-3">
           {SECTIONS.map((s) => (
-            <div key={s.t} className="rounded-xl bg-white p-5">
-              <h2 className="font-medium text-[#333]">{t(s.t)}</h2>
-              <p className="mt-1 text-sm leading-relaxed text-[#555]">{t(s.d)}</p>
-            </div>
+            <section key={s.t} className={LEGAL_CARD}>
+              <h3 className="font-extrabold tracking-[-0.01em] text-[#111]">{t(s.t)}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[#6b6b6b]">{t(s.d)}</p>
+            </section>
           ))}
         </div>
-        <p className="mt-6 text-sm text-[#777]">
-          {t("Données et confidentialité :")}{" "}
-          <Link to="/privacy-centre" className="text-[#e60050] underline">{t("centre de confidentialité")}</Link>
-        </p>
+
+        <h2 className="mt-10 font-extrabold tracking-[-0.01em] text-[#111]">{t("Conditions générales d'utilisation — texte intégral")}</h2>
+        <div className="mt-3 grid gap-3">
+          {ARTICLES.map(([title, body]) => (
+            <section key={title} className={LEGAL_CARD}>
+              <h3 className="font-extrabold tracking-[-0.01em] text-[#111]">{title}</h3>
+              <LegalArticleBody body={body} />
+            </section>
+          ))}
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-2">
+          <Link to="/privacy-centre" className={LEGAL_PILL}>
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" /> {t("centre de confidentialité")}
+          </Link>
+          <Link to="/cookies" className={LEGAL_PILL}>
+            <Cookie className="h-4 w-4" aria-hidden="true" /> {t("cookies")}
+          </Link>
+          <Link to="/cgv" className={LEGAL_PILL}>
+            <ReceiptText className="h-4 w-4" aria-hidden="true" /> {t("CGV")}
+          </Link>
+          <Link to="/mentions-legales" className={LEGAL_PILL}>
+            <FileText className="h-4 w-4" aria-hidden="true" /> {t("mentions légales")}
+          </Link>
+        </div>
       </main>
       <SwivvFooter />
     </div>

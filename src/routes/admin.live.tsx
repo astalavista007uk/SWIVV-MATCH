@@ -138,7 +138,7 @@ function AdminLive() {
           {conn === "live" ? "En direct (20 s)" : conn === "pause" ? "En pause (onglet masqué)" : "Déconnecté — réessai auto"}
         </span>
       </div>
-      <p className="mt-1 text-xs text-[#999]">Métadonnées uniquement (ni contenus, ni positions, ni tokens). Connexions/échecs d'auth : tableau Supabase Auth uniquement. Surveillance limitée à l'exploitation et à la sécurité.</p>
+      <p className="mt-1 text-xs text-[#6b6b73]">Métadonnées uniquement (ni contenus, ni positions, ni tokens). Connexions/échecs d'auth : tableau Supabase Auth uniquement. Surveillance limitée à l'exploitation et à la sécurité.</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <input value={acct} onChange={(e) => setAcct(e.target.value)} placeholder="Compte (nom ou ID)…" aria-label="Filtre compte" className="min-w-0 flex-1 rounded-md border border-border bg-white px-3 py-2 text-sm" />
         <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Filtre type" className={sel}>
@@ -156,8 +156,8 @@ function AdminLive() {
               <button type="button" onClick={() => setOpenKey(open ? null : r.key)} aria-expanded={open} className="flex w-full flex-wrap items-center gap-2 text-left">
                 <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-medium ${sevCls(r.severity)}`}>{r.type}</span>
                 <span className="text-[#333]">{r.label}</span>
-                <span className="text-xs text-[#777]">{nm(r.actorId)}{r.targetId && r.targetId !== r.actorId ? ` → ${nm(r.targetId)}` : ""}</span>
-                <span className="ml-auto font-mono text-xs text-[#999]">{new Date(r.at).toLocaleTimeString("fr-FR")}</span>
+                <span className="text-xs text-[#5c5c66]">{nm(r.actorId)}{r.targetId && r.targetId !== r.actorId ? ` → ${nm(r.targetId)}` : ""}</span>
+                <span className="ml-auto font-mono text-xs text-[#6b6b73]">{new Date(r.at).toLocaleTimeString("fr-FR")}</span>
               </button>
               {open && (
                 <div className="mt-1 border-t border-border pt-1 text-xs text-[#555]">
@@ -176,7 +176,7 @@ function AdminLive() {
             </div>
           );
         })}
-        {shown.length === 0 && <p className="text-sm text-[#777]">{conn === "erreur" ? "Flux déconnecté — réessai automatique en cours." : emptyMsg || feed.length === 0 ? "Chargement du flux…" : "Aucune activité récente."}</p>}
+        {shown.length === 0 && <p className="text-sm text-[#5c5c66]">{conn === "erreur" ? "Flux déconnecté — réessai automatique en cours." : emptyMsg || feed.length === 0 ? "Chargement du flux…" : "Aucune activité récente."}</p>}
       </div>
     </div>
   );

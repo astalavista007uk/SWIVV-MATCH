@@ -38,7 +38,7 @@ const REPORT_STATUS: Record<string, string> = {
 };
 // ponytail: status drives the pill skin (same level-skin idea as Mon profil tips) — extend here if new report states appear
 const REPORT_SKIN: Record<string, string> = {
-  new: "bg-red-100 text-[#DC2626]", investigating: "bg-orange-100 text-[#F97316]", waiting: "bg-orange-100 text-[#F97316]", resolved: "bg-green-100 text-[#16A34A]", dismissed: "bg-[#f2f2f2] text-[#777]",
+  new: "bg-red-100 text-[#DC2626]", investigating: "bg-orange-100 text-[#F97316]", waiting: "bg-orange-100 text-[#F97316]", resolved: "bg-green-100 text-[#16A34A]", dismissed: "bg-[#f2f2f2] text-[#5c5c66]",
 };
 const GENERIC_TAGLINES = ["salut", "coucou", "hello", "hey", "je cherche", "cherche quelqu", "a decouvrir", "à découvrir", "femme cherche", "homme cherche"];
 
@@ -78,7 +78,7 @@ function Bars({ a, b, days }: { a: number[]; b: number[]; days: number }) {
           </span>
         ))}
       </div>
-      <div className="mt-2 flex gap-4 text-xs text-[#777]">
+      <div className="mt-2 flex gap-4 text-xs text-[#5c5c66]">
         <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e2e2e6]" />{t("Visites")}</span>
         <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-[#e60050]" />{t("Likes reçus")}</span>
       </div>
@@ -96,7 +96,7 @@ function Gauge({ pct }: { pct: number }) {
         <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#ececee" strokeWidth="16" strokeLinecap="round" />
         <path d="M12,100 A88,88 0 0 1 188,100" fill="none" stroke="#e60050" strokeWidth="16" strokeLinecap="round" pathLength={100} strokeDasharray={`${v} 100`} />
       </svg>
-      <p className="absolute inset-x-0 bottom-0 text-center text-4xl font-semibold text-[#1b1b1e]">{v}<span className="text-base font-normal text-[#777]"> %</span></p>
+      <p className="absolute inset-x-0 bottom-0 text-center text-4xl font-semibold text-[#1b1b1e]">{v}<span className="text-base font-normal text-[#5c5c66]"> %</span></p>
     </div>
   );
 }
@@ -111,7 +111,7 @@ const TONES = [
 
 function Tile({ label, value, sub, tone = 0 }: { label: string; value: string | number; sub?: string | null; tone?: number }) {
   const t = TONES[tone % TONES.length];
-  const subCls = t.startsWith("bg-white") ? "text-[#777]" : "text-white/70";
+  const subCls = t.startsWith("bg-white") ? "text-[#5c5c66]" : "text-white/70";
   return (
     <div className={`flex min-h-[128px] flex-col justify-between rounded-[22px] p-5 ${t}`}>
       <p className="text-4xl font-bold leading-none">{value}</p>
@@ -363,7 +363,7 @@ function StatsPage() {
         </header>
         <SwivvCategoryNav />
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">{t("Connecte-toi pour voir tes statistiques.")}</p>
+          <p className="text-sm text-[#5c5c66]">{t("Connecte-toi pour voir tes statistiques.")}</p>
           <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white">
             {t("Se connecter / S'inscrire")}
           </button>
@@ -412,9 +412,9 @@ function StatsPage() {
         </div>
         {data && s && (
           <div className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
-            <p className="flex items-center gap-2 text-sm"><Eye className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.viewsP.length}</span><span className="text-[#777]">{t("Visites")}</span></p>
-            <p className="flex items-center gap-2 text-sm"><Heart className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.gotP.length}</span><span className="text-[#777]">{t("Likes reçus")}</span></p>
-            <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{data.matches.length}</span><span className="text-[#777]">{t("Matches")}</span></p>
+            <p className="flex items-center gap-2 text-sm"><Eye className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.viewsP.length}</span><span className="text-[#5c5c66]">{t("Visites")}</span></p>
+            <p className="flex items-center gap-2 text-sm"><Heart className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{s.gotP.length}</span><span className="text-[#5c5c66]">{t("Likes reçus")}</span></p>
+            <p className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-[#e60050]" aria-hidden="true" /><span className="text-xl font-semibold text-[#1b1b1e]">{data.matches.length}</span><span className="text-[#5c5c66]">{t("Matches")}</span></p>
           </div>
         )}
         <div role="tablist" aria-label={t("Sections des statistiques")} className="mt-5 flex gap-1 overflow-x-auto rounded-full bg-[#f1f2f4] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -431,7 +431,7 @@ function StatsPage() {
             {t("Impossible de charger tes statistiques.")} <button type="button" onClick={() => window.location.reload()} className="font-medium text-[#e60050] hover:underline">{t("Réessayer")}</button>
           </div>
         )}
-        {!data && !failed && <p className="mt-6 text-sm text-[#777]">{t("Chargement de tes statistiques…")}</p>}
+        {!data && !failed && <p className="mt-6 text-sm text-[#5c5c66]">{t("Chargement de tes statistiques…")}</p>}
 
         {data && s && tab === "overview" && (
           <>
@@ -446,7 +446,7 @@ function StatsPage() {
                   )}
                   <div className="min-w-0">
                     <p className="truncate font-medium text-[#1b1b1e]">{myName}</p>
-                    <p className="text-xs text-[#777]">{t("Profil complété à {n} %", { n: myPct })}</p>
+                    <p className="text-xs text-[#5c5c66]">{t("Profil complété à {n} %", { n: myPct })}</p>
                   </div>
                 </div>
                 <Link to="/mon-profil" className="mt-4 block rounded-full bg-[#f1f2f4] px-4 py-2 text-center text-sm font-medium text-[#1b1b1e] hover:bg-[#e6eaef]">{t("Voir mon profil")}</Link>
@@ -454,7 +454,7 @@ function StatsPage() {
               <div className="rounded-[20px] border border-[#ececee] p-5">
                 <p className="text-sm font-semibold text-[#1b1b1e]">{t("Performance")}</p>
                 <div className="mt-2"><Gauge pct={myPct} /></div>
-                <p className="mt-1 text-center text-xs text-[#777]">{t("{m} matches · {c} conversations", { m: data.matches.length, c: s.convoList.length })}</p>
+                <p className="mt-1 text-center text-xs text-[#5c5c66]">{t("{m} matches · {c} conversations", { m: data.matches.length, c: s.convoList.length })}</p>
                 <div className="mt-4 rounded-[16px] bg-[#1b1b1e] p-4 text-white">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium">{t("Ton rapport")}</p>
@@ -470,9 +470,9 @@ function StatsPage() {
                 <p className="text-sm font-semibold text-[#1b1b1e]">{t("Analytique")}</p>
                 <div className="mt-3"><Bars a={s.av} b={s.al} days={s.chartDays} /></div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.sentP.length}</p><p className="text-[11px] text-[#777]">{t("Likes envoyés")}</p></div>
+                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.sentP.length}</p><p className="text-[11px] text-[#5c5c66]">{t("Likes envoyés")}</p></div>
                   <div className="rounded-xl bg-[#1b1b1e] p-2 text-white"><p className="text-lg font-semibold">{s.totSent + s.totGot}</p><p className="text-[11px] text-white/70">{t("Messages")}</p></div>
-                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.matchesP.length}</p><p className="text-[11px] text-[#777]">{t("Nouveaux matches")}</p></div>
+                  <div className="rounded-xl bg-[#f7f7f8] p-2"><p className="text-lg font-semibold text-[#1b1b1e]">{s.matchesP.length}</p><p className="text-[11px] text-[#5c5c66]">{t("Nouveaux matches")}</p></div>
                 </div>
               </div>
             </div>
@@ -503,7 +503,7 @@ function StatsPage() {
                 {t("{sent} envoyés · {got} reçus · {m} matches mutuels.", { sent: data.likesSent.length, got: data.likesGot.length, m: data.matches.length })}
                 {data.likesSent.length > 0 && ` ${t("{n} de tes likes sont devenus des matches.", { n: data.matches.length })}`}
               </p>
-              {data.matches.length === 0 && data.likesGot.length === 0 && <p className="mt-2 text-sm text-[#777]">{t(emptyState)}</p>}
+              {data.matches.length === 0 && data.likesGot.length === 0 && <p className="mt-2 text-sm text-[#5c5c66]">{t(emptyState)}</p>}
             </Section>
             <LikeList title={t("Likes reçus")} list={data.likesGot} data={data} peerName={peerName} dir="got" />
             <LikeList title={t("Likes envoyés")} list={data.likesSent} data={data} peerName={peerName} dir="sent" />
@@ -522,7 +522,7 @@ function StatsPage() {
             </div>
             <Section title={t("Taux de réponse")}>
               {s.startedP.length < 5 ? (
-                <p className="text-sm text-[#777]">{t("Échantillon trop petit pour un taux fiable ({count}). Les chiffres ci-dessous restent indicatifs.", { count: s.startedP.length > 1 ? t("{n} conversations commencées sur la période", { n: s.startedP.length }) : t("1 conversation commencée sur la période") })}</p>
+                <p className="text-sm text-[#5c5c66]">{t("Échantillon trop petit pour un taux fiable ({count}). Les chiffres ci-dessous restent indicatifs.", { count: s.startedP.length > 1 ? t("{n} conversations commencées sur la période", { n: s.startedP.length }) : t("1 conversation commencée sur la période") })}</p>
               ) : (
                 <p className="text-sm text-[#555]">{t("{replied} de tes {started} conversations commencées ont reçu une réponse ({pct} %). Le volume de messages ne mesure pas la compatibilité.", { replied: s.repliedP.length, started: s.startedP.length, pct: Math.round((s.repliedP.length / s.startedP.length) * 100) })}</p>
               )}
@@ -532,15 +532,15 @@ function StatsPage() {
               </p>
             </Section>
             <Section title={t("Conversations")}>
-              {s.convoList.length === 0 ? <p className="text-sm text-[#777]">{t(emptyState)}</p> : (
+              {s.convoList.length === 0 ? <p className="text-sm text-[#5c5c66]">{t(emptyState)}</p> : (
                 <ul className="divide-y divide-border">
                   {[...s.convoList].sort((x, y) => y.last - x.last).slice(0, 50).map((g) => (
                     <li key={g.peer} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={g.peer} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(g.peer)}</p>
-                        <p className="text-xs text-[#777]">{t("{sent} envoyés · {got} reçus", { sent: g.sent, got: g.got })}{g.voiceS + g.voiceG > 0 && ` · ${t("{n} vocaux", { n: g.voiceS + g.voiceG })}`}{g.attS + g.attG > 0 && ` · ${t("{n} photos", { n: g.attS + g.attG })}`} · {g.replied ? t("avec réponse") : t("sans réponse")}</p>
-                        <p className="text-xs text-[#999]">{t("Dernière activité : {date}", { date: fmtDT(g.last, dateLocale) })}</p>
+                        <p className="text-xs text-[#5c5c66]">{t("{sent} envoyés · {got} reçus", { sent: g.sent, got: g.got })}{g.voiceS + g.voiceG > 0 && ` · ${t("{n} vocaux", { n: g.voiceS + g.voiceG })}`}{g.attS + g.attG > 0 && ` · ${t("{n} photos", { n: g.attS + g.attG })}`} · {g.replied ? t("avec réponse") : t("sans réponse")}</p>
+                        <p className="text-xs text-[#6b6b73]">{t("Dernière activité : {date}", { date: fmtDT(g.last, dateLocale) })}</p>
                       </div>
                       <Link to="/messagerie" className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">{t("Ouvrir")}</Link>
                     </li>
@@ -558,17 +558,17 @@ function StatsPage() {
               <p className="mt-3 text-sm text-[#555]">
                 {t("Cette semaine sur SWIVV MATCH : {views} visites de profil · {likes} likes reçus · {matches} nouveaux matches · {convos} nouvelles conversations.", { views: s.viewsP.length, likes: s.gotP.length, matches: s.matchesP.length, convos: s.startedP.length })}
               </p>
-              {(s.viewsP.length + s.gotP.length + s.matchesP.length + s.startedP.length) === 0 && <p className="mt-2 text-sm text-[#777]">{t(emptyState)}</p>}
+              {(s.viewsP.length + s.gotP.length + s.matchesP.length + s.startedP.length) === 0 && <p className="mt-2 text-sm text-[#5c5c66]">{t(emptyState)}</p>}
             </Section>
             <Section title={t("Visiteurs récents")}>
-              {s.viewsP.length === 0 ? <p className="text-sm text-[#777]">{t(emptyState)}</p> : (
+              {s.viewsP.length === 0 ? <p className="text-sm text-[#5c5c66]">{t(emptyState)}</p> : (
                 <ul className="divide-y divide-border">
                   {s.viewsP.slice(0, 30).map((x, i) => (
                     <li key={`${x.viewer}-${x.at}-${i}`} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={x.viewer} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(x.viewer)}</p>
-                        <p className="text-xs text-[#999]">{fmtDT(x.at, dateLocale)}</p>
+                        <p className="text-xs text-[#6b6b73]">{fmtDT(x.at, dateLocale)}</p>
                       </div>
                       {!data.peers[x.viewer]?.blocked && UUID.test(x.viewer) && (
                         <Link to="/member/$id" params={{ id: x.viewer }} className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">{t("Voir le profil")}</Link>
@@ -589,26 +589,26 @@ function StatsPage() {
               <Tile tone={2} label={t("M'ont bloqué")} value={data.blockedBy.length} />
             </div>
             <Section title={t("Mes signalements")}>
-              {data.reports.length === 0 ? <p className="text-sm text-[#777]">{t("Tu n'as soumis aucun signalement.")}</p> : (
+              {data.reports.length === 0 ? <p className="text-sm text-[#5c5c66]">{t("Tu n'as soumis aucun signalement.")}</p> : (
                 <ul className="divide-y divide-border">
                   {data.reports.map((r) => (
                     <li key={r.id} className="py-2.5 text-sm">
                       <p className="font-medium text-[#333]">{r.category}</p>
-                      <p className="mt-1 text-xs text-[#777]">{fmtDate(r.at, dateLocale)} · <span className={`inline-block rounded-full px-2.5 py-0.5 font-medium ${REPORT_SKIN[r.status] ?? "bg-[#f2f2f2] text-[#777]"}`}>{t(REPORT_STATUS[r.status] ?? r.status)}</span></p>
+                      <p className="mt-1 text-xs text-[#5c5c66]">{fmtDate(r.at, dateLocale)} · <span className={`inline-block rounded-full px-2.5 py-0.5 font-medium ${REPORT_SKIN[r.status] ?? "bg-[#f2f2f2] text-[#5c5c66]"}`}>{t(REPORT_STATUS[r.status] ?? r.status)}</span></p>
                     </li>
                   ))}
                 </ul>
               )}
             </Section>
             <Section title={t("Mes blocs")}>
-              {data.blocks.length === 0 ? <p className="text-sm text-[#777]">{t("Tu n'as bloqué aucun membre.")}</p> : (
+              {data.blocks.length === 0 ? <p className="text-sm text-[#5c5c66]">{t("Tu n'as bloqué aucun membre.")}</p> : (
                 <ul className="divide-y divide-border">
                   {data.blocks.map((bl) => (
                     <li key={bl.id} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={bl.id} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(bl.id)}</p>
-                        <p className="text-xs text-[#777]">{t("{date} · Actif", { date: fmtDate(bl.at, dateLocale) })}</p>
+                        <p className="text-xs text-[#5c5c66]">{t("{date} · Actif", { date: fmtDate(bl.at, dateLocale) })}</p>
                       </div>
                       <button type="button" onClick={() => { toggleBlock(bl.id); data.blocks = data.blocks.filter((x) => x.id !== bl.id); setData({ ...data }); }} className="shrink-0 rounded-full border border-[#e60050] px-4 py-1.5 text-sm font-medium text-[#e60050] hover:bg-[#e60050]/10">
                         {t("Débloquer")}
@@ -619,14 +619,14 @@ function StatsPage() {
               )}
             </Section>
             <Section title={t("Membres qui m'ont bloqué")}>
-              {data.blockedBy.length === 0 ? <p className="text-sm text-[#777]">{t("Aucun membre ne t'a bloqué.")}</p> : (
+              {data.blockedBy.length === 0 ? <p className="text-sm text-[#5c5c66]">{t("Aucun membre ne t'a bloqué.")}</p> : (
                 <ul className="divide-y divide-border">
                   {data.blockedBy.map((bl) => (
                     <li key={bl.id} className="flex items-center gap-3 py-2.5">
                       <PeerBadge id={bl.id} data={data} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-[#333]">{peerName(bl.id)}</p>
-                        <p className="text-xs text-[#777]">{fmtDate(bl.at, dateLocale)}</p>
+                        <p className="text-xs text-[#5c5c66]">{fmtDate(bl.at, dateLocale)}</p>
                       </div>
                     </li>
                   ))}
@@ -671,7 +671,7 @@ function HistoryList({ data, histType, histQ, histN, setHistN, peerName }: {
     .sort((x, y) => y.at - x.at);
   // ponytail: "Afficher plus" lives here where the total is known — a dead button at the end of the list otherwise
   const shown = all.slice(0, histN);
-  if (!all.length) return <p className="mt-2 text-sm text-[#777]">{t("Aucune activité pour ce filtre.")}</p>;
+  if (!all.length) return <p className="mt-2 text-sm text-[#5c5c66]">{t("Aucune activité pour ce filtre.")}</p>;
   return (
     <>
     <ul className="mt-2 divide-y divide-border">
@@ -680,7 +680,7 @@ function HistoryList({ data, histType, histQ, histN, setHistN, peerName }: {
           <PeerBadge id={e.id} data={data} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm text-[#333]"><span className="font-medium">{t(e.label)}</span> — {peerName(e.id)}</p>
-            <p className="text-xs text-[#999]">{e.at ? fmtDT(e.at, dateLocale) : t("date inconnue")}</p>
+            <p className="text-xs text-[#6b6b73]">{e.at ? fmtDT(e.at, dateLocale) : t("date inconnue")}</p>
           </div>
           {!data.peers[e.id]?.blocked && UUID.test(e.id) && (
             <Link to="/member/$id" params={{ id: e.id }} className="shrink-0 text-sm font-medium text-[#e60050] hover:underline">{t("Voir")}</Link>
@@ -724,7 +724,7 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
           {period !== 0 && ` · ${s.newP.length > 1 ? t("{n} nouvelles sur la période", { n: s.newP.length }) : t("1 nouvelle sur la période")}`}.
         </p>
         {empty ? (
-          <p className="mt-2 text-sm text-[#777]">{t(emptyState)}</p>
+          <p className="mt-2 text-sm text-[#5c5c66]">{t(emptyState)}</p>
         ) : (
           <>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -777,7 +777,7 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
               <option value="oldest">{t("Activité ancienne")}</option>
             </select>
           </div>
-          <p className="mt-2 text-xs text-[#777]">{t("« Récent / ancien » = dernière réaction reçue (les dates d'ajout par photo ne sont pas suivies).")}</p>
+          <p className="mt-2 text-xs text-[#5c5c66]">{t("« Récent / ancien » = dernière réaction reçue (les dates d'ajout par photo ne sont pas suivies).")}</p>
           <ul className="mt-2 divide-y divide-border">
             {sorted.slice(0, 50).map((x) => {
               const topReaction = emojiOf(x.top);
@@ -786,7 +786,7 @@ function PhotoReactions({ s, period, photoSort, setPhotoSort }: {
                   <img src={mediaUrl(x.photo)} alt="" loading="lazy" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[#333]">{x.n > 1 ? t("{n} réactions", { n: x.n }) : t("1 réaction")} · {x.reactors > 1 ? t("{n} membres", { n: x.reactors }) : t("1 membre")}</p>
-                    <p className="text-xs text-[#777]">
+                    <p className="text-xs text-[#5c5c66]">
                       {topReaction ? t("{emoji} {label} en tête", { emoji: topReaction.emoji, label: topReaction.label }) : t("Aucune réaction active")} · {t("Dernière activité : {date}", { date: x.last ? fmtDT(x.last, dateLocale) : "—" })}
                     </p>
                   </div>
@@ -807,14 +807,14 @@ function LikeList({ title, list, data, peerName, dir, match }: {
   const dateLocale = useDateLocale();
   return (
     <Section title={`${title} (${list.length})`}>
-      {list.length === 0 ? <p className="text-sm text-[#777]">{t("Rien ici pour le moment.")}</p> : (
+      {list.length === 0 ? <p className="text-sm text-[#5c5c66]">{t("Rien ici pour le moment.")}</p> : (
         <ul className="divide-y divide-border">
           {list.slice(0, 50).map((x, i) => (
             <li key={`${dir}-${i}`} className="flex items-center gap-3 py-2.5">
               <PeerBadge id={x.other} data={data} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-[#333]">{peerName(x.other)}</p>
-                <p className="text-xs text-[#999]">{match ? t("Match mutuel") : dir === "got" ? t("T'a liké") : t("Tu as liké")} · {x.at ? fmtDT(x.at, dateLocale) : t("date inconnue")}</p>
+                <p className="text-xs text-[#6b6b73]">{match ? t("Match mutuel") : dir === "got" ? t("T'a liké") : t("Tu as liké")} · {x.at ? fmtDT(x.at, dateLocale) : t("date inconnue")}</p>
               </div>
               {!data.peers[x.other]?.blocked && UUID.test(x.other) && (
                 <Link to="/member/$id" params={{ id: x.other }} className="shrink-0 rounded-full bg-[#e60050] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#c2185b]">{t("Voir le profil")}</Link>
@@ -878,7 +878,7 @@ function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | n
         )}
       </Section>
       <Section title={t("Comment améliorer mon profil ?")}>
-        {tips.length === 0 ? <p className="text-sm text-[#777]">{t("Rien à signaler : ton profil est bien rempli. Les suggestions apparaîtront ici si quelque chose manque.")}</p> : (
+        {tips.length === 0 ? <p className="text-sm text-[#5c5c66]">{t("Rien à signaler : ton profil est bien rempli. Les suggestions apparaîtront ici si quelque chose manque.")}</p> : (
           <ul className="space-y-3">
             {tips.map((tip, i) => {
               // ponytail: level drives the whole card skin (bg + bar + icon) — one map, no per-level branches
@@ -886,7 +886,7 @@ function ProfileTab({ profile, views, got, convos }: { profile: SwivvProfile | n
                 ? { card: "border-red-200 bg-red-50", bar: "bg-[#DC2626]", text: "text-[#DC2626]", Icon: CircleAlert }
                 : tip.level === "Recommandé"
                   ? { card: "border-orange-200 bg-orange-50", bar: "bg-[#F97316]", text: "text-[#F97316]", Icon: TriangleAlert }
-                  : { card: "border-border bg-[#f7f7f7]", bar: "bg-[#999]", text: "text-[#777]", Icon: Lightbulb };
+                  : { card: "border-border bg-[#f7f7f7]", bar: "bg-[#999]", text: "text-[#5c5c66]", Icon: Lightbulb };
               return (
               <li key={i} className={`flex gap-3 overflow-hidden rounded-xl border ${skin.card}`}>
                 <span className={`w-1.5 shrink-0 ${skin.bar}`} aria-hidden="true" />

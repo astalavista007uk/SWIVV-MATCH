@@ -245,7 +245,7 @@ function AdminAnalytics() {
   const kpi = (label: string, value: string, def: string, delta?: string) => (
     <div className="rounded-xl bg-white p-4 shadow-sm" title={def}>
       <p className="text-3xl font-bold text-[#333]">{value}</p>
-      <p className="mt-1 text-sm text-[#777]">
+      <p className="mt-1 text-sm text-[#5c5c66]">
         {label}
         {delta && delta !== "—" && (
           <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${delta.startsWith("-") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{delta}</span>
@@ -292,7 +292,7 @@ function AdminAnalytics() {
       {tab === "Acquisition" && (
         <div className="mt-3">
           {d.legacyNull ? (
-            <p className="rounded-xl bg-white p-4 text-sm text-[#777] shadow-sm">Inscriptions indisponibles pour ce rôle (table profiles lisible admin uniquement). Événements signup : {v(d.evSignups)}.</p>
+            <p className="rounded-xl bg-white p-4 text-sm text-[#5c5c66] shadow-sm">Inscriptions indisponibles pour ce rôle (table profiles lisible admin uniquement). Événements signup : {v(d.evSignups)}.</p>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -303,7 +303,7 @@ function AdminAnalytics() {
               </div>
               <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
                 <p className="text-sm font-medium text-[#333]">Inscriptions / jour ({rangeLabel})</p>
-                <p className="text-xs text-[#999]">{src}</p>
+                <p className="text-xs text-[#6b6b73]">{src}</p>
                 {chart(d.regsSeries ?? [], [{ k: "n", c: "#6747c7" }])}
               </div>
             </>
@@ -319,7 +319,7 @@ function AdminAnalytics() {
             {kpi("Inscription → profil (médiane)", d.reg2complete == null ? "—" : `${Math.round(d.reg2complete)} h`, "legacy.created_at → profile.updated_at, profils complétés (approx).")}
             {kpi("Inscription → 1re interaction (médiane)", d.reg2first == null ? "—" : `${d.reg2first.toFixed(1)} j`, "legacy.created_at → 1er like/match/vue enregistré (borné aux scans).")}
           </div>
-          <p className="mt-2 text-xs text-[#999]">Entonnoir : comptes ({v(d.accounts)}) → profils dating ({v(d.profils)}) → complétés ({v(d.complets)}) → ont interagi ({v(d.interacted)}). {src}</p>
+          <p className="mt-2 text-xs text-[#6b6b73]">Entonnoir : comptes ({v(d.accounts)}) → profils dating ({v(d.profils)}) → complétés ({v(d.complets)}) → ont interagi ({v(d.interacted)}). {src}</p>
         </div>
       )}
 
@@ -333,12 +333,12 @@ function AdminAnalytics() {
           </div>
           <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
             <p className="text-sm font-medium text-[#333]">Messages / jour ({rangeLabel})</p>
-            <p className="text-xs text-[#999]">{src}</p>
+            <p className="text-xs text-[#6b6b73]">{src}</p>
             {chart(d.msgTrend ?? [], [{ k: "n", c: "#6747c7" }])}
           </div>
           <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
             <p className="text-sm font-medium text-[#333]">Profils actifs / jour ({rangeLabel}, proxy updated_at)</p>
-            <p className="text-xs text-[#999]">{src}</p>
+            <p className="text-xs text-[#6b6b73]">{src}</p>
             {chart(d.actSeries ?? [], [{ k: "n", c: "#e60050" }])}
           </div>
         </div>
@@ -354,7 +354,7 @@ function AdminAnalytics() {
           </div>
           <div className="mt-3 rounded-xl bg-white p-4 shadow-sm">
             <p className="text-sm font-medium text-[#333]">Matchs / jour ({rangeLabel})</p>
-            <p className="text-xs text-[#999]">{src}</p>
+            <p className="text-xs text-[#6b6b73]">{src}</p>
             {chart(d.matchTrend ?? [], [{ k: "n", c: "#e60050" }])}
           </div>
         </div>
@@ -362,11 +362,11 @@ function AdminAnalytics() {
 
       {tab === "Rétention" && (
         <div className="mt-3">
-          <p className="text-xs text-[#999]">Cohortes par semaine d'inscription (legacy) · retenu = updated_at ≥ J+n (définition comportementale transparente). Churn = inactif 90 j+.</p>
+          <p className="text-xs text-[#6b6b73]">Cohortes par semaine d'inscription (legacy) · retenu = updated_at ≥ J+n (définition comportementale transparente). Churn = inactif 90 j+.</p>
           <div className="mt-2 overflow-x-auto rounded-xl bg-white p-4 shadow-sm">
             <table className="w-full min-w-[480px] text-sm">
               <thead>
-                <tr className="text-left text-xs text-[#999]"><th>Cohorte</th><th>Taille</th><th>J+1</th><th>J+7</th><th>J+30</th></tr>
+                <tr className="text-left text-xs text-[#6b6b73]"><th>Cohorte</th><th>Taille</th><th>J+1</th><th>J+7</th><th>J+30</th></tr>
               </thead>
               <tbody>
                 {(d.cohorts ?? []).map((c: any) => (

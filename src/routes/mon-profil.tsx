@@ -184,7 +184,7 @@ function MyProfilePage() {
         {offline ? (
           <div className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center shadow-sm">
             <p className="font-medium text-[#333]">{t("Connexion perdue")}</p>
-            <p className="mt-1 text-sm text-[#777]">
+            <p className="mt-1 text-sm text-[#5c5c66]">
               {t("Impossible de charger ton profil sans connexion. Tes données sont en sécurité — réessaie quand internet revient.")}
             </p>
             <button
@@ -196,14 +196,14 @@ function MyProfilePage() {
             </button>
           </div>
         ) : profile === undefined ? (
-          <p className="py-16 text-center text-[#777]">{t("Chargement…")}</p>
+          <p className="py-16 text-center text-[#5c5c66]">{t("Chargement…")}</p>
         ) : !profile ? (
           // ponytail: no dead-end card — profile-less signups go straight to the form that creates the row; a transient null lands on a prefilled edit form, never a wall
           !user ? (
           <div className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center shadow-sm">
             <SwivvLogo />
             <h1 className="mt-2 text-xl font-medium text-[#333]">{t("Crée ton profil SWIVV")}</h1>
-            <p className="mt-1 text-sm text-[#777]">
+            <p className="mt-1 text-sm text-[#5c5c66]">
               {t("Crée ton profil complet pour le voir ici.")}
             </p>
             <button
@@ -223,29 +223,30 @@ function MyProfilePage() {
             <div className="mb-4 flex flex-wrap items-center gap-3">
             {(() => {
               const pct = profileCompleteness(profile);
-              // ponytail: same strip restyled, no confetti component — celebratory animation if delight ever gets measured
+              // ponytail: error-page palette (light grey card, black bar/CTA, white arrow disc) — same strip, no confetti component
               if (pct >= 100) {
                 return (
-                  <p className="min-w-52 flex-1 rounded-2xl bg-emerald-500/10 p-4 text-center text-sm font-medium text-emerald-900">
+                  <p className="swivv-panel swivv-panel--slim swivv-panel--plain min-w-52 flex-1 text-center text-sm font-medium text-[#111]">
                     {t("Bravo ! Ton profil SWIVV est 100 % complet 🎉")}
                   </p>
                 );
               }
               return (
-              <div className="flex min-w-52 flex-1 flex-wrap items-center gap-3 rounded-2xl bg-[#e60050]/5 p-4">
+              <div className="swivv-panel swivv-panel--slim swivv-panel--plain flex min-w-52 flex-1 flex-wrap items-center gap-3">
                 <div className="min-w-52 flex-1">
-                  <p className="text-sm font-medium text-[#333]">
+                  <p className="text-sm font-medium text-[#111]">
                     {t("Ton profil est à {pct} % — ajoute ta photo et tes détails pour recevoir plus de messages.", { pct })}
                   </p>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e60050]/15" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-                    <div className="h-full rounded-full bg-[#e60050]" style={{ width: `${pct}%` }} />
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+                    <div className="h-full rounded-full bg-[#111]" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
                 <Link
                   to="/inscription"
-                  className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white"
+                  className="inline-flex items-center gap-3 rounded-full bg-[#111] py-2 pl-5 pr-2 text-xs font-bold uppercase tracking-[0.06em] text-white hover:bg-black"
                 >
                   {t("Compléter mon profil")}
+                  <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full bg-white text-sm leading-none text-[#111]">→</span>
                 </Link>
               </div>
               );
@@ -255,7 +256,7 @@ function MyProfilePage() {
                 to="/verification"
                 className="rounded-md border border-border px-4 py-2 text-sm font-medium text-[#555]"
               >
-                {t("Vérifier avec un selfie")}
+                {t("Vérifier mon profil")}
               </Link>
               <Link
                 to="/parametres"

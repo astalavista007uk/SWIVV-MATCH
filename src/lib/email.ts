@@ -11,7 +11,17 @@ export type EmailResult =
  * Send an email via Resend. Returns the provider id on acceptance.
  * ponytail: Resend accepts async — ok:true means ACCEPTED (queued provider-side), not delivered; true delivery status needs the Resend webhook, which isn't wired yet
  */
-export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }): Promise<EmailResult> {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  replyTo,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+}): Promise<EmailResult> {
   const resendKey = process.env.RESEND_API_KEY;
   const supportFrom = process.env.SUPPORT_EMAIL_FROM;
   // ponytail: explicit not-configured error (was a silent false) — callers log it to the outbox row instead of swallowing
@@ -20,7 +30,7 @@ export async function sendEmail({ to, subject, html }: { to: string; subject: st
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: supportFrom, to: [to], subject, html }),
+      body: JSON.stringify({ from: supportFrom, to: [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
     });
     // ponytail: parse defensively (non-JSON error pages exist) and log status + provider message only — the key and html body never enter logs
     let body: any = null;

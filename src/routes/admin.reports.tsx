@@ -149,7 +149,7 @@ function AdminReports() {
   return (
     <div>
       <h1 className="text-2xl font-medium text-[#333]">Signalements ({shown.length})</h1>
-      <p className="mt-1 text-xs text-[#999]">
+      <p className="mt-1 text-xs text-[#6b6b73]">
         {rows.length} affichés · {distinctTargets} compte(s) signalé(s) distinct(s) — les doublons ne comptent qu'une fois par compte. Tri déterministe (critiques → récidivistes → récents) · IA non configurée.
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -187,8 +187,8 @@ function AdminReports() {
                 {(repeats[r.reported_user_id ?? ""] ?? 0) > 1 && (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">×{repeats[r.reported_user_id ?? ""]} signalements</span>
                 )}
-                <span className="text-xs text-[#777]">{nm(r.reporter_id)} → {nm(r.reported_user_id)}</span>
-                <span className="ml-auto text-xs text-[#999]" title={new Date(r.created_at).toLocaleString("fr-FR")}>{timeSince(r.created_at)} · assigné : {r.assigned_to ? nm(r.assigned_to) : "—"}</span>
+                <span className="text-xs text-[#5c5c66]">{nm(r.reporter_id)} → {nm(r.reported_user_id)}</span>
+                <span className="ml-auto text-xs text-[#6b6b73]" title={new Date(r.created_at).toLocaleString("fr-FR")}>{timeSince(r.created_at)} · assigné : {r.assigned_to ? nm(r.assigned_to) : "—"}</span>
               </button>
               {open && (
                 <div className="mt-3 border-t border-border pt-3 text-sm">
@@ -203,25 +203,25 @@ function AdminReports() {
                     <div className="mt-2 grid gap-2 lg:grid-cols-2">
                       <div className="rounded-lg bg-[#f7f7f7] p-2">
                         <p className="text-xs font-medium text-[#555]">Signalements précédents ({d.prev.length})</p>
-                        {d.prev.length ? d.prev.map((x: any) => <p key={x.id} className="text-xs text-[#777]">{x.category} · {x.priority} · {x.status} · {timeSince(x.created_at)}{x.resolution ? ` — ${x.resolution}` : ""}</p>) : <p className="text-xs text-[#999]">Aucun.</p>}
+                        {d.prev.length ? d.prev.map((x: any) => <p key={x.id} className="text-xs text-[#5c5c66]">{x.category} · {x.priority} · {x.status} · {timeSince(x.created_at)}{x.resolution ? ` — ${x.resolution}` : ""}</p>) : <p className="text-xs text-[#6b6b73]">Aucun.</p>}
                       </div>
                       <div className="rounded-lg bg-[#f7f7f7] p-2">
                         <p className="text-xs font-medium text-[#555]">Cas + sanctions passées ({d.cases.length + d.audit.length})</p>
-                        {d.cases.map((x: any) => <p key={x.id} className="text-xs text-[#777]">Cas {x.status}{x.action_taken ? ` → ${x.action_taken}` : ""} · {timeSince(x.created_at)}</p>)}
-                        {d.audit.map((x: any, i: number) => <p key={i} className="text-xs text-[#777]">Admin {x.action} · {timeSince(x.created_at)}</p>)}
-                        {!d.cases.length && !d.audit.length && <p className="text-xs text-[#999]">Aucun antécédent.</p>}
+                        {d.cases.map((x: any) => <p key={x.id} className="text-xs text-[#5c5c66]">Cas {x.status}{x.action_taken ? ` → ${x.action_taken}` : ""} · {timeSince(x.created_at)}</p>)}
+                        {d.audit.map((x: any, i: number) => <p key={i} className="text-xs text-[#5c5c66]">Admin {x.action} · {timeSince(x.created_at)}</p>)}
+                        {!d.cases.length && !d.audit.length && <p className="text-xs text-[#6b6b73]">Aucun antécédent.</p>}
                       </div>
                       <div className="rounded-lg bg-[#f7f7f7] p-2">
                         <p className="text-xs font-medium text-[#555]">Tickets liés ({d.tickets.length})</p>
-                        {d.tickets.length ? d.tickets.map((x: any) => <p key={x.id} className="text-xs text-[#777]">« {x.subject} » · {x.status}</p>) : <p className="text-xs text-[#999]">Aucun.</p>}
+                        {d.tickets.length ? d.tickets.map((x: any) => <p key={x.id} className="text-xs text-[#5c5c66]">« {x.subject} » · {x.status}</p>) : <p className="text-xs text-[#6b6b73]">Aucun.</p>}
                       </div>
                       <div className="rounded-lg bg-[#f7f7f7] p-2">
                         <p className="text-xs font-medium text-[#555]">Notes internes ({d.notes.length})</p>
-                        {d.notes.map((x: any, i: number) => <p key={i} className="text-xs text-[#777]">{x.body} · {timeSince(x.created_at)}</p>)}
-                        {!d.notes.length && <p className="text-xs text-[#999]">Aucune.</p>}
+                        {d.notes.map((x: any, i: number) => <p key={i} className="text-xs text-[#5c5c66]">{x.body} · {timeSince(x.created_at)}</p>)}
+                        {!d.notes.length && <p className="text-xs text-[#6b6b73]">Aucune.</p>}
                       </div>
                     </div>
-                  ) : <p className="mt-2 text-xs text-[#999]">Chargement du dossier…</p>}
+                  ) : <p className="mt-2 text-xs text-[#6b6b73]">Chargement du dossier…</p>}
                   {r.status !== "resolved" && r.status !== "dismissed" && (
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       {r.status === "new" && <button type="button" onClick={async () => { const { data: { user } } = await supabase.auth.getUser(); update(r.id, { assigned_to: user?.id, status: "investigating" }, "admin.report.assign"); }} className="rounded border border-border px-2 py-1 text-xs">Prendre en charge</button>}
@@ -289,7 +289,7 @@ function AdminReports() {
             </article>
           );
         })}
-        {shown.length === 0 && <p className="text-sm text-[#777]">Aucun signalement avec ces filtres.</p>}
+        {shown.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun signalement avec ces filtres.</p>}
       </div>
     </div>
   );

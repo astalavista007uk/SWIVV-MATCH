@@ -145,7 +145,7 @@ function AdminAlerts() {
         supabase.from("swivv_support_tickets").select("id,subject,created_at").in("status", ["open", "assigned", "waiting_user", "waiting_internal"]).order("created_at", { ascending: true }).limit(100),
         supabase.from("swivv_verification_requests").select("id,kind,status,created_at").eq("status", "pending").limit(100),
         q.from("swivv_ai_runs").select("rule_key,error,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(50),
-        q.from("swivv_email_log").select("to,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(50),
+        q.from("swivv_email_log").select("key,template,created_at").eq("status", "failed").order("created_at", { ascending: false }).limit(50),
       ]);
       for (const r of [rp, cs, fc, tk, vf, ar, ml]) if (r.error) throw r.error;
       const openIds = ((tk.data ?? []) as any[]).map((t) => t.id);
@@ -200,7 +200,7 @@ function AdminAlerts() {
             {busy ? "Évaluation…" : "Tout évaluer"}
           </button>
         ) : (
-          <p className="ml-auto text-xs text-[#777]">Évaluation réservée aux modérateurs et plus.</p>
+          <p className="ml-auto text-xs text-[#5c5c66]">Évaluation réservée aux modérateurs et plus.</p>
         )}
       </div>
       {msg && <p className="mt-2 text-sm text-green-700">{msg}</p>}
@@ -231,7 +231,7 @@ function AdminAlerts() {
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${SEV[a.severity] ?? SEV.info}`}>{a.severity}</span>
                   <strong className="text-[#333]">{a.title}</strong>
                   <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{STATUS_FR[a.status] ?? a.status}</span>
-                  <span className="text-xs text-[#777]">{a.source ?? a.kind} · {frDate.format(new Date(a.created_at))} · assignée : {a.assignee ? nm(a.assignee) : "—"}</span>
+                  <span className="text-xs text-[#5c5c66]">{a.source ?? a.kind} · {frDate.format(new Date(a.created_at))} · assignée : {a.assignee ? nm(a.assignee) : "—"}</span>
                 </button>
               </div>
               {open && (
@@ -278,7 +278,7 @@ function AdminAlerts() {
             </article>
           );
         })}
-        {shown.length === 0 && <p className="text-sm text-[#777]">Aucune alerte avec ces filtres. Lance « Tout évaluer » pour balayer les 7 sources.</p>}
+        {shown.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune alerte avec ces filtres. Lance « Tout évaluer » pour balayer les 7 sources.</p>}
       </div>
     </div>
   );

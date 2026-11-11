@@ -17,7 +17,7 @@ function Card({ label, value, def, delta, to, search }: {
   const body = (
     <div className="rounded-xl bg-white p-4 shadow-sm" title={def}>
       <p className="text-3xl font-bold text-[#333]">{value}</p>
-      <p className="mt-1 text-sm text-[#777]">
+      <p className="mt-1 text-sm text-[#5c5c66]">
         {label}
         {delta && delta !== "—" && (
           <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${delta.startsWith("-") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
@@ -34,7 +34,7 @@ function Missing({ label, def }: { label: string; def: string }) {
   return (
     <div className="rounded-xl bg-white p-4 shadow-sm" title={def}>
       <p className="text-3xl font-bold text-[#bbb]">—</p>
-      <p className="mt-1 text-sm text-[#777]">{label}</p>
+      <p className="mt-1 text-sm text-[#5c5c66]">{label}</p>
     </div>
   );
 }
@@ -200,7 +200,7 @@ function AdminDashboard() {
       </div>
 
       <h2 className="mt-6 font-medium text-[#555]">A · Utilisateurs</h2>
-      <p className="text-xs text-[#999]">Profils dating (swivv_profiles) · comptes auth (profiles, toutes époques) · actifs = updated_at récent · complété = profil rempli à ≥ 80 %.</p>
+      <p className="text-xs text-[#6b6b73]">Profils dating (swivv_profiles) · comptes auth (profiles, toutes époques) · actifs = updated_at récent · complété = profil rempli à ≥ 80 %.</p>
       <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card label="Profils dating" value={v(d.users)} def="Lignes swivv_profiles (total)." to="/admin/users" />
         {d.accounts == null && d.users == null ? <Missing label="Comptes auth" def="Table profiles illisible pour ce rôle." /> : <Card label="Comptes auth" value={v(d.accounts)} def="Lignes profiles créées par le trigger à l'inscription (toutes époques)." />}
@@ -222,7 +222,7 @@ function AdminDashboard() {
       </div>
 
       <h2 className="mt-6 font-medium text-[#555]">B · Engagement ({rangeLabel}, vs période précédente)</h2>
-      <p className="text-xs text-[#999]">Messages dédupliqués par msg_id (1 envoi = 1, pas 1 par participant) · matchs/likes/vues/réactions par created_at · tendance 14 derniers jours.</p>
+      <p className="text-xs text-[#6b6b73]">Messages dédupliqués par msg_id (1 envoi = 1, pas 1 par participant) · matchs/likes/vues/réactions par created_at · tendance 14 derniers jours.</p>
       <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card label={`Messages envoyés (${rangeLabel})`} value={v(d.msgCur)} def="msg_id distincts sur la période (scan 20k max)." delta={d.msgCur != null ? fmtDelta(d.msgCur, d.msgPrev) : undefined} />
         <Card label={`Nouveaux matchs (${rangeLabel})`} value={v(d.matchCur)} def="Lignes swivv_matches par created_at." delta={d.matchCur != null ? fmtDelta(d.matchCur, d.matchPrev) : undefined} />
@@ -263,7 +263,7 @@ function AdminDashboard() {
       </div>
 
       <h2 className="mt-6 font-medium text-[#555]">C · Confiance et sécurité</h2>
-      <p className="text-xs text-[#999]">Ouverts = new/investigating/waiting (signalements) ou open/investigating/waiting (cas).</p>
+      <p className="text-xs text-[#6b6b73]">Ouverts = new/investigating/waiting (signalements) ou open/investigating/waiting (cas).</p>
       <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card label="Signalements ouverts" value={v(d.reportsOpen)} def="Status new, investigating ou waiting." to="/admin/reports" search={{ status: "new" }} />
         <Card label="À revoir (new)" value={v(d.reportsNew)} def="Status new, jamais examinés." to="/admin/reports" search={{ status: "new" }} />
@@ -272,7 +272,7 @@ function AdminDashboard() {
       </div>
 
       <h2 className="mt-6 font-medium text-[#555]">D · Support</h2>
-      <p className="text-xs text-[#999]">Ouverts = open/assigned/waiting_* · en retard = sans réponse staff depuis plus de 48 h (politique SLA).</p>
+      <p className="text-xs text-[#6b6b73]">Ouverts = open/assigned/waiting_* · en retard = sans réponse staff depuis plus de 48 h (politique SLA).</p>
       <div className="mt-2 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card label="Tickets ouverts" value={v(d.tickets)} def="Status open, assigned, waiting_user ou waiting_internal." to="/admin/support" search={{ status: "open" }} />
         <Card label="Haute priorité non résolus" value={v(d.ticketsHigh)} def="Priorité high ou critical + statut ouvert." to="/admin/support" search={{ status: "open" }} />
@@ -293,7 +293,7 @@ function AdminDashboard() {
         )}
         <Missing label="Erreurs applicatives" def="Aucune instrumentation d'erreurs déployée." />
       </div>
-      <p className="mt-2 text-xs text-[#999]">Pas de traitements planifiés configurés (ni worker d'envoi d'e-mails, ni cron) — les files d'annonces et d'e-mails sont traitées manuellement.</p>
+      <p className="mt-2 text-xs text-[#6b6b73]">Pas de traitements planifiés configurés (ni worker d'envoi d'e-mails, ni cron) — les files d'annonces et d'e-mails sont traitées manuellement.</p>
     </div>
   );
 }

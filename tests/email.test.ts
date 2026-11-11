@@ -5,16 +5,22 @@ import { SAFE_MSG_PREVIEW, previewForEmail } from "../src/lib/swivv-notify.logic
 
 describe("sendEmail", () => {
   test("missing config is an explicit error, not a silent false", async () => {
-    const key = process.env.RESEND_API_KEY;
+    const host = process.env.IONOS_SMTP_HOST;
+    const user = process.env.IONOS_SMTP_USER;
+    const pass = process.env.IONOS_SMTP_PASS;
     const from = process.env.SUPPORT_EMAIL_FROM;
-    delete process.env.RESEND_API_KEY;
+    delete process.env.IONOS_SMTP_HOST;
+    delete process.env.IONOS_SMTP_USER;
+    delete process.env.IONOS_SMTP_PASS;
     delete process.env.SUPPORT_EMAIL_FROM;
     try {
       const r = await sendEmail({ to: "nobody@example.com", subject: "x", html: "<p>x</p>" });
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error).toBe("not-configured");
     } finally {
-      if (key !== undefined) process.env.RESEND_API_KEY = key;
+      if (host !== undefined) process.env.IONOS_SMTP_HOST = host;
+      if (user !== undefined) process.env.IONOS_SMTP_USER = user;
+      if (pass !== undefined) process.env.IONOS_SMTP_PASS = pass;
       if (from !== undefined) process.env.SUPPORT_EMAIL_FROM = from;
     }
   });

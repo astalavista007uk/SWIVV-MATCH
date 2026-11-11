@@ -21,11 +21,11 @@ describe("collectAlerts", () => {
       ],
       verifs: [{ id: "v1", kind: "profile", status: "pending", created_at: old }],
       aiFailed: [{ rule_key: "spam-bios", created_at: fresh }],
-      mailFailed: [{ to: "a@b.c", created_at: fresh }],
+      mailFailed: [{ key: "m1", template: "message", created_at: fresh }],
       nowMs: now,
     });
     expect(out.map((s) => s.dedupe).sort()).toEqual(
-      ["ai:spam-bios:" + fresh, "case:c1", "fraud:f1", "mail:a@b.c:" + fresh, "report:r1", "ticket:t1", "verif:v1"].sort(),
+      ["ai:spam-bios:" + fresh, "case:c1", "fraud:f1", "mail:m1:" + fresh, "report:r1", "ticket:t1", "verif:v1"].sort(),
     );
     expect(out.find((s) => s.dedupe === "report:r1")?.severity).toBe("critical");
     expect(new Set(out.map((s) => s.dedupe)).size).toBe(out.length);

@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, Heart } from "lucide-react";
+import { BadgeCheck, Heart, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getPhotoReaction, isMemberUuid, preloadMyReactionsForPhotos, REACTIONS, reactionOf, subscribeReactions, togglePhotoReaction, type ReactionId } from "@/lib/swivv-reactions";
-import { SWIVV_PROFILES } from "@/lib/swivv-data";
+import { SWIVV_PROFILES, nameAge } from "@/lib/swivv-data";
 import { displayPct, load, MatchLoginPrompt } from "@/lib/match-score";
 import { useAuth } from "@/hooks/use-auth";
 import { realDistance } from "@/lib/location-distance";
@@ -192,7 +192,8 @@ function SwivvBrowse() {
       if (gender !== "all" && p.gender !== gender) return false;
       if (onlineOnly && !p.online) return false;
       if (lookingFor !== "all" && p.lookingFor !== lookingFor) return false;
-      if (p.age < minAge || p.age > maxAge) return false;
+      // ponytail: unknown age is not an age — a null/NaN age coerced to 0 and hid the member from every search
+      if (Number.isFinite(p.age) && (p.age < minAge || p.age > maxAge)) return false;
       if (cat === "femmes" && p.gender !== "woman") return false;
       if (cat === "hommes" && p.gender !== "man") return false;
       if (cat === "en ligne" && !p.online) return false;
@@ -371,7 +372,7 @@ function SwivvBrowse() {
               return profiles;
             })()}
             {category && cat !== "photos récentes" ? ` · ${t(category)}` : ""}
-            {CAT_HINT[cat] && <span className="text-sm font-normal text-[#777]"> — {t(CAT_HINT[cat])}</span>}
+            {CAT_HINT[cat] && <span className="text-sm font-normal text-[#5c5c66]"> — {t(CAT_HINT[cat])}</span>}
           </h1>
           {category && (
             <button
@@ -384,11 +385,16 @@ function SwivvBrowse() {
             </button>
           )}
         </div>
+        {results.some((p) => p.demo) && (
+          <p className="mt-2 text-sm text-[#5c5c66]">
+            {t("Les profils marqués « Démo » sont des exemples, pas des membres réels.")}
+          </p>
+        )}
         {gridReady && !poolLoaded && (
-          <p className="mt-4 text-sm text-[#777]">{t("Chargement des derniers profils…")}</p>
+          <p className="mt-4 text-sm text-[#5c5c66]">{t("Chargement des derniers profils…")}</p>
         )}
         {!gridReady ? (
-          <p className="mt-6 text-sm text-[#777]">{t("Chargement…")}</p>
+          <p className="mt-6 text-sm text-[#5c5c66]">{t("Chargement…")}</p>
         ) : cat === "photos récentes" ? (
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {results.flatMap((p) => p.photos.map((src, i) => ({ p, src, i }))).map(({ p, src, i }) => (
@@ -409,9 +415,9 @@ function SwivvBrowse() {
               </div>
                 <div className="p-2.5">
                   <p className="text-[15px] font-medium text-[#333]">
-                    {p.name}, {p.age}
+                    {nameAge(p)}
                   </p>
-                  <p className="text-xs text-[#999]">{t("Photo ajoutée le {date}", { date: fmtDate(p.joinedAt) })}</p>
+                  <p className="text-xs text-[#6b6b73]">{t("Photo ajoutée le {date}", { date: fmtDate(p.joinedAt) })}</p>
                 </div>
               </article>
             ))}
@@ -447,7 +453,11 @@ function SwivvBrowse() {
                       {liked ? t("Déliker {name}", { name: p.name }) : t("Liker {name}", { name: p.name })}
                     </span>
                   </span>
-                  {p.online && (
+                  {p.demo ? (
+                    <span className="absolute left-2 top-2 rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-medium text-white">
+                      {t("Démo")}
+                    </span>
+                  ) : p.online && (
                     <span className="absolute left-2 top-2 rounded-full bg-green-600 px-2 py-0.5 text-[11px] font-medium text-white">
                       {t("En ligne")}
                     </span>
@@ -477,14 +487,17 @@ function SwivvBrowse() {
                 </div>
                 <Link to="/member/$id" params={{ id: p.id }} className="block p-3">
                   <p className="flex items-center gap-1 font-medium text-[#333]">
-                    {p.name}, {p.age}
+                    {nameAge(p)}
                     {p.verified && <BadgeCheck className="h-4 w-4 text-[#e60050]" />}
+                    {p.idVerified && <ShieldCheck aria-label={t("Identité vérifiée")} className="h-4 w-4 text-[#e60050]" />}
                   </p>
-                  <p className="text-sm text-[#999]">
-                    {p.city} · {dist(p)} km · {p.lastActive}
+                  <p className="text-sm text-[#6b6b73]">
+                    {p.city}{p.demo ? "" : ` · ${dist(p)} km · ${p.lastActive}`}
                   </p>
-                  <p className="text-xs text-[#999]">
-                    {t("Membre depuis le {date}", { date: fmtDate(p.joinedAt) })}
+                  <p className="text-xs text-[#6b6b73]">
+                    {p.demo
+                      ? t("Profil de démonstration")
+                      : t("Membre depuis le {date}", { date: fmtDate(p.joinedAt) })}
                   </p>
                   {authLoading || user ? (
                     <p className="mt-1 text-xs font-medium text-[#e60050]">
@@ -508,7 +521,7 @@ function SwivvBrowse() {
             {t("Voir plus de profils")}
           </button>
         )}
-        {gridReady && poolLoaded && results.length === 0 && <p className="mt-6 text-sm text-[#777]">{t("Aucun profil avec ces filtres. Élargis ta recherche.")}</p>}
+        {gridReady && poolLoaded && results.length === 0 && <p className="mt-6 text-sm text-[#5c5c66]">{t("Aucun profil avec ces filtres. Élargis ta recherche.")}</p>}
       </main>
       <SwivvFooter />
     </div>

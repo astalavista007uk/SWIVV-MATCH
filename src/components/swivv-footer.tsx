@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { useAuth } from "@/hooks/use-auth";
-import { setSetting } from "@/lib/swivv-store";
 import { useT } from "@/lib/i18n";
 import { SwivvLangSwitch } from "@/components/swivv-lang-switch";
 import type { EnKey } from "@/lib/locales/en";
@@ -23,6 +22,9 @@ type FooterLink = { label: EnKey; authOnly?: true } & (
   | { to: "/guide-photos" }
   | { to: "/cgv" }
   | { to: "/cookies" }
+  | { to: "/mentions-legales" }
+  | { to: "/verification-age" }
+  | { to: "/confidentialite-donnees" }
 );
 
 // ponytail: browse/search values stay French — they are filter keys matched by /browse, only the label is translated
@@ -71,6 +73,12 @@ const COLUMNS: { id: "discover" | "help" | "legal" | "brand"; title: EnKey; link
       { label: "Conditions d'utilisation", to: "/terms-and-conditions" },
       { label: "Conditions Générales de Vente (CGV)", to: "/cgv" },
       { label: "Centre de confidentialité", to: "/privacy-centre" },
+      {
+        label: "Vérification de l'âge & protection des mineurs",
+        to: "/verification-age",
+      },
+      { label: "Confidentialité des données", to: "/confidentialite-donnees" },
+      { label: "Mentions légales", to: "/mentions-legales" },
       { label: "Cookies", to: "/cookies" },
     ],
   },
@@ -95,8 +103,8 @@ export function SwivvFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_1fr]">
         <div>
           <SwivvLogo className="h-24" />
-          <p className="mt-2 text-sm text-[#777]">{t("Your Match. Your Story.")}</p>
-          <p className="mt-4 text-xs text-[#999]">{t("© 2026 SWIVV. Tous droits réservés.")}</p>
+          <p className="mt-2 text-sm text-[#5c5c66]">{t("Your Match. Your Story.")}</p>
+          <p className="mt-4 text-xs text-[#6b6b73]">{t("© 2026 SWIVV. Tous droits réservés.")}</p>
           <SwivvLangSwitch className="mt-4" />
         </div>
         {columns.map((col) => (
@@ -140,16 +148,6 @@ export function SwivvFooter() {
                 </li>
               ))}
             </ul>
-            {/* ponytail: plain anchor + full reload — re-shows the dismissed home section and jumps to it; no new page/route */}
-            {col.id === "brand" && (
-              <a
-                href="/#telecharger"
-                onClick={() => setSetting("appPromoDismissed", false)}
-                className="mt-3 inline-block text-sm text-[#555] hover:text-[#e60050] hover:underline"
-              >
-                {t("Application mobile")}
-              </a>
-            )}
             {/* ponytail: multiply melts the JPG white box into the footer grey; pinned right on mobile, normal flow on sm+ (flex restructure if it ever needs vertical centering) */}
             {col.id === "brand" && (
               <img src="/favicon.png" alt="SWIVV" loading="lazy" className="absolute right-0 top-1/2 h-24 w-auto -translate-y-1/2 mix-blend-multiply sm:static sm:mt-4 sm:translate-y-0" />

@@ -1,30 +1,166 @@
-export function renderErrorPage(): string {
+import type { Lang } from "./swivv-lang";
+
+/**
+ * Last-resort screen for 500s and crashed routes — plain HTML because the React tree may be
+ * dead. Served three ways: the server catch paths (server.ts / start.ts), the router's
+ * defaultErrorComponent (route crash), and the public/swivv-erreur*.html copies (kept in sync
+ * by tests/error-page.test.ts).
+ * ponytail: no image, no font, no JS — grid + type only, so it renders when the network or the
+ * scripts are exactly what broke. Ceiling: a static "500" instead of a live status code; pass
+ * the real code in if a 404/503 ever needs its own number.
+ */
+const COPY: Record<Lang, {
+  doc: string; eyebrow: string; title: string; body: string; retry: string; home: string; stuck: string; contact: string;
+}> = {
+  fr: {
+    doc: "Oups — SWIVV MATCH",
+    eyebrow: "SWIVV MATCH · Erreur 500",
+    title: "Oups ! Cette page n'a pas pu se charger.",
+    body: "Désolé pour la gêne occasionnée. Nos équipes font tout leur possible pour résoudre le problème au plus vite — réessaie dans quelques instants.",
+    retry: "Réessayer",
+    home: "Retour à l'accueil",
+    stuck: "Le problème persiste ?",
+    contact: "Écris-nous",
+  },
+  en: {
+    doc: "Oops — SWIVV MATCH",
+    eyebrow: "SWIVV MATCH · 500 Error",
+    title: "Oops! This page couldn't load.",
+    body: "Sorry for the inconvenience. Our team is doing everything we can to fix the problem as quickly as possible — please try again in a moment.",
+    retry: "Try again",
+    home: "Back to home",
+    stuck: "Still having trouble?",
+    contact: "Contact us",
+  },
+  es: {
+    doc: "Vaya — SWIVV MATCH",
+    eyebrow: "SWIVV MATCH · Error 500",
+    title: "¡Vaya! Esta página no ha podido cargarse.",
+    body: "Disculpa las molestias. Nuestro equipo está haciendo todo lo posible para resolver el problema lo antes posible — vuelve a intentarlo en un momento.",
+    retry: "Reintentar",
+    home: "Volver al inicio",
+    stuck: "¿El problema continúa?",
+    contact: "Escríbenos",
+  },
+};
+
+const STYLE = `<style>
+  .swivv-err {
+    min-height: 100vh; margin: 0; padding: 18vh 20px 32px;
+    display: grid; place-items: start center; background: #fff; color: #111;
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .swivv-err *, .swivv-err *::before, .swivv-err *::after { box-sizing: border-box; }
+  .swivv-err .card {
+    position: relative; width: 100%; max-width: 60rem; border-radius: 26px;
+    padding: 44px 48px; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+    background-color: #f3f3f3;
+    background-image:
+      linear-gradient(to right, rgba(0, 0, 0, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.055) 1px, transparent 1px);
+    background-size: 78px 78px;
+  }
+  .swivv-err .copy { max-width: 34rem; }
+  .swivv-err .eyebrow { margin: 0 0 16px; font-size: 12px; color: #6b6b6b; letter-spacing: 0.01em; }
+  .swivv-err h1 {
+    margin: 0 0 14px; font-size: clamp(1.6rem, 3.2vw, 2.35rem); line-height: 1.12;
+    font-weight: 800; letter-spacing: -0.02em; color: #111;
+  }
+  .swivv-err p.body { margin: 0 0 24px; max-width: 30rem; font-size: 14px; color: #6b6b6b; }
+  .swivv-err .actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .swivv-err .btn {
+    display: inline-flex; align-items: center; gap: 12px; padding: 8px 8px 8px 20px;
+    border: 0; border-radius: 999px; background: #111; color: #fff; cursor: pointer;
+    font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .swivv-err .btn:hover { background: #000; }
+  .swivv-err .arrow {
+    display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; color: #111; font-size: 14px; line-height: 1;
+  }
+  .swivv-err .link { font-size: 13px; color: #4a4a4a; }
+  .swivv-err .contact { margin: 20px 0 0; font-size: 12px; color: #8a8a8a; }
+  .swivv-err .contact a { color: #111; font-weight: 600; text-decoration: none; }
+  .swivv-err .contact a:hover { text-decoration: underline; }
+  .swivv-err .code {
+    flex: none; font-size: clamp(96px, 14vw, 190px); font-weight: 800; line-height: 0.82;
+    letter-spacing: -0.05em; color: #575757; user-select: none;
+  }
+  .swivv-err .mark {
+    position: absolute; top: 18px; right: 20px; width: 44px; height: 44px;
+    display: grid; place-items: center;
+  }
+  .swivv-err .mark img {
+    width: 100%; height: 100%; display: block;
+    animation: swivv-err-beat 3s ease-in-out infinite;
+  }
+  /* two signal rings radiating from the mark */
+  .swivv-err .mark::before, .swivv-err .mark::after {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    border: 1.5px solid rgba(87, 87, 87, 0.45);
+    animation: swivv-err-ping 3s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  }
+  .swivv-err .mark::after { animation-delay: 1.5s; }
+  @keyframes swivv-err-beat {
+    0%, 44%, 100% { transform: scale(1); }
+    10% { transform: scale(1.12); }
+    20% { transform: scale(1); }
+    30% { transform: scale(1.07); }
+  }
+  @keyframes swivv-err-ping {
+    0% { transform: scale(0.65); opacity: 0.65; }
+    70%, 100% { transform: scale(1.7); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .swivv-err .mark img, .swivv-err .mark::before, .swivv-err .mark::after { animation: none; }
+    .swivv-err .mark::before, .swivv-err .mark::after { opacity: 0.25; }
+  }
+  @media (max-width: 760px) {
+    .swivv-err .card { flex-direction: column; align-items: flex-start; padding: 28px 24px; }
+    .swivv-err .code { align-self: flex-end; font-size: 92px; }
+    .swivv-err .mark { width: 36px; height: 36px; top: 14px; right: 16px; }
+  }
+</style>`;
+
+/** Body-only fragment: usable inside the app (defaultErrorComponent) and inside a full document. */
+export function errorScreenHtml(lang: Lang = "fr"): string {
+  const c = COPY[lang] ?? COPY.fr;
+  return `${STYLE}
+<div class="swivv-err">
+  <div class="card">
+    <span class="mark" aria-hidden="true">
+      <img src="/s-mark-grey.png" alt="" width="44" height="44" />
+    </span>
+    <div class="copy">
+      <p class="eyebrow">${c.eyebrow}</p>
+      <h1>${c.title}</h1>
+      <p class="body">${c.body}</p>
+      <div class="actions">
+        <button class="btn" onclick="location.reload()">${c.retry}<span class="arrow" aria-hidden="true">&#8635;</span></button>
+        <a class="link" href="/">${c.home}</a>
+      </div>
+      <p class="contact">${c.stuck} <a href="/contact-us">${c.contact}</a></p>
+    </div>
+    <div class="code" aria-hidden="true">500</div>
+  </div>
+</div>`;
+}
+
+export function renderErrorPage(lang: Lang = "fr"): string {
   return `<!doctype html>
-<html lang="en">
+<html lang="${lang}">
   <head>
     <meta charset="utf-8" />
-    <title>This page didn't load</title>
+    <title>${(COPY[lang] ?? COPY.fr).doc}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>
-      body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: #fafafa; color: #111; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
-      .card { max-width: 28rem; width: 100%; text-align: center; padding: 2rem; }
-      h1 { font-size: 1.25rem; margin: 0 0 0.5rem; }
-      p { color: #4b5563; margin: 0 0 1.5rem; }
-      .actions { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
-      a, button { padding: 0.5rem 1rem; border-radius: 0.375rem; font: inherit; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
-      .primary { background: #111; color: #fff; }
-      .secondary { background: #fff; color: #111; border-color: #d1d5db; }
-    </style>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
-  <body>
-    <div class="card">
-      <h1>This page didn't load</h1>
-      <p>Something went wrong on our end. You can try refreshing or head back home.</p>
-      <div class="actions">
-        <button class="primary" onclick="location.reload()">Try again</button>
-        <a class="secondary" href="/">Go home</a>
-      </div>
-    </div>
+  <body style="margin:0;background:#fff">
+${errorScreenHtml(lang)}
   </body>
 </html>`;
 }

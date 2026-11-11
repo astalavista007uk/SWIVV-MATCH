@@ -4,23 +4,15 @@
  * Usage:  bun run scripts/send-all-swivv-test-emails.ts you@example.com
  *         bun run scripts/send-all-swivv-test-emails.ts you@example.com DailyMatches,WeeklyMatches
  *
- * Same safety rules as send-swivv-test-email.ts (terminal-only, fixed test
- * sender, Resend test mode delivers only to your own account email).
- * ponytail: 700ms pacing — Resend's free tier allows ~2 req/s; drop the delay if sending ever moves to a paid tier with higher limits
+ * Same safety rule as send-swivv-test-email.ts (terminal-only, same sendEmail() path).
+ * ponytail: 700ms pacing protects the IONOS mailbox from a 44-message burst; tune if its limit says otherwise
  */
-import { RESEND_TEST_FROM } from "../src/lib/email";
+import { sendEmail } from "../src/lib/email";
 import * as T from "../src/lib/swivv-email-templates";
 
 const TO = process.argv[2];
-const RESEND_KEY = process.env.RESEND_API_KEY;
-
 if (!TO || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(TO)) {
   console.error("Usage: bun run scripts/send-all-swivv-test-emails.ts you@example.com");
-  console.error("(Use your Resend account email — test mode only delivers to it.)");
-  process.exit(1);
-}
-if (!RESEND_KEY) {
-  console.error("ERROR: RESEND_API_KEY not set in environment.");
   process.exit(1);
 }
 
@@ -81,22 +73,12 @@ if (!queue.length) {
   process.exit(1);
 }
 for (const t of queue) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: RESEND_TEST_FROM, to: [TO], subject: `[TEST ${t.label}] ${t.subject}`, html: t.html }),
-  });
-  let body: any = null;
-  try {
-    body = await res.json();
-  } catch {
-    body = null;
-  }
-  if (res.ok && body?.id) {
+  const r = await sendEmail({ to: TO, subject: `[TEST ${t.label}] ${t.subject}`, html: t.html });
+  if (r.ok) {
     ok++;
-    console.log(`ok   ${t.label} (${body.id})`);
+    console.log(`ok   ${t.label} (${r.id || "accepted"})`);
   } else {
-    console.error(`FAIL ${t.label} — status ${res.status}: ${JSON.stringify(body)?.slice(0, 200)}`);
+    console.error(`FAIL ${t.label} — ${r.error}${r.status ? ` (status ${r.status})` : ""}`);
   }
   await new Promise((r) => setTimeout(r, 700));
 }

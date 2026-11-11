@@ -4,6 +4,9 @@
 -- any staff reads — same split as swivv_moderation_cases.
 -- ponytail: no DELETE grant (the UI never deletes) and no FK on ref_id (alerts point
 -- at users/reports/tickets across tables) — hard-delete or FKs if retention ever needs them.
+-- The earlier ops-centre migration created an older shape of this table; the
+-- alert centre needs the dedupe/source schema below. It holds no rows.
+DROP TABLE IF EXISTS public.swivv_admin_alerts CASCADE;
 CREATE TABLE IF NOT EXISTS public.swivv_admin_alerts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at timestamptz NOT NULL DEFAULT now(),

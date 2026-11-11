@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Coffee, Globe, Heart, Sparkles, User, Users } from "lucide-react";
-import { SWIVV_PROFILES, type SwivvProfile } from "@/lib/swivv-data";
+import { SWIVV_PROFILES, nameAge, type SwivvProfile } from "@/lib/swivv-data";
 import { realDistance, useMyCity } from "@/lib/location-distance";
 import { getLikes, isThreadBlocked, markMatchCriteriaSaved, markMatchCriteriaVisited, MATCH_CRITERIA_KEY as KEY, pullMatchCriteria, pushMatchCriteria, subscribe, toggleLike } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
@@ -79,16 +79,16 @@ type Crit = {
 
 const CRITERIA: Crit[] = [
   { key: "gender", label: "Je recherche", group: "L'essentiel", kind: "select", options: ["Femme", "Homme"], test: (p, v) => p.gender === (v === "Femme" ? "woman" : "man") },
-  { key: "ageMin", label: "Âge min", group: "L'essentiel", kind: "number", placeholder: "18", test: (p, v) => p.age >= Number(v) },
-  { key: "ageMax", label: "Âge max", group: "L'essentiel", kind: "number", placeholder: "99", test: (p, v) => p.age <= Number(v) },
+  { key: "ageMin", label: "Âge min", group: "L'essentiel", kind: "number", placeholder: "18", test: (p, v) => !Number.isFinite(p.age) || p.age >= Number(v) },
+  { key: "ageMax", label: "Âge max", group: "L'essentiel", kind: "number", placeholder: "99", test: (p, v) => !Number.isFinite(p.age) || p.age <= Number(v) },
   { key: "country", label: "Pays", group: "L'essentiel", kind: "select", options: PAYS, test: inc((p) => p.country) },
   { key: "city", label: "Ville", group: "L'essentiel", kind: "text", list: "cities", placeholder: "Peu importe", test: inc((p) => p.city) },
   { key: "maxDistance", label: "Distance max (km)", group: "L'essentiel", kind: "number", placeholder: "Peu importe", test: (p, v) => p.distanceKm <= Number(v) },
   { key: "nationality", label: "Nationalité", group: "L'essentiel", kind: "select", options: NATS, vary: "natMasc", test: natTest },
   { key: "lookingFor", label: "Recherche", group: "L'essentiel", kind: "select", options: LOOKING, test: inc((p) => p.lookingFor) },
   { key: "maritalStatus", label: "Statut matrimonial", group: "L'essentiel", kind: "select", options: MARITAL, gendered: true, test: inc((p) => p.maritalStatus) },
-  { key: "heightMin", label: "Taille min (cm)", group: "Apparence", kind: "number", min: 130, max: 220, placeholder: "130", test: (p, v) => p.heightCm >= Number(v) },
-  { key: "heightMax", label: "Taille max (cm)", group: "Apparence", kind: "number", min: 130, max: 220, placeholder: "220", test: (p, v) => p.heightCm <= Number(v) },
+  { key: "heightMin", label: "Taille min (cm)", group: "Apparence", kind: "number", min: 130, max: 220, placeholder: "130", test: (p, v) => (p.heightCm == null ? true : p.heightCm >= Number(v)) },
+  { key: "heightMax", label: "Taille max (cm)", group: "Apparence", kind: "number", min: 130, max: 220, placeholder: "220", test: (p, v) => (p.heightCm == null ? true : p.heightCm <= Number(v)) },
   { key: "weightMin", label: "Poids min (kg)", group: "Apparence", kind: "number", min: 30, max: 200, placeholder: "30", test: (p, v) => (p.weightKg == null ? true : p.weightKg >= Number(v)) },
   { key: "weightMax", label: "Poids max (kg)", group: "Apparence", kind: "number", min: 30, max: 200, placeholder: "Peu importe", test: (p, v) => (p.weightKg == null ? true : p.weightKg <= Number(v)) },
   { key: "hair", label: "Cheveux", group: "Apparence", kind: "select", options: HAIR, vary: "adjFem", test: adjTest((p) => p.hairColor) },
@@ -127,7 +127,7 @@ const GROUP_META: Record<string, typeof User> = {
   "Origines & valeurs": Globe,
 };
 const fieldCls =
-  "w-full rounded-xl border border-border bg-[#fafafa] px-3 py-2.5 text-sm transition-colors placeholder:text-[#999] focus:border-[#e60050] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e60050]/30";
+  "w-full rounded-xl border border-border bg-[#fafafa] px-3 py-2.5 text-sm transition-colors placeholder:text-[#6b6b73] focus:border-[#e60050] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e60050]/30";
 
 // ponytail: static grouping, no dnd — virtualize if criteria ever pass ~100
 const GROUPS: { name: string; items: Crit[] }[] = [];
@@ -150,7 +150,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
 
   const heightInput = (key: "heightMin" | "heightMax", placeholder: string) => {
     const raw = form[key] ?? "";
-      const cls = "w-full min-w-0 max-w-20 rounded-xl border border-border px-2 py-2.5 text-sm placeholder:text-[#999]";
+      const cls = "w-full min-w-0 max-w-20 rounded-xl border border-border px-2 py-2.5 text-sm placeholder:text-[#6b6b73]";
     if (hUnit === "cm") {
       return (
         <input type="number" value={raw} min={130} max={220} placeholder={placeholder}
@@ -179,7 +179,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
         inputMode="decimal"
         aria-label={key === "weightMin" ? t("Poids min") : t("Poids max")}
         onChange={(e) => setForm({ ...form, [key]: wUnit === "kg" ? e.target.value : stToKg(e.target.value) })}
-        className="w-full min-w-0 max-w-20 rounded-xl border border-border px-2 py-2.5 text-sm placeholder:text-[#999]" />
+        className="w-full min-w-0 max-w-20 rounded-xl border border-border px-2 py-2.5 text-sm placeholder:text-[#6b6b73]" />
     );
   };
   const [savedFlash, setSavedFlash] = useState(false);
@@ -221,7 +221,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
             <span id="m-taille" className="mb-1 block text-sm font-medium text-[#333]">{t("Taille min – max")}</span>
             <div className="flex items-center gap-1" role="group" aria-labelledby="m-taille">
               {heightInput("heightMin", "130")}
-              <span className="text-[#999]">–</span>
+              <span className="text-[#6b6b73]">–</span>
               {heightInput("heightMax", "220")}
               <div className="w-24 shrink-0">
                 <Seg value={hUnit} onChange={setHUnit} options={["cm", "ft"]} />
@@ -232,7 +232,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
             <span id="m-poids" className="mb-1 block text-sm font-medium text-[#333]">{t("Poids min – max")}</span>
             <div className="flex items-center gap-1" role="group" aria-labelledby="m-poids">
               {weightInput("weightMin", "30")}
-              <span className="text-[#999]">–</span>
+              <span className="text-[#6b6b73]">–</span>
               {weightInput("weightMax", "Peu importe")}
               <div className="w-24 shrink-0">
                 <Seg value={wUnit} onChange={setWUnit} options={["kg", "st"]} />
@@ -295,7 +295,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
               list={c.list}
               min={c.min}
               max={c.max}
-              className="w-full rounded-xl border border-border px-3 py-2.5 text-sm placeholder:text-[#999]"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-sm placeholder:text-[#6b6b73]"
             />
             {c.list === "cities" && (
               <datalist id="cities">
@@ -323,7 +323,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
       </header>
       <SwivvCategoryNav />
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">{t("Connecte-toi pour découvrir tes matches.")}</p>
+          <p className="text-sm text-[#5c5c66]">{t("Connecte-toi pour découvrir tes matches.")}</p>
           <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white">
             {t("Se connecter / S'inscrire")}
           </button>
@@ -365,7 +365,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-2xl font-medium text-[#333]">{t(title)}</h1>
         <div className="mt-1 flex flex-wrap items-center gap-3">
-          <p className="min-w-0 flex-1 text-sm text-[#777]">{mode === "edit" ? t("Sélectionne tes critères puis sauvegarde : ils définissent ton % de compatibilité partout sur le site, et les profils correspondants s'affichent ci-dessous, meilleurs en premier.") : t("Dis-nous qui tu cherches, on te montre les meilleurs profils en premier. Tes critères enregistrés dans Mes Matches sont chargés par défaut.")}</p>
+          <p className="min-w-0 flex-1 text-sm text-[#5c5c66]">{mode === "edit" ? t("Sélectionne tes critères puis sauvegarde : ils définissent ton % de compatibilité partout sur le site, et les profils correspondants s'affichent ci-dessous, meilleurs en premier.") : t("Dis-nous qui tu cherches, on te montre les meilleurs profils en premier. Tes critères enregistrés dans Mes Matches sont chargés par défaut.")}</p>
           {mode === "search" && (
             <button
               type="button"
@@ -455,7 +455,7 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
               {results.length === 1 ? t("1 profil, meilleur match en premier") : t("{n} profils, meilleur match en premier", { n: results.length })}
             </h2>
             {results.length === 0 ? (
-              <p className="mt-2 text-sm text-[#777]">{t("Aucun profil avec ces critères. Élargis ta recherche.")}</p>
+              <p className="mt-2 text-sm text-[#5c5c66]">{t("Aucun profil avec ces critères. Élargis ta recherche.")}</p>
             ) : (
               <div className={mode === "search" ? "mt-4 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4" : "mt-4 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-5"}>
                 {results.map(({ p, km }) => (
@@ -495,8 +495,8 @@ export function MatchesPage({ title = "Mes Matches", mode = "edit" }: { title?: 
                       </span>
                     </div>
                     <Link to="/member/$id" params={{ id: p.id }} className="block p-2.5">
-                      <p className="text-[15px] font-medium text-[#333]">{p.name}, {p.age}</p>
-                      <p className="text-[13px] text-[#999]">{p.city} · {km} km</p>
+                      <p className="text-[15px] font-medium text-[#333]">{nameAge(p)}</p>
+                      <p className="text-[13px] text-[#6b6b73]">{p.city} · {km} km</p>
                     </Link>
                   </article>
                 ))}

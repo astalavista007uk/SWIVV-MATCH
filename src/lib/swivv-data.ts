@@ -63,11 +63,16 @@ export type SwivvProfile = {
   interests: string[];
   languages: string[];
   online: boolean;
+  /** True for the bundled example profiles — these are never real members. */
+  demo?: boolean;
   isNew?: boolean;
   joinedAt: string;
   lastActive: string;
   compatibility: number;
   verified: boolean;
+  /** Second badge: ID document checked (auto face match or staff decision). */
+  idVerified?: boolean;
+  idVerifiedAt?: string;
 };
 
 // ponytail: w=400 q=70 (cards render ≤192px wide; detail pages upscale slightly) — bump to w=600 if full-screen photo views ever need it
@@ -114,7 +119,7 @@ const MEN = [
   "photo-1521119989659-a83eee488004",
   "photo-1520975954732-35dd22299614",
   "photo-1480429370139-e0132c086e2a",
-  "photo-1513956589386-bad6acb9b9d4",
+  "photo-1506277886164-e25aa3f4ef7f",
   "photo-1539571696357-5a69c17a67c6",
   "photo-1552058544-f2b08422138a",
   "photo-1542909168-82c3e7fdca5c",
@@ -125,10 +130,10 @@ const MEN = [
   "photo-1568602471122-7832951cc4c5",
   "photo-1595152772835-219674b2a8a6",
   "photo-1520975661595-6453be3f7070",
-  "photo-1531891437562-34b057a7a15a",
+  "photo-1557862921-37829c790f19",
   "photo-1517070208541-6ddc4d3efbcb",
   "photo-1541101767792-f9b2b1c4f127",
-  "photo-1520975916090-3105956dac2d",
+  "photo-1599566150163-29194dcaad36",
   "photo-1531427186611-ecfd6d936c79",
   "photo-1552374196-1ab2a1c593e8",
   "photo-1566492031773-4f4e44671857",
@@ -1274,8 +1279,22 @@ export const SWIVV_PROFILES: SwivvProfile[] = [
   },
 ];
 
+// ponytail: demo galleries mixed different people — one photo per seed until curated same-person sets exist
+for (const p of SWIVV_PROFILES) {
+  p.photos = p.photos.slice(0, 1);
+  p.demo = true;
+  p.verified = false;
+  p.idVerified = false;
+  p.online = false;
+}
+
 export function getProfile(id: string) {
   return SWIVV_PROFILES.find((p) => p.id === id);
+}
+
+/** "Name, 27" — age is optional in stored rows, so never render a dangling comma. */
+export function nameAge(p: { name: string; age?: number | null }) {
+  return Number.isFinite(p.age) ? `${p.name}, ${p.age}` : p.name;
 }
 
 const photoUrl = (id: string) =>

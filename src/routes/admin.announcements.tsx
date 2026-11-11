@@ -190,7 +190,7 @@ function AdminAnnouncements() {
               <input value={scheduled} onChange={(e) => setScheduled(e.target.value)} type="datetime-local" aria-label="Envoi planifié (Europe/Paris, manuel)" className="rounded-md border border-border px-3 py-2 text-sm" />
               <button type="submit" disabled={busy} className="rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Créer (brouillon)</button>
             </div>
-            <p className="text-xs text-[#999]">Planification = intention + fanion « à envoyer » (aucun worker : l'envoi reste manuel, fuseau Europe/Paris). Audiences : attributs non sensibles uniquement.</p>
+            <p className="text-xs text-[#6b6b73]">Planification = intention + fanion « à envoyer » (aucun worker : l'envoi reste manuel, fuseau Europe/Paris). Audiences : attributs non sensibles uniquement.</p>
           </form>
           {msg && <p className="mt-2 text-sm text-[#555]">{msg}</p>}
           {confirm && (
@@ -211,12 +211,12 @@ function AdminAnnouncements() {
                   <button type="button" onClick={() => preview(r)} aria-expanded={previewId === r.id} className="flex w-full flex-wrap items-center gap-2 text-left">
                     <span className="font-medium text-[#333]">{r.title}</span>
                     <span className="rounded-full bg-[#f2f2f2] px-2 py-0.5 text-xs">{stateFr[st]}</span>
-                    <span className="text-xs text-[#999]">{r.audience}{r.target_country ? ` · ${r.target_country}` : ""}{r.scheduled_at ? ` · planifiée le ${new Date(r.scheduled_at).toLocaleString("fr-FR")}` : ""}{r.sent_at ? ` · envoyée le ${new Date(r.sent_at).toLocaleString("fr-FR")}` : ""}</span>
+                    <span className="text-xs text-[#6b6b73]">{r.audience}{r.target_country ? ` · ${r.target_country}` : ""}{r.scheduled_at ? ` · planifiée le ${new Date(r.scheduled_at).toLocaleString("fr-FR")}` : ""}{r.sent_at ? ` · envoyée le ${new Date(r.sent_at).toLocaleString("fr-FR")}` : ""}</span>
                   </button>
                   {previewId === r.id && (
                     <div className="mt-2 border-t border-border pt-2">
                       <p className="text-[#555]">{r.body}</p>
-                      {r.sent_at && s && <p className="mt-1 text-xs text-[#777]">Notifications : {s.sent} · lues : {s.read} (pas de tracking d'ouverture/clic — non instrumenté).</p>}
+                      {r.sent_at && s && <p className="mt-1 text-xs text-[#5c5c66]">Notifications : {s.sent} · lues : {s.read} (pas de tracking d'ouverture/clic — non instrumenté).</p>}
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <button type="button" onClick={() => testSend(r)} className="rounded border border-border px-2 py-1">Envoi test (moi)</button>
                         {(st === "draft" || st === "sending_due") && <button type="button" onClick={() => prepareSend(r)} disabled={busy} className="rounded border border-border px-2 py-1 disabled:opacity-50">Envoyer…</button>}
@@ -227,15 +227,15 @@ function AdminAnnouncements() {
                 </article>
               );
             })}
-            {rows.length === 0 && <p className="text-sm text-[#777]">Aucune campagne.</p>}
+            {rows.length === 0 && <p className="text-sm text-[#5c5c66]">Aucune campagne.</p>}
           </div>
         </>
       )}
 
       {tab === "E-mail" && (
         <div className="mt-4 rounded-xl bg-white p-4 text-sm shadow-sm">
-          <p className="text-[#333]">Campagnes e-mail <strong>non branchées</strong> : Resend ne sert que le transactionnel serveur. Aucune statistique d'ouverture/clic (pas de webhooks).</p>
-          <p className="mt-2 text-[#777]">Journal réel : {mailStats ? `${mailStats.sent} envoyé(s), ${mailStats.failed} en échec.` : "journal illisible pour ce rôle."}</p>
+          <p className="text-[#333]">Campagnes e-mail <strong>non branchées</strong> : IONOS SMTP ne sert que le transactionnel serveur. Aucune statistique d'ouverture/clic (pas de webhooks).</p>
+          <p className="mt-2 text-[#5c5c66]">Journal réel : {mailStats ? `${mailStats.sent} envoyé(s), ${mailStats.failed} en échec.` : "journal illisible pour ce rôle."}</p>
         </div>
       )}
 

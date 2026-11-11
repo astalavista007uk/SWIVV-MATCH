@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Heart, X, Zap } from "lucide-react";
-import { SWIVV_PROFILES } from "@/lib/swivv-data";
+import { SWIVV_PROFILES, nameAge } from "@/lib/swivv-data";
 import { getLikes, isThreadBlocked, subscribe, toggleLike } from "@/lib/swivv-store";
 import { useAuth } from "@/hooks/use-auth";
-import { SwivvAuthButtons, openAuthModal, requireSwivvAuth } from "@/lib/swivv-auth";
+import { SwivvAuthButtons, getMyBasics, openAuthModal, requireSwivvAuth } from "@/lib/swivv-auth";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
@@ -54,14 +54,32 @@ function SwipePage() {
   // ponytail: ref not state — click fires after pointerup reset dx to 0, so state can't suppress the Link navigation; a drag library if gestures ever get complex
   const dragged = useRef(false);
 
-  const sought = (() => {
+  // ponytail: same source as home/browse — per-uid cache first, then the server (which prefers the saved "Je recherche" criteria). The deck waits for it so a fresh browser never flashes the wrong gender.
+  const [sought, setSought] = useState<"woman" | "man" | null>(() => {
     try {
-      const c = localStorage.getItem("swivv-seeking");
+      const uid = localStorage.getItem("swivv-uid");
+      const mine = uid ? localStorage.getItem(`swivv-seeking:${uid}`) : null;
+      const c = mine === "woman" || mine === "man" ? mine : localStorage.getItem("swivv-seeking");
       return c === "woman" || c === "man" ? c : null;
     } catch {
       return null;
     }
-  })();
+  });
+  const [seekReady, setSeekReady] = useState(false);
+  useEffect(() => {
+    let live = true;
+    getMyBasics()
+      .then((b) => {
+        if (live && b.seeking) setSought(b.seeking);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (live) setSeekReady(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   const deck = useMemo(() => {
     return SWIVV_PROFILES.filter((p) => !isThreadBlocked(p.id) && (!sought || p.gender === sought) && !passed.has(p.id));
@@ -136,8 +154,8 @@ function SwipePage() {
       </header>
       <SwivvCategoryNav />
         <main className="mx-auto max-w-2xl px-4 py-8 text-center">
-          <p className="text-sm text-[#777]">Connecte-toi pour swiper les profils.</p>
-          <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#007782] px-6 py-3 font-medium text-white">
+          <p className="text-sm text-[#5c5c66]">Connecte-toi pour swiper les profils.</p>
+          <button type="button" onClick={() => openAuthModal("account", "signin")} className="mt-4 rounded-md bg-[#e60050] px-6 py-3 font-medium text-white">
             Se connecter / S&apos;inscrire
           </button>
         </main>
@@ -161,11 +179,13 @@ function SwipePage() {
           <Zap className="h-6 w-6 text-[#e60050]" aria-hidden="true" />
           SWIVV SWIPE
         </h1>
-        {!p ? (
+        {!seekReady ? (
+          <p className="mt-6 text-sm text-[#5c5c66]">Chargement.</p>
+        ) : !p ? (
           <div className="mt-6 text-center">
             <img src="/apple-touch-icon.png" alt="SWIVV" className="mx-auto h-16 w-16 rounded-xl object-contain" />
-            <p className="mt-2 text-sm text-[#777]">Plus de profils pour l'instant. Reviens plus tard !</p>
-            <Link to="/browse" search={{ q: "", type: "", location: "" }} className="mt-3 inline-block font-medium text-[#007782] hover:underline">
+            <p className="mt-2 text-sm text-[#5c5c66]">Plus de profils pour l'instant. Reviens plus tard !</p>
+            <Link to="/browse" search={{ q: "", type: "", location: "" }} className="mt-3 inline-block font-medium text-[#e60050] hover:underline">
               Parcourir les profils
             </Link>
           </div>
@@ -179,7 +199,7 @@ function SwipePage() {
                 <div className="absolute inset-x-0 top-0" aria-hidden="true">
                   <img src={next.photo} alt="" className="h-[62svh] w-full object-cover" />
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-10 text-white">
-                    <span className="block text-xl font-bold">{next.name}, {next.age}</span>
+                    <span className="block text-xl font-bold">{nameAge(next)}</span>
                     <span className="block text-sm opacity-90">{next.tagline}</span>
                     <span className="block text-sm opacity-90">{next.city}</span>
                   </span>
@@ -206,8 +226,13 @@ function SwipePage() {
                   onClick={(e) => { if (dragged.current) { e.preventDefault(); dragged.current = false; } }}
                 >
                   <img src={p.photo} alt={`Photo de ${p.name}`} className="h-[62svh] w-full object-cover" draggable={false} />
+                  {p.demo && (
+                    <span className="absolute left-2 top-2 rounded-full bg-black/75 px-2 py-0.5 text-[11px] font-medium text-white">
+                      Démo
+                    </span>
+                  )}
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 pt-10 text-white">
-                    <span className="block text-xl font-bold">{p.name}, {p.age}</span>
+                    <span className="block text-xl font-bold">{nameAge(p)}</span>
                     <span className="block text-sm opacity-90">{p.tagline}</span>
                     <span className="block text-sm opacity-90">{p.city}</span>
                   </span>
@@ -264,7 +289,7 @@ function SwipePage() {
             )}
           </div>
         )}
-        <p className="mt-3 text-center text-xs text-[#999]">Glisse vers la gauche pour passer, vers la droite pour liker — ou utilise les boutons.</p>
+        <p className="mt-3 text-center text-xs text-[#6b6b73]">Glisse vers la gauche pour passer, vers la droite pour liker — ou utilise les boutons.</p>
       </main>
 
       <Dialog open={!!match} onOpenChange={(o) => !o && setMatch(null)}>

@@ -50,7 +50,7 @@ function TemoignagePage() {
 
       <main className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl font-medium text-[#333]">{t("Partager votre témoignage")}</h1>
-        <p className="mt-2 text-[#777]">
+        <p className="mt-2 text-[#5c5c66]">
           {t("Vous vous êtes dit oui grâce à SWIVV ? Racontez votre histoire, elle inspirera les prochains couples.")}
         </p>
 
@@ -73,7 +73,7 @@ function TemoignagePage() {
                   value={name1}
                   onChange={(e) => setName1(e.target.value)}
                   placeholder="Emma"
-                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                 />
               </div>
               <div>
@@ -85,7 +85,7 @@ function TemoignagePage() {
                   value={name2}
                   onChange={(e) => setName2(e.target.value)}
                   placeholder="Karim"
-                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                  className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                 />
               </div>
             </div>
@@ -100,7 +100,7 @@ function TemoignagePage() {
                 rows={6}
                 maxLength={2000}
                 placeholder={t("Comment vous êtes-vous rencontrés ? Le premier message, le premier rendez-vous, le déclic…")}
-                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                className="w-full rounded-md border border-border px-3 py-2.5 placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             </div>
             <div>
@@ -108,7 +108,7 @@ function TemoignagePage() {
                 {t("Photos de couple (3 maximum)")}
               </span>
               {photos.length < 3 && (
-                <label className="block cursor-pointer rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-[#777] hover:border-[#e60050] hover:text-[#e60050]">
+                <label className="block cursor-pointer rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-[#5c5c66] hover:border-[#e60050] hover:text-[#e60050]">
                   {t("+ Ajouter des photos")}
                   <input type="file" accept="image/*" multiple onChange={(e) => addPhotos(e.target.files)} className="hidden" />
                 </label>

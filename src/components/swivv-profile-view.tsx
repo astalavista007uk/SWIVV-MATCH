@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from "react";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   birthRankLabel,
+  nameAge,
   petsLabel,
   relocateLabel,
   siblingSummary,
@@ -13,14 +14,25 @@ import { getAppLang } from "@/lib/swivv-store";
 import { eachImageUrl } from "@/routes/inscription";
 import { useDateLocale, useT } from "@/lib/i18n";
 
+// ponytail: error-page card language (grid paper panel) reused —
+// swap back from swivv-profile-view.tsx.bak if the look is rejected
+function ProfilePanel({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section aria-label={title} className="swivv-panel swivv-panel--plain mt-6">
+      <h2 className="text-2xl font-extrabold tracking-[-0.02em] text-[#111]">{title}</h2>
+      {children}
+    </section>
+  );
+}
+
 function FactGrid({ items }: { items: [string, ReactNode][] }) {
   const t = useT();
   return (
-    <dl className="mt-2 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 lg:grid-cols-4">
+    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4 text-sm sm:grid-cols-3 lg:grid-cols-4">
       {items.map(([k, v]) => (
-        <div key={k} className="rounded-lg bg-white p-3">
-          <dt className="text-xs uppercase text-[#999]">{t(k)}</dt>
-          <dd className="font-medium text-[#333]">{v ?? "—"}</dd>
+        <div key={k} className="border-t border-black/10 pt-2">
+          <dt className="text-[11px] uppercase tracking-wide text-[#8a8a8a]">{t(k)}</dt>
+          <dd className="mt-0.5 font-semibold text-[#1a1a1a]">{v ?? "—"}</dd>
         </div>
       ))}
     </dl>
@@ -170,7 +182,7 @@ function EditableGallery({ profile, onSavePhotos, reactToolbar }: { profile: Swi
         {photos[idx] ? (
           <img src={photos[idx]} alt={t("Photo de {name}", { name: profile.name })} className="aspect-[4/5] w-full object-cover" />
         ) : (
-          <p className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-[#ccc] px-6 text-center text-sm text-[#999]">{t("Aucune photo - Clique sur le bouton + en bas pour ajouter tes photos.")}</p>
+          <p className="flex aspect-[4/5] w-full items-center justify-center rounded-md border border-dashed border-[#ccc] px-6 text-center text-sm text-[#6b6b73]">{t("Aucune photo - Clique sur le bouton + en bas pour ajouter tes photos.")}</p>
         )}
         {idx === 0 && photos.length > 0 && (
           <span className="absolute right-2 top-2 rounded-full bg-[#e60050] px-2 py-0.5 text-[11px] font-medium text-white">
@@ -313,70 +325,77 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
           {actions}
         </div>
 
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-medium text-[#333]">
-            {profile.name}, {profile.age}
-            {profile.verified && (
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-[#e60050]">
-                <BadgeCheck className="h-6 w-6" aria-hidden="true" /> {t("Photos vérifiées")}
-              </span>
-            )}
-          </h1>
-          <p className="mt-1 flex items-center gap-1 text-[#777]">
-            <MapPin className="h-4 w-4" /> {profile.city}, {profile.country} · {dist} km ·{" "}
-            {profile.lastActive}
-          </p>
-          <p className="mt-1 text-sm text-[#999]">
-            {t("Membre depuis le {date}", {
-              date: new Date(profile.joinedAt).toLocaleDateString(dateLocale, {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              }),
-            })}
-            {profile.isNew && (
-              <span className="ml-2 rounded-full bg-[#e60050]/10 px-2 py-0.5 text-xs font-medium text-[#e60050]">
-                {t("Nouveau")}
-              </span>
-            )}
-          </p>
-          {badge}
-          <p className="mt-3 text-base text-[#333]">« {profile.tagline} »</p>
-          <p className="mt-1.5 text-[15px] leading-snug text-[#555]">{profile.bio}</p>
+        <div className="swivv-panel swivv-panel--plain self-start">
+          <div>
+            <h1 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[clamp(1.6rem,3.2vw,2.35rem)] font-extrabold leading-[1.12] tracking-[-0.02em] text-[#111]">
+              {nameAge(profile)}
+              {profile.verified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#111]">
+                  <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" /> {t("Photos vérifiées")}
+                </span>
+              )}
+              {profile.idVerified && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#111]">
+                  <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" /> {t("Identité vérifiée")}
+                </span>
+              )}
+            </h1>
+            <p className="mt-3 flex flex-wrap items-center gap-1 text-sm text-[#6b6b6b]">
+              <MapPin className="h-4 w-4" /> {profile.city}, {profile.country}
+              {profile.demo ? ` · ${t("Profil de démonstration")}` : ` · ${dist} km · ${profile.lastActive}`}
+            </p>
+            <p className="mt-1 text-xs text-[#8a8a8a]">
+              {profile.demo
+                ? t("Profil de démonstration")
+                : t("Membre depuis le {date}", {
+                    date: new Date(profile.joinedAt).toLocaleDateString(dateLocale, {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    }),
+                  })}
+              {profile.isNew && (
+                <span className="ml-2 rounded-full bg-[#e60050]/10 px-2 py-0.5 text-xs font-medium text-[#e60050]">
+                  {t("Nouveau")}
+                </span>
+              )}
+            </p>
+            {badge && <div className="mt-3">{badge}</div>}
+            <p className="mt-5 text-base font-semibold text-[#111]">« {profile.tagline} »</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-[#6b6b6b]">{profile.bio}</p>
 
-          <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
-            {(
-              [
-                ["Métier", profile.occupation],
-                ["Études", profile.education],
-                ["Taille", Number.isFinite(profile.heightCm) ? `${profile.heightCm} cm` : "-"],
-                ["Statut", profile.maritalStatus],
-                ["Religion", profile.religion],
-                ["Recherche", profile.lookingFor],
-                ["Langues", (profile.languages ?? []).join(", ")],
-                ["Ville", `${profile.city} (${dist} km)`],
-              ] as [string, ReactNode][]
-            ).map(([k, v]) => (
-              <div key={k} className="rounded-lg bg-white px-3 py-2">
-                <dt className="text-xs uppercase text-[#999]">{t(k)}</dt>
-                <dd className="font-medium text-[#333]">{v}</dd>
-              </div>
-            ))}
-          </dl>
+            <FactGrid
+              items={
+                [
+                  ["Métier", profile.occupation],
+                  ["Études", profile.education],
+                  ["Taille", Number.isFinite(profile.heightCm) ? `${profile.heightCm} cm` : "-"],
+                  ["Statut", profile.maritalStatus],
+                  ["Religion", profile.religion],
+                  ["Recherche", profile.lookingFor],
+                  ["Langues", (profile.languages ?? []).join(", ")],
+                  ["Ville", profile.demo ? profile.city : `${profile.city} (${dist} km)`],
+                ] as [string, ReactNode][]
+              }
+            />
 
-          <h2 className="mt-4 font-medium text-[#333]">{t("Centres d'intérêt")}</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {(profile.interests ?? []).map((i) => (
-              <span key={i} className="rounded-full bg-[#f2f2f2] px-3 py-1 text-sm text-[#555]">
-                {i}
-              </span>
-            ))}
+            {(profile.interests ?? []).length > 0 && (
+              <>
+                <p className="mt-5 text-[11px] uppercase tracking-wide text-[#8a8a8a]">{t("Centres d'intérêt")}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(profile.interests ?? []).map((i) => (
+                    <span key={i} className="rounded-full bg-[#333] px-3 py-1 text-sm text-white">
+                      {i}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      <section aria-label={t("Apparence")} className="mt-8">
-        <h2 className="font-medium text-[#333]">{t("Apparence")}</h2>
+      <ProfilePanel title={t("Apparence")}>
         <FactGrid
           items={[
             ["Cheveux", profile.hairColor],
@@ -389,10 +408,9 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
             ["Plus beaux atouts", <BestFeatureValue text={profile.bestFeature} firstLanguage={profile.firstLanguage} />],
           ]}
         />
-      </section>
+      </ProfilePanel>
 
-      <section aria-label={t("Style de vie")} className="mt-8">
-        <h2 className="font-medium text-[#333]">{t("Style de vie")}</h2>
+      <ProfilePanel title={t("Style de vie")}>
         <FactGrid
           items={[
             ["Alcool", profile.drink],
@@ -408,10 +426,9 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
             ["Veut (d'autres) animaux", profile.wantsMorePets],
           ]}
         />
-      </section>
+      </ProfilePanel>
 
-      <section aria-label={t("Famille")} className="mt-8">
-        <h2 className="font-medium text-[#333]">{t("Famille")}</h2>
+      <ProfilePanel title={t("Famille")}>
         <FactGrid
           items={[
             ["Statut matrimonial", profile.maritalStatus],
@@ -422,10 +439,9 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
             ["Parents", profile.parentsMaritalStatus],
           ]}
         />
-      </section>
+      </ProfilePanel>
 
-      <section aria-label={t("Origines et valeurs")} className="mt-8">
-        <h2 className="font-medium text-[#333]">{t("Origines & valeurs")}</h2>
+      <ProfilePanel title={t("Origines & valeurs")}>
         <FactGrid
           items={[
             ["Nationalité", profile.nationality],
@@ -438,7 +454,7 @@ export function SwivvProfileView({ profile, badge, actions, after, onSavePhotos,
             ["Valeurs familiales", profile.familyValues],
           ]}
         />
-      </section>
+      </ProfilePanel>
 
       {after}
     </>

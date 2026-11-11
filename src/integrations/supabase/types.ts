@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -1330,6 +1330,10 @@ export type Database = {
           body: string
           created_at: string
           duration_s: number | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
           msg_id: string
           peer_id: string
           peer_name: string
@@ -1342,6 +1346,10 @@ export type Database = {
           body: string
           created_at?: string
           duration_s?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           msg_id: string
           peer_id: string
           peer_name?: string
@@ -1354,12 +1362,79 @@ export type Database = {
           body?: string
           created_at?: string
           duration_s?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           msg_id?: string
           peer_id?: string
           peer_name?: string
           peer_photo?: string
           sender?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      swivv_message_requests: {
+        Row: {
+          conversation_key: string
+          created_at: string
+          files_allowed: boolean
+          files_changed_at: string | null
+          files_requested: boolean
+          id: string
+          initial_message: string
+          recipient_id: string
+          responded_at: string | null
+          sender_id: string
+          sender_name: string
+          sender_photo: string
+          status: string
+          text_allowed: boolean
+          text_changed_at: string | null
+          voice_allowed: boolean
+          voice_changed_at: string | null
+          voice_requested: boolean
+        }
+        Insert: {
+          conversation_key?: string
+          created_at?: string
+          files_allowed?: boolean
+          files_changed_at?: string | null
+          files_requested?: boolean
+          id?: string
+          initial_message: string
+          recipient_id: string
+          responded_at?: string | null
+          sender_id: string
+          sender_name?: string
+          sender_photo?: string
+          status?: string
+          text_allowed?: boolean
+          text_changed_at?: string | null
+          voice_allowed?: boolean
+          voice_changed_at?: string | null
+          voice_requested?: boolean
+        }
+        Update: {
+          conversation_key?: string
+          created_at?: string
+          files_allowed?: boolean
+          files_changed_at?: string | null
+          files_requested?: boolean
+          id?: string
+          initial_message?: string
+          recipient_id?: string
+          responded_at?: string | null
+          sender_id?: string
+          sender_name?: string
+          sender_photo?: string
+          status?: string
+          text_allowed?: boolean
+          text_changed_at?: string | null
+          voice_allowed?: boolean
+          voice_changed_at?: string | null
+          voice_requested?: boolean
         }
         Relationships: []
       }

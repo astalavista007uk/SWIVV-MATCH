@@ -21,7 +21,7 @@ export type AlertInput = {
   tickets: { id: string; subject: string; created_at: string; staffReplied: boolean }[];
   verifs: { id: string; kind: string; status: string; created_at: string }[];
   aiFailed: { rule_key: string; error?: string | null; created_at: string }[];
-  mailFailed: { to?: string; created_at: string }[];
+  mailFailed: { key?: string; template?: string; created_at: string }[];
   nowMs?: number;
 };
 
@@ -81,8 +81,8 @@ export function collectAlerts(d: AlertInput): AlertSpec[] {
     });
   for (const m of d.mailFailed)
     out.push({
-      dedupe: `mail:${m.to ?? "?"}:${m.created_at}`, source: "notify", category: "échec envoi", severity: "warning",
-      title: `E-mail en échec${m.to ? ` (${m.to})` : ""}`, detail: {}, refKind: null, refId: null,
+      dedupe: `mail:${m.key ?? m.template ?? "?"}:${m.created_at}`, source: "notify", category: "échec envoi", severity: "warning",
+      title: `E-mail en échec${m.template ? ` (${m.template})` : ""}`, detail: {}, refKind: null, refId: null,
     });
   return out;
 }
@@ -97,6 +97,8 @@ export function alertLink(a: { source?: string | null; kind?: string | null; ref
   if (src === "verification") return { to: "/admin/verification", label: "Vérification" };
   if (src === "ai") return { to: "/admin/ai", label: "Centre IA" };
   if (src === "notify") return { to: "/admin/health", label: "Santé" };
+  // ponytail: page crashes are the loudest signal we have — always critical, always linked to the log
+  if (src === "errors") return { to: "/admin/health", label: "Erreurs" };
   if (a.refKind === "user" && a.refId) return { to: `/admin/users/${a.refId}`, label: "Fiche membre" };
   return null;
 }

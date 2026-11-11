@@ -204,7 +204,7 @@ function AdminSupport() {
     <div className="lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-4">
       <div>
         <h1 className="text-2xl font-medium text-[#333]">Support ({shown.length})</h1>
-        <p className="mt-1 text-xs text-[#999]">Échéance : 1re réponse staff sous 48 h (politique SLA).</p>
+        <p className="mt-1 text-xs text-[#6b6b73]">Échéance : 1re réponse staff sous 48 h (politique SLA).</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <select value={filter} onChange={(e) => setFilter(e.target.value)} aria-label="Filtre statut" className={sel}>
             {["all", ...STATUSES].map((s) => <option key={s} value={s}>{s === "all" ? "Tous" : s}</option>)}
@@ -240,29 +240,29 @@ function AdminSupport() {
                 className={`block w-full rounded-xl bg-white p-3 text-left shadow-sm ${active?.id === t.id ? "ring-2 ring-[#e60050]" : ""}`}
               >
                 <span className="block truncate text-sm font-medium text-[#333]">{t.subject}</span>
-                <span className="mt-0.5 block text-xs text-[#999]">
+                <span className="mt-0.5 block text-xs text-[#6b6b73]">
                   {nm(t.user_id)} · {t.category} · {t.status} · {t.priority} · {frDate(t.created_at)}
                   {f.overdue ? <span className="font-medium text-red-700"> · EN RETARD (échéance {deadlineLabel(t.created_at)})</span> : f.awaiting && OPEN.includes(t.status) ? " · en attente" : ""}
                 </span>
               </button>
             );
           })}
-          {shown.length === 0 && <p className="text-sm text-[#777]">Aucun ticket avec ces filtres.</p>}
+          {shown.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun ticket avec ces filtres.</p>}
         </div>
       </div>
       <div className="mt-6 lg:mt-0">
         {!active ? (
-          <p className="text-sm text-[#777]">Sélectionne un ticket.</p>
+          <p className="text-sm text-[#5c5c66]">Sélectionne un ticket.</p>
         ) : (
           <div className="rounded-xl bg-white p-4 shadow-sm">
             <p className="font-mono text-[11px] text-[#bbb]">ID {active.id}</p>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="font-medium text-[#333]">{active.subject}</h2>
-              <span className="text-xs text-[#999]">{active.category} · {nm(active.user_id)} · créé le {frDate(active.created_at)} · MAJ {frDate(active.updated_at)} · échéance {deadlineLabel(active.created_at)}</span>
+              <span className="text-xs text-[#6b6b73]">{active.category} · {nm(active.user_id)} · créé le {frDate(active.created_at)} · MAJ {frDate(active.updated_at)} · échéance {deadlineLabel(active.created_at)}</span>
               {active.user_id && <Link to="/admin/users/$userId" params={{ userId: active.user_id }} className="text-xs text-[#e60050] underline">Fiche membre</Link>}
             </div>
             {(related.tickets.length > 0 || related.reports > 0 || related.cases > 0) && (
-              <p className="mt-1 text-xs text-[#777]">
+              <p className="mt-1 text-xs text-[#5c5c66]">
                 Contexte : {related.tickets.length} autre(s) ticket(s){related.reports > 0 ? ` · ${related.reports} signalement(s) reçu(s)` : ""}{related.cases > 0 ? ` · ${related.cases} cas modération` : ""}
                 {related.tickets.slice(0, 3).map((x: any) => ` · « ${x.subject} » (${x.status})`).join("")}
               </p>
@@ -304,11 +304,11 @@ function AdminSupport() {
                       ))}
                     </span>
                   )}
-                  <span className={`block text-[11px] ${m.is_staff ? "text-white/70" : "text-[#999]"}`}>{frDate(m.created_at)}</span>
+                  <span className={`block text-[11px] ${m.is_staff ? "text-white/70" : "text-[#6b6b73]"}`}>{frDate(m.created_at)}</span>
                 </div>
                 );
               })}
-              {thread.length === 0 && <p className="text-sm text-[#999]">Aucun message.</p>}
+              {thread.length === 0 && <p className="text-sm text-[#6b6b73]">Aucun message.</p>}
             </div>
             <form onSubmit={send} className="mt-3 flex gap-2">
               <input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Répondre… (rédigé par un humain, jamais par l'IA)" maxLength={2000} aria-label="Réponse" className="flex-1 rounded-md border border-border px-3 py-2 text-sm" />
@@ -316,7 +316,7 @@ function AdminSupport() {
             </form>
             <div className="mt-3 border-t border-border pt-3">
               <p className="text-xs font-medium text-[#555]">Notes internes ({notes.length}) · IA indisponible (pas de résumé ni brouillon auto)</p>
-              {notes.map((n: any, i: number) => <p key={i} className="mt-1 text-xs text-[#777]">{n.body} · {frDate(n.created_at)}</p>)}
+              {notes.map((n: any, i: number) => <p key={i} className="mt-1 text-xs text-[#5c5c66]">{n.body} · {frDate(n.created_at)}</p>)}
               <div className="mt-1 flex gap-2">
                 <input value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Note interne…" maxLength={1000} aria-label="Note interne" className="flex-1 rounded border border-border px-2 py-1 text-xs" />
                 <button

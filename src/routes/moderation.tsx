@@ -31,12 +31,12 @@ function ModerationPage() {
       <SwivvCategoryNav />
       <main className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="text-2xl font-medium text-[#333]">Modération</h1>
-        <p className="mt-1 text-sm text-[#777]">
+        <p className="mt-1 text-sm text-[#5c5c66]">
           Signalements de cet appareil. Les messages du formulaire de contact arrivent directement à{" "}
           <a className="font-medium text-[#e60050] hover:underline" href={`mailto:${MODERATION_EMAIL}`}>{MODERATION_EMAIL}</a>.
         </p>
         <div className="mt-4 space-y-2">
-          {reports.length === 0 && <p className="text-sm text-[#777]">Aucun signalement pour l&apos;instant.</p>}
+          {reports.length === 0 && <p className="text-sm text-[#5c5c66]">Aucun signalement pour l&apos;instant.</p>}
           {reports.map((r) => {
             const p = getProfile(r.target);
             const subject = encodeURIComponent(`[SWIVV] Signalement ${p?.name ?? r.target}`);
@@ -45,7 +45,7 @@ function ModerationPage() {
               <div key={r.target} className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-white p-3">
                 <span className="min-w-0 flex-1 text-sm text-[#333]">
                   <span className="font-medium">{p ? `${p.name} (${p.city})` : r.target}</span>
-                  <span className="block text-xs text-[#999]">{r.by || "anonyme"} · {new Date(r.at).toLocaleString("fr-FR")}</span>
+                  <span className="block text-xs text-[#6b6b73]">{r.by || "anonyme"} · {new Date(r.at).toLocaleString("fr-FR")}</span>
                   {!!r.detail && <span className="block text-xs text-[#333]">{r.detail}</span>}
                 </span>
                 <a

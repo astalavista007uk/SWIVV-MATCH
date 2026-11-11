@@ -194,7 +194,7 @@ function SettingsPage() {
 
         {loading ? null : !user ? (
           <div className="mt-6 rounded-2xl bg-white p-6 text-center shadow-sm">
-            <p className="text-sm text-[#777]">{t("Connecte-toi pour gérer tes paramètres.")}</p>
+            <p className="text-sm text-[#5c5c66]">{t("Connecte-toi pour gérer tes paramètres.")}</p>
             <button
               type="button"
               onClick={() => openAuthModal("account", "signin")}
@@ -210,7 +210,7 @@ function SettingsPage() {
               <div className="mt-2 space-y-3 rounded-2xl bg-white p-4 shadow-sm">
                 <div id="email">
                   <span className="mb-1 block text-sm font-medium text-[#333]">{t("Ton adresse e-mail")}</span>
-                  <p className="text-sm text-[#777]">{user.email}</p>
+                  <p className="text-sm text-[#5c5c66]">{user.email}</p>
                   {editingEmail ? (
                     <div className="mt-2 space-y-2">
                       <input
@@ -221,7 +221,7 @@ function SettingsPage() {
                         placeholder="nouvelle@adresse.fr"
                         autoComplete="off"
                         autoFocus
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <div className="flex gap-2">
                         <button
@@ -312,7 +312,7 @@ function SettingsPage() {
                         autoComplete="current-password"
                         autoFocus
                         disabled={!pwUnlocked}
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <input
                         id={`npw-${fieldUid}`}
@@ -323,7 +323,7 @@ function SettingsPage() {
                         placeholder={t("Nouveau mot de passe (8 caractères min)")}
                         autoComplete="off"
                         disabled={!pwUnlocked}
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <input
                         type="text" inputMode="text" style={maskStyle}
@@ -333,7 +333,7 @@ function SettingsPage() {
                         placeholder={t("Confirme le nouveau mot de passe")}
                         autoComplete="off"
                         disabled={!pwUnlocked}
-                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                        className="w-full rounded-md border border-border px-3 py-2.5 text-[15px] placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
                       />
                       <div className="flex gap-2">
                         <button
@@ -422,7 +422,7 @@ function SettingsPage() {
                   <option value="it">Italiano</option>
                   <option value="pt">Português</option>
                 </select>
-                <p className="mt-2 text-sm text-[#777]">
+                <p className="mt-2 text-sm text-[#5c5c66]">
                   {t("Les messages de la messagerie et certains textes de profil peuvent être traduits vers cette langue.")}
                 </p>
               </div>
@@ -434,7 +434,7 @@ function SettingsPage() {
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm text-[#333]">
                     <span className="block font-medium">{t("Masquer mon profil")}</span>
-                    <span className="text-[#777]">{t("Invisible des autres utilisateurs jusqu'à réactivation.")}</span>
+                    <span className="text-[#5c5c66]">{t("Invisible des autres utilisateurs jusqu'à réactivation.")}</span>
                   </span>
                   {/* ponytail: hand-rolled switch, no toggle lib — headless UI if switches ever need animations */}
                   <button
@@ -510,7 +510,7 @@ function SettingsPage() {
           >
             <SwivvLogo />
             <h2 className="mt-2 text-xl font-medium text-[#333]">{t("Swivv Out ?")}</h2>
-            <p className="mt-1 text-sm text-[#777]">
+            <p className="mt-1 text-sm text-[#5c5c66]">
               {t("Tu es sûr de vouloir partir ? Ton profil, tes likes, tes matchs et tes messages seront effacés. Irréversible.")}
             </p>
             <p className="mt-4 text-sm font-medium text-[#333]">{t("Pourquoi nous quittes-tu ?")}</p>
@@ -536,7 +536,7 @@ function SettingsPage() {
                 placeholder={t("Dis-nous en plus…")}
                 rows={3}
                 maxLength={500}
-                className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+                className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-[#e60050]"
               />
             )}
             <div className="mt-4 flex gap-2">

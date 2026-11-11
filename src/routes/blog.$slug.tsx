@@ -113,7 +113,7 @@ function BlogPostPage() {
       <SwivvCategoryNav />
       <div className="mx-auto max-w-3xl px-4 py-8">
         {/* Breadcrumb */}
-        <div className="mb-4 flex items-center gap-1 text-sm text-[#777]">
+        <div className="mb-4 flex items-center gap-1 text-sm text-[#5c5c66]">
           <Link to="/blog" className="hover:text-[#e60050]">Blog</Link>
           <ChevronRight className="h-3.5 w-3.5" />
           <span className="text-[#333]">{t(post.category)}</span>
@@ -122,7 +122,7 @@ function BlogPostPage() {
         {/* Header */}
         <span className="mb-2 inline-block w-fit rounded-full bg-[#e60050]/10 px-2.5 py-0.5 text-xs font-semibold text-[#e60050]">{t(post.category)}</span>
         <h1 className="text-3xl font-medium leading-tight">{t(post.title)}</h1>
-        <div className="mt-3 flex items-center gap-4 text-sm text-[#777]">
+        <div className="mt-3 flex items-center gap-4 text-sm text-[#5c5c66]">
           <span className="flex items-center gap-1.5">
             <div className="grid h-6 w-6 place-items-center rounded-full bg-[#e60050]/10">
               <Heart className="h-3.5 w-3.5 text-[#e60050]" />
@@ -161,7 +161,7 @@ function BlogPostPage() {
                       <span className="rounded-full bg-[#e60050] px-2.5 py-0.5 text-xs font-medium text-white">
                         {t("Témoignage {n}", { n: i + 1 })}
                       </span>
-                      <span className="text-xs text-[#999]">{tm.place}</span>
+                      <span className="text-xs text-[#6b6b73]">{tm.place}</span>
                     </div>
                     <blockquote className="mt-3 leading-relaxed text-[#333]">« {tm.quote} »</blockquote>
                     <figcaption className="mt-3 flex items-center gap-1.5 text-sm font-medium text-[#e60050]">

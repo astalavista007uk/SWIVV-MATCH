@@ -1,6 +1,8 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 
 import { renderErrorPage } from "./lib/error-page";
+import { langFromHeaders, type Lang } from "./lib/swivv-lang";
 import { PRIVATE_PATH } from "./lib/seo";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
@@ -17,7 +19,11 @@ const errorMiddleware = createMiddleware().server(async ({ next, pathname }) => 
       throw error;
     }
     console.error(error);
-    return new Response(renderErrorPage(), {
+    let lang: Lang = "fr";
+    try {
+      lang = langFromHeaders(getRequest().headers);
+    } catch {}
+    return new Response(renderErrorPage(lang), {
       status: 500,
       headers: { "content-type": "text/html; charset=utf-8" },
     });

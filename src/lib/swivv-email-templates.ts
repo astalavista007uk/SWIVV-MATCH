@@ -3,13 +3,13 @@
  *
  * Single template system: one shared branded wrapper + one builder
  * per email returning { subject, html }.
- * Send via sendEmail() from "@/lib/email" (Resend) from a server function.
+ * Send via sendEmail() from "@/lib/email" (IONOS SMTP) from a server function.
  */
 
 // ponytail: placeholder domain until the prod URL is confirmed — swap in one place
 const SITE = "https://swivvmatch.com";
-// ponytail: single moderation inbox (reports, verifications, complaints) — Resend/server fan-out when SMTP keys exist, mailto until then
-export const MODERATION_EMAIL = "akram.benchikh@yahoo.com";
+// ponytail: single moderation inbox (reports, verifications, complaints) — server fan-out when SMTP keys exist, mailto until then
+export const MODERATION_EMAIL = "contact@swivvmatch.com";
 // ponytail: relative logo in dev so /emails preview loads it same-origin — absolute prod URL in sent mail; real CDN if clients ever block it
 // ponytail: EMAIL_LOGO_URL wins when set (public https logo for real inboxes — relative paths never resolve in email clients); Supabase public bucket if no CDN exists yet
 const ENV_LOGO = typeof process !== "undefined" ? process.env.EMAIL_LOGO_URL : "";
@@ -54,8 +54,8 @@ ${preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;"
 
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:592px;max-width:592px;background:${CARD_BG};border:1px solid ${PRIMARY};border-radius:24px;border-collapse:separate;border-spacing:0;">
 
-<tr><td style="background:#ffffff;padding:22px 32px;border-radius:23px 23px 0 0;">
-<img src="${LOGO_URL}" alt="SWIVV MATCH" width="120" style="display:block;width:120px;max-width:100%;height:auto;border:0;font-size:20px;font-weight:900;color:${PRIMARY};letter-spacing:-0.5px;" />
+<tr><td style="background:#ffffff;padding:12px 32px;border-radius:23px 23px 0 0;">
+<img src="${LOGO_URL}" alt="SWIVV MATCH" width="96" style="display:block;width:96px;max-width:100%;height:auto;border:0;font-size:20px;font-weight:900;color:${PRIMARY};letter-spacing:-0.5px;" />
 </td></tr>
 
 <tr><td style="background:${CARD_BG};padding:24px 36px 32px;">
@@ -235,6 +235,26 @@ export function swivvNewMatch({ name, matchName }: { name: string; matchName: st
   };
 }
 
+/** 5b — Demande de connexion reçue (le premier message est lisible dans l'app). */
+export function swivvNewRequest({ name, senderName, senderPhoto }: { name: string; senderName: string; senderPhoto?: string }): SwivvEmail {
+  return {
+    subject: `${senderName} souhaite te contacter`,
+    html: buildSwivvEmailHtml({
+      title: "Nouvelle demande",
+      preheader: `${senderName} t'a envoyé une demande de connexion.`,
+      bodyHtml:
+        hi(name, "tu as une nouvelle demande de connexion.") +
+        `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>
+${senderPhoto ? `<td style="padding-right:12px;vertical-align:middle;"><img src="${escapeHtml(senderPhoto)}" alt="${escapeHtml(senderName)}" width="48" height="48" style="display:block;width:48px;height:48px;border-radius:50%;object-fit:cover;border:0;" /></td>` : ""}
+<td style="vertical-align:middle;font-size:15px;color:${TEXT_DARK};line-height:1.6;"><strong>${escapeHtml(senderName)}</strong> souhaite discuter avec toi :</td>
+</tr></table>` +
+        p("Ouvre Messages pour lire son premier message, puis accepte ou refuse la demande. Les vocaux et les pièces jointes restent désactivés jusqu'à ce que tu les autorises.") +
+        btn("Voir la demande", `${SITE}/messagerie`, ACCENT_RED) +
+        small("Tu peux désactiver ces e-mails dans tes préférences de notification."),
+    }),
+  };
+}
+
 /** 6 — Message reçu. */
 export function swivvNewMessage({ name, senderName, senderPhoto, preview }: { name: string; senderName: string; senderPhoto?: string; preview: string }): SwivvEmail {
   const clean = preview.length > 140 ? `${preview.slice(0, 140)}…` : preview;
@@ -266,7 +286,7 @@ export function swivvActivityDigest({ name, likes, messages }: { name: string; l
       bodyHtml:
         hi(name, "on parle de toi !") +
         chartBars([{ label: "Likes", value: likes }, { label: "Messages", value: messages }]) +
-        p(`Tu as aussi <strong>${messages} message${messages > 1 ? "s" : ""} non lu${messages > 1 ? "s" : ""}</strong>. Fais un tour avant que tes matches ne refroidissent.`) +
+        p(`Tu as aussi reçu <strong>${messages} message${messages > 1 ? "s" : ""}</strong>. Fais un tour avant que tes matches ne refroidissent.`) +
         btn("Voir mon activité", `${SITE}/browse`, ACCENT_RED),
     }),
   };
@@ -721,22 +741,22 @@ export function swivvCookiesUpdated({ name }: { name: string }): SwivvEmail {
 
 /** 33 — App mobile disponible. */
 export function swivvAppAvailable({ name }: { name: string }): SwivvEmail {
-  // ponytail: QR hotlink via api.qrserver.com (zero dep, zero binary asset) — self-host a generated PNG if uptime/branding ever matters
+  // ponytail: QR is baked once into public/qr-app.png (quickchart, rounded modules, ecLevel H, S mark centred) — regenerate if the destination URL or mark changes
   // ponytail: store cards link SITE until native apps ship — swap hrefs for real App Store / Google Play URLs
   // ponytail: official multicolor Play arrow PNG (inline SVG never loads in Gmail/Outlook) — grey monochrome exists nowhere trustworthy; re-tint if palette ever beats real artwork
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&margin=4&color=ffffff&bgcolor=13233a&data=${encodeURIComponent("https://www.swivvmatch.com")}`;
+  const qr = `${SITE}/qr-app.png`;
   const apple = "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Apple_logo_grey.svg/250px-Apple_logo_grey.svg.png";
   const play = "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d0/Google_Play_Arrow_logo.svg/250px-Google_Play_Arrow_logo.svg.png";
   const card = (icon: string, alt: string, l1: string, l2: string) =>
-    `<td valign="top" width="33%" style="padding:0 5px;"><a href="${SITE}" style="text-decoration:none;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:${PANEL_BG};border:1px solid ${PANEL_BORDER};border-radius:22px;"><tr><td style="padding:26px 20px 24px;text-align:left;">` +
+    `<td valign="top" width="33%" style="padding:0 5px;"><a href="${SITE}" style="text-decoration:none;"><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;background:#000000;border-radius:22px;"><tr><td style="padding:26px 20px 24px;text-align:left;">` +
     `<div style="height:108px;">${icon}</div>` +
-    `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:400;color:${TEXT_BODY};line-height:1.4;">${l1}<br/>${l2}</div>` +
+    `<div style="font-family:${FONT};font-size:16px;font-weight:400;color:#d6d6d6;line-height:1.4;">${l1}<br/>${l2}</div>` +
     `</td></tr></table></a></td>`;
   const appIcons =
-    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:24px -5px 8px;"><tr>` +
+    `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 -5px;"><tr>` +
     card(`<img src="${apple}" alt="App Store" width="30" style="display:block;width:30px;height:auto;border:0;" />`, "App Store", "Open", "App Store") +
     card(`<img src="${play}" alt="Google Play" width="40" style="display:block;width:40px;height:auto;border:0;" />`, "Google Play", "Open", "Google Play") +
-    card(`<img src="${qr}" alt="QR code vers www.swivvmatch.com" width="84" style="display:block;width:84px;height:84px;border:0;" />`, "QR", "Scan", "to download") +
+    card(`<img src="${qr}" alt="QR code vers swivvmatch.com" width="84" height="84" style="display:block;width:84px;height:84px;border:0;" />`, "QR", "Scan", "to download") +
     `</tr></table>`;
   return {
     subject: "📱 SWIVV is now available on your phone!",
@@ -745,11 +765,14 @@ export function swivvAppAvailable({ name }: { name: string }): SwivvEmail {
       preheader: "Tes matches partout avec toi.",
       bodyHtml:
         hi(name, "bonne nouvelle !") +
-        `<div style="font-size:30px;font-weight:900;color:#ffffff;line-height:1.15;margin:4px 0 10px;">Change ta vie<br/>avec SWIVV MATCH</div>` +
-        p("L'application SWIVV MATCH arrive sur ton téléphone : tes matches, messages et notifications partout avec toi.") +
+        `<div style="font-size:30px;font-weight:900;color:#ffffff;line-height:1.15;margin:4px 0 24px;">Change ta vie<br/>avec SWIVV MATCH</div>` +
+        // ponytail: white block bleeds past the wrapper's 36px/32px cell padding with negative margins — Outlook ignores them and shows an inset white panel instead of a full bleed
+        `<div style="background:#ffffff;margin:0 -36px -32px;padding:28px 36px 30px;border-radius:0 0 23px 23px;">` +
+        `<div style="font-size:15px;color:#111111;line-height:1.7;margin-bottom:22px;">L'application SWIVV MATCH arrive sur ton téléphone : tes matches, messages et notifications partout avec toi.</div>` +
         appIcons +
         // ponytail: trust icons are grey PNGs via wsrv mod=0.6 (phones ignore U+FE0E, SVG shows dots) - self-host if wsrv ever fails
-        `<div style="text-align:center;font-size:12px;color:#9a9aa0;margin:14px 0 4px;">★ Profils vérifiés &nbsp;·&nbsp; <img src="https://wsrv.nl/?url=thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/OOjs_UI_icon_bell-invert.svg/60px-OOjs_UI_icon_bell-invert.svg.png&w=48&mod=0.6&output=png" alt="" width="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px;" /> Alertes match en direct &nbsp;·&nbsp; <img src="https://wsrv.nl/?url=thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/OOjs_UI_icon_userAvatar-invert.svg/60px-OOjs_UI_icon_userAvatar-invert.svg.png&w=48&mod=0.6&output=png" alt="" width="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px;" /> Modération humaine</div>`,
+        `<div style="text-align:center;font-size:12px;color:#9a9aa0;margin:18px 0 0;">★ Profils vérifiés &nbsp;·&nbsp; <img src="https://wsrv.nl/?url=thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/OOjs_UI_icon_bell-invert.svg/60px-OOjs_UI_icon_bell-invert.svg.png&w=48&mod=0.6&output=png" alt="" width="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px;" /> Alertes match en direct &nbsp;·&nbsp; <img src="https://wsrv.nl/?url=thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/OOjs_UI_icon_userAvatar-invert.svg/60px-OOjs_UI_icon_userAvatar-invert.svg.png&w=48&mod=0.6&output=png" alt="" width="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px;" /> Modération humaine</div>` +
+        `</div>`,
     }),
   };
 }
@@ -938,4 +961,4 @@ export function swivvPromo({ name, headline, detail, cta, url }: { name: string;
   };
 }
 
-// ponytail: templates only, no sending here — call sendEmail() from a server function with RESEND_API_KEY set, and gate each send on the user's notification prefs
+// ponytail: templates only, no sending here — call sendEmail() from a server function with the IONOS SMTP vars set, and gate each send on the user's notification prefs

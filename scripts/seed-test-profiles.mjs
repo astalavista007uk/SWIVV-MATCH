@@ -137,7 +137,8 @@ for (const p of PERSONAS) {
     ...p,
     ...(p.extra ?? {}),
     id: `u:${user.id}`,
-    photos: p.photos,
+    // ponytail: one photo per persona — the persona arrays mixed different people; add curated same-person sets before raising this cap
+    photos: p.photos.slice(0, 1),
     photo: p.photos[0],
     joinedAt: now,
     lastActive: now,

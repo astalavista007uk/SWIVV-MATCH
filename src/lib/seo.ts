@@ -3,7 +3,7 @@ export const OG_IMAGE = `${SITE_URL}/swivv-match-logo.jpg`;
 
 // ponytail: path list duplicated in public/robots.txt — update both if a private route is added
 export const PRIVATE_PATH =
-  /^\/(admin|browse|member|messagerie|matches|mon-profil|notifications|parametres|progress|recherche-avancee|statistiques|swipe|verification|facturation|emails|moderation|temoignage|api)(\/|$)/;
+  /^\/(admin|browse|member|messagerie|matches|mon-profil|notifications|parametres|progress|recherche-avancee|statistiques|swipe|verification|facturation|emails|moderation|temoignage|simulation-erreur|api)(\/|$)/;
 
 export function pageHead(title: string, description: string, path: string, type = "website") {
   const url = `${SITE_URL}${path}`;

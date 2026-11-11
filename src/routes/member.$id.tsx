@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Ban, Flag, Heart, MessageCircle, Mic, Square, X } from "lucide-react";
-import { SWIVV_PROFILES, getProfile, type SwivvProfile } from "@/lib/swivv-data";
+import { SWIVV_PROFILES, getProfile, nameAge, type SwivvProfile } from "@/lib/swivv-data";
 import { displayPct, load, MatchLoginPrompt, MatchTooltip, topMatches } from "@/lib/match-score";
 import { useAuth } from "@/hooks/use-auth";
 import { fmtFull, getLikes, isBlockedById, isBlockedId, isMatch, isReported, logModReport, mediaUrl, rememberPeer, reportMember, sendFeedback, toggleBlock, toggleLike, bumpProfileView, getChat, sendChat, sendVoice, pullMatchCriteria, subscribe, useSignedMediaMap } from "@/lib/swivv-store";
+import { acceptedRequest, answerText, canMedia, canRequest, canText, cancelRequest, cooldownDaysLeft, latestRequest, listRequests, sendRequest, type MessageRequest } from "@/lib/swivv-requests";
 import { PROFILE_REPORT_REASONS, REPORT_REASONS, findOffensive } from "@/lib/swivv-moderation";
 import { toast } from "sonner";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
@@ -112,7 +113,7 @@ function MemberPage() {
     if (isMemberUuid(id) && !remoteDone) {
       return (
         <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-          <p className="text-[#777]">Chargement…</p>
+          <p className="text-[#5c5c66]">Chargement…</p>
         </div>
       );
     }
@@ -252,7 +253,7 @@ function MemberPage() {
               )}
               {matched && (
                 <p className="mt-2 rounded-md bg-green-50 p-2 text-center text-sm font-medium text-green-700">
-                  C&apos;est un match ! Va dans Messages pour discuter.
+                  C&apos;est un match ! Envoie une demande de connexion pour discuter.
                 </p>
               )}
               {blocked ? (
@@ -273,7 +274,7 @@ function MemberPage() {
               ) : (
                 <div ref={reportRef} className="mt-2 flex gap-2">
                   {reported ? (
-                    <span className="flex flex-1 items-center justify-center rounded-md bg-[#f2f2f2] px-3 py-2 text-sm font-medium text-[#777]">
+                    <span className="flex flex-1 items-center justify-center rounded-md bg-[#f2f2f2] px-3 py-2 text-sm font-medium text-[#5c5c66]">
                       <Flag className="mr-1.5 h-4 w-4" /> Signalé
                     </span>
                   ) : (
@@ -294,7 +295,7 @@ function MemberPage() {
                                 onChange={() => setReportChoice(r)}
                                 className="accent-red-600"
                               />
-                              {r}
+                              {t(r)}
                             </label>
                           ))}
                         </div>
@@ -306,7 +307,7 @@ function MemberPage() {
                             maxLength={300}
                             aria-label="Précise le motif"
                             autoFocus
-                            className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-red-600"
+                            className="mt-2 w-full rounded-md border border-border px-3 py-2 text-sm placeholder:text-[#6b6b73] focus:outline-none focus:ring-2 focus:ring-red-600"
                           />
                         )}
                         <button
@@ -353,9 +354,9 @@ function MemberPage() {
                       <img src={p.photo} alt={p.name} loading="lazy" className="aspect-square w-full object-cover" />
                       <div className="p-2">
                         <p className="text-sm font-medium text-[#333]">
-                          {p.name}, {p.age}
+                          {nameAge(p)}
                         </p>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-[#777]">
+                        <p className="mt-0.5 line-clamp-2 text-xs text-[#5c5c66]">
                           {sameCity ? `${p.city} · ` : ""}
                           {shared.length > 0 ? `${shared.slice(0, 2).join(", ")}` : p.lookingFor}
                           {p.religion === profile.religion ? " · même religion" : ""}
@@ -370,13 +371,14 @@ function MemberPage() {
         />
       </main>
       <SwivvFooter />
-      {msgOpen && <MessageDialog profile={profile} onClose={() => { setMsgOpen(false); force((x) => x + 1); }} />}
+      {msgOpen && <MessageDialog profile={profile} me={user?.id ?? ""} onClose={() => { setMsgOpen(false); force((x) => x + 1); }} />}
     </div>
   );
 }
 
 // ponytail: same fixed-overlay pattern as AuthModal, history included so first contact works — shared <ChatBox> with /messagerie if a third composer appears
-function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: () => void }) {
+function MessageDialog({ profile, me, onClose }: { profile: SwivvProfile; me: string; onClose: () => void }) {
+  const t = useT();
   const [draft, setDraft] = useState("");
   const [, force] = useState(0);
   const chat = getChat(profile.id);
@@ -388,6 +390,26 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
   const [voiceErr, setVoiceErr] = useState<string | null>(null);
   const [voiceReport, setVoiceReport] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
+  const [requests, setRequests] = useState<MessageRequest[]>([]);
+  const [reqText, setReqText] = useState("");
+  const [reqErr, setReqErr] = useState<string | null>(null);
+  const [reqBusy, setReqBusy] = useState(false);
+
+  const reloadRequests = () => {
+    if (!me) return;
+    void listRequests().then(setRequests).catch(() => {});
+  };
+  useEffect(reloadRequests, [me]);
+
+  const request = latestRequest(requests, profile.id, me);
+  const acceptedThread = acceptedRequest(requests, profile.id, me);
+  const blockedHere = isBlockedId(profile.id) || isBlockedById(profile.id);
+  // Seed/demo profiles have no auth account — they keep the local-only chat.
+  const realPeer = isMemberUuid(profile.id);
+  const accepted = !realPeer || canText(request, blockedHere);
+  const voiceOk = canMedia(request, "voice");
+  const filesOk = canMedia(request, "files");
+  const canAsk = canRequest(request, { blocked: blockedHere });
 
   function send(e: React.FormEvent) {
     e.preventDefault();
@@ -405,6 +427,116 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
     window.setTimeout(() => force((x) => x + 1), 1500);
   }
 
+  async function submitRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setReqErr(null);
+    setReqBusy(true);
+    const err = await sendRequest(profile.id, reqText);
+    setReqBusy(false);
+    if (err) { setReqErr(err); return; }
+    setReqText("");
+    reloadRequests();
+  }
+
+  if (!accepted) {
+    const pending = request?.status === "pending";
+    const iAsked = pending && request?.sender_id === me;
+    const days = cooldownDaysLeft(request);
+    return (
+      <div role="dialog" aria-modal="true" aria-label={t("Contacter {name}", { name: profile.name })} className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={onClose}>
+        <div className="flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-3 border-b border-border pb-3">
+            <img src={profile.photo} alt={profile.name} className="h-10 w-10 rounded-full object-cover" />
+            <div>
+              <p className="font-medium">{profile.name}</p>
+              <p className="text-xs text-[#6b6b73]">{t("Demande de connexion")}</p>
+            </div>
+            <button type="button" onClick={onClose} aria-label={t("Fermer")} className="ml-auto rounded-full px-2 py-1 text-xl leading-none text-[#5c5c66] hover:text-[#333]">
+              ×
+            </button>
+          </div>
+
+          {blockedHere ? (
+            <p className="py-6 text-center text-sm text-[#5c5c66]">{t("Impossible de contacter ce membre pour le moment.")}</p>
+          ) : pending ? (
+            <div className="space-y-3 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#6b6b73]">
+                {iAsked ? t("Demande envoyée") : t("Nouvelle demande de connexion")}
+              </p>
+              <p className="rounded-lg bg-[#f2f2f2] p-3 text-sm text-[#333]">{request?.initial_message}</p>
+              {iAsked ? (
+                <>
+                  <p className="text-sm text-[#5c5c66]">{t("En attente de sa réponse. Tu peux annuler tant qu'elle n'a pas répondu.")}</p>
+                  <button
+                    type="button"
+                    onClick={async () => { const err = await cancelRequest(request!.id); if (err) { setReqErr(err); return; } reloadRequests(); }}
+                    className="w-full rounded-md border border-border px-4 py-2.5 text-sm font-medium text-[#555]"
+                  >
+                    {t("Annuler la demande")}
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/messagerie"
+                  onClick={() => { try { sessionStorage.setItem("swivv-active-chat", profile.id); } catch {} onClose(); }}
+                  className="block w-full rounded-md bg-[#e60050] px-4 py-3 text-center font-medium text-white"
+                >
+                  {t("Accepter ou refuser dans Messages")}
+                </Link>
+              )}
+            </div>
+          ) : request?.status === "accepted" ? (
+            <div className="space-y-3 py-4">
+              {acceptedThread && <p className="rounded-lg bg-[#f2f2f2] p-3 text-sm text-[#333]">{acceptedThread.initial_message}</p>}
+              <p className="text-sm text-[#5c5c66]">
+                {request.recipient_id === me
+                  ? t("Les messages texte ne sont pas encore autorisés. Autorise-les pour discuter.")
+                  : t("Les messages texte ne sont pas encore autorisés par {name}.", { name: profile.name })}
+              </p>
+              {request.recipient_id === me && (
+                <button
+                  type="button"
+                  onClick={async () => { const err = await answerText(request.id, true); if (err) { setReqErr(err); return; } reloadRequests(); }}
+                  className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
+                >
+                  {t("Autoriser les messages texte")}
+                </button>
+              )}
+              {reqErr && <p className="text-xs text-red-600">{reqErr}</p>}
+            </div>
+          ) : days > 0 ? (
+            <p className="py-6 text-center text-sm text-[#5c5c66]">
+              {t("Cette personne a refusé la demande. Tu pourras réessayer dans {n} jour(s).", { n: days })}
+            </p>
+          ) : (
+            <form onSubmit={submitRequest} className="space-y-3 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#6b6b73]">{t("Premier message")}</p>
+              <textarea
+                value={reqText}
+                onChange={(e) => setReqText(e.target.value)}
+                maxLength={500}
+                rows={4}
+                autoFocus
+                placeholder={t("Présente-toi en quelques lignes…")}
+                aria-label={t("Ton premier message")}
+                className="w-full resize-none rounded-lg border border-border bg-[#f7f7f7] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e60050]"
+              />
+              <div className="flex items-center justify-between text-xs text-[#6b6b73]">
+                <span>{t("Un seul message, lisible avant acceptation.")}</span>
+                <span>{reqText.length}/500</span>
+              </div>
+              {reqErr && <p className="text-xs text-red-600">{reqErr}</p>}
+              <button type="submit" disabled={!reqText.trim() || reqBusy} className="w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-40">
+                {reqBusy ? t("Envoi…") : t("Envoyer la demande")}
+              </button>
+            </form>
+          )}
+          {reqErr && !canAsk && <p className="text-xs text-red-600">{reqErr}</p>}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div role="dialog" aria-modal="true" aria-label={`Message à ${profile.name}`} className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center" onClick={onClose}>
       <div className="flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -412,14 +544,24 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
           <img src={profile.photo} alt={profile.name} className="h-10 w-10 rounded-full object-cover" />
           <div>
             <p className="font-medium">{profile.name}</p>
-            <p className="text-xs text-[#999]">{profile.online ? "En ligne" : profile.lastActive}</p>
+            <p className="text-xs text-[#6b6b73]">
+              {profile.demo ? "Profil de démonstration" : profile.online ? "En ligne" : profile.lastActive}
+            </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="ml-auto rounded-full px-2 py-1 text-xl leading-none text-[#777] hover:text-[#333]">
+          <button type="button" onClick={onClose} aria-label="Fermer" className="ml-auto rounded-full px-2 py-1 text-xl leading-none text-[#5c5c66] hover:text-[#333]">
             ×
           </button>
         </div>
         <div className="min-h-[120px] flex-1 space-y-2 overflow-y-auto py-3" aria-live="polite">
-          {chat.length === 0 && <p className="text-sm text-[#999]">Dis bonjour à {profile.name} !</p>}
+          {acceptedThread && (
+            <div className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${acceptedThread.sender_id === me ? "ml-auto bg-[#e60050] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
+              <p className="whitespace-pre-wrap">{acceptedThread.initial_message}</p>
+              <p className={`mt-1 text-[11px] ${acceptedThread.sender_id === me ? "text-white/70" : "text-[#6b6b73]"}`}>
+                {fmtFull(Date.parse(acceptedThread.created_at), "")}
+              </p>
+            </div>
+          )}
+          {chat.length === 0 && !acceptedThread && <p className="text-sm text-[#6b6b73]">Dis bonjour à {profile.name} !</p>}
           {chat.map((m) => (
             <div key={m.id} className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${m.from === "me" ? "ml-auto bg-[#e60050] text-white" : "bg-[#f2f2f2] text-[#333]"}`}>
               {m.audio ? (
@@ -431,18 +573,18 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
                         type="button"
                         aria-label="Signaler ce vocal"
                         onClick={() => { setVoiceReport(m.id); setReportReason(""); }}
-                        className={`shrink-0 rounded p-1 ${m.from === "me" ? "text-white/70 hover:text-white" : "text-[#999] hover:text-red-600"}`}
+                        className={`shrink-0 rounded p-1 ${m.from === "me" ? "text-white/70 hover:text-white" : "text-[#6b6b73] hover:text-red-600"}`}
                       >
                         <Flag className="h-4 w-4" />
                       </button>
                     </SwivvHint>
                   </span>
-                  {!!m.dur && <p className={`mt-1 text-[11px] ${m.from === "me" ? "text-white/70" : "text-[#999]"}`}>{m.dur}s · {fmtFull(m.ts, m.at)}</p>}
+                  {!!m.dur && <p className={`mt-1 text-[11px] ${m.from === "me" ? "text-white/70" : "text-[#6b6b73]"}`}>{m.dur}s · {fmtFull(m.ts, m.at)}</p>}
                 </>
               ) : (
                 <p>{m.text}</p>
               )}
-              {!m.audio && <p className={`mt-1 text-[11px] ${m.from === "me" ? "text-white/70" : "text-[#999]"}`}>{fmtFull(m.ts, m.at)}</p>}
+              {!m.audio && <p className={`mt-1 text-[11px] ${m.from === "me" ? "text-white/70" : "text-[#6b6b73]"}`}>{fmtFull(m.ts, m.at)}</p>}
             </div>
           ))}
         </div>
@@ -456,14 +598,14 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
             autoFocus
             className="flex-1 rounded-lg border border-border bg-[#f7f7f7] px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#e60050]"
           />
-          {isMatch(profile.id) && (
+          {voiceOk && (
             voice.recording ? (
               <span className="flex items-center gap-1">
                 <span className="text-sm font-medium tabular-nums text-red-600">{voice.seconds}s</span>
                 <button type="button" onClick={async () => { const blob = await voice.stop(); if (!blob) return; setSendingVoice(true); const err = await sendVoice(profile.id, blob, voice.seconds); setSendingVoice(false); setVoiceErr(err); force((x) => x + 1); }} aria-label="Envoyer le vocal" className="rounded-lg bg-red-600 px-3 py-2 text-white">
                   <Square className="h-5 w-5" />
                 </button>
-                <button type="button" onClick={voice.cancel} aria-label="Annuler le vocal" className="rounded-lg border border-border px-2 py-2 text-[#777]">
+                <button type="button" onClick={voice.cancel} aria-label="Annuler le vocal" className="rounded-lg border border-border px-2 py-2 text-[#5c5c66]">
                   <X className="h-5 w-5" />
                 </button>
               </span>
@@ -478,7 +620,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
           </button>
         </form>
         {voiceErr && <p className="pt-1 text-xs text-red-600">{voiceErr}</p>}
-        {sendingVoice && <p className="pt-1 text-xs text-[#777]">Envoi du vocal…</p>}
+        {sendingVoice && <p className="pt-1 text-xs text-[#5c5c66]">Envoi du vocal…</p>}
         <Link to="/messagerie" onClick={() => { try { sessionStorage.setItem("swivv-active-chat", profile.id); } catch {} }} className="mt-2 text-center text-sm text-[#e60050] hover:underline">
           Tout l&apos;historique dans Messages
         </Link>
@@ -486,7 +628,7 @@ function MessageDialog({ profile, onClose }: { profile: SwivvProfile; onClose: (
           <div role="dialog" aria-modal="true" aria-label="Signaler ce vocal" className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4" onClick={() => { setVoiceReport(null); setReportReason(""); }}>
             <div className="w-full max-w-sm rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
               <p className="font-medium text-[#333]">Signaler ce vocal ?</p>
-              <p className="mt-1 text-sm text-[#777]">Choisis le motif — la modération l&apos;examinera.</p>
+              <p className="mt-1 text-sm text-[#5c5c66]">Choisis le motif — la modération l&apos;examinera.</p>
               <select
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}

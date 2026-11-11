@@ -5,18 +5,19 @@ import {
   createRootRouteWithContext,
   HeadContent,
   Scripts,
-  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
+import { SwivvMatchPopup } from "@/components/swivv-match-popup";
+import { SwivvRequestPopup, SwivvRequestAnswerPopup } from "@/components/swivv-request-popup";
 import { startChatSync, pullMatchCriteria } from "@/lib/swivv-store";
 import { initNotifyListeners, maybeRemindIncomplete } from "@/lib/swivv-notify";
-import { catchUpNotifs } from "@/lib/notify.functions";
+import { catchUpNotifs, sendDigestIfDue } from "@/lib/notify.functions";
 import { signOutSwivv, isEmailConfirmed } from "@/lib/swivv-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { LangProvider, readLang, useDateLocale, useT } from "@/lib/i18n";
+import { LangProvider, OG_LOCALE, readLang, useDateLocale, useT } from "@/lib/i18n";
+import { useErrorLog } from "@/lib/swivv-error-log";
 
 import appCss from "../styles.css?url";
 
@@ -42,37 +43,41 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SWIVV MATCH — Rencontres gratuites" },
-      {
-        name: "description",
-        content:
-          "SWIVV MATCH, site de rencontres gratuit et sans carte bancaire : profils, likes, matchs, messages, vocaux et photos.",
-      },
-      { name: "theme-color", content: "#e60050" },
-      { property: "og:site_name", content: "SWIVV MATCH" },
-      { property: "og:locale", content: "fr_FR" },
-      { property: "og:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
-      { property: "og:image:alt", content: "SWIVV MATCH" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
-    ],
-    links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "preconnect", href: "https://images.unsplash.com" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap",
-      },
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-    ],
-  }),
+  head: () => {
+    const lang = readLang();
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: "SWIVV MATCH — Rencontres gratuites" },
+        {
+          name: "description",
+          content:
+            "SWIVV MATCH, site de rencontres gratuit et sans carte bancaire : profils, likes, matchs, messages, vocaux et photos.",
+        },
+        { name: "theme-color", content: "#e60050" },
+        { property: "og:site_name", content: "SWIVV MATCH" },
+        { property: "og:locale", content: OG_LOCALE[lang] },
+        { property: "og:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
+        { property: "og:image:alt", content: "SWIVV MATCH" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: "https://swivvmatch.com/swivv-match-logo.jpg" },
+      ],
+      links: [
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        { rel: "preconnect", href: "https://images.unsplash.com" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap",
+        },
+        { rel: "stylesheet", href: appCss },
+        { rel: "icon", type: "image/png", href: "/favicon.png" },
+        { rel: "manifest", href: "/manifest.json" },
+        { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -93,60 +98,42 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-// ponytail: single global banner instead of per-page copies — shown while the e-mail is unverified (session or fresh-signup stash), hidden otherwise
-// ponytail: re-checked per navigation, not just on auth change — the root never remounts on SPA nav, so a banner keyed on [loading, user] alone missed signups that keep the visitor logged out (the exact first-signup case); a storage event if same-tab writes ever need instant pickup
-function VerifyBanner() {
+// ponytail: hard gate, not a banner — while the server says the e-mail is unconfirmed, no route renders (GoTrue already refuses logins, this covers legacy/stale sessions)
+function ConfirmEmailCard({ email, signOut }: { email: string; signOut: () => void }) {
   const t = useT();
-  const { user, loading } = useAuth();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      try {
-        setShow(!!localStorage.getItem("swivv-pending-profile"));
-      } catch {
-        setShow(false);
-      }
-      return;
-    }
-    isEmailConfirmed().then((c) => setShow(c === false));
-  }, [loading, user, pathname]);
-  if (!show) return null;
-  return (
-    <p className="bg-amber-100 px-4 py-2.5 text-center text-sm font-medium text-amber-900">
-      ⚠️{" "}
-      {t("Ton e-mail est en attente de confirmation — clique sur le lien reçu par e-mail pour activer ton compte.")}
-    </p>
-  );
-}
-
-function GatedOutlet() {
-  const t = useT();
-  const dateLocale = useDateLocale();
-  const { restriction, loading, signOut } = useAuth();
-  if (loading || !restriction) return <Outlet />;
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  async function resend() {
+    setBusy(true);
+    setMsg(null);
+    const { error } = await supabase.auth
+      .resend({ type: "signup", email })
+      .catch(() => ({ error: true as const }));
+    setBusy(false);
+    setMsg(
+      error
+        ? t("Envoi impossible pour le moment — vérifie ta connexion et réessaie.")
+        : t("E-mail renvoyé ! Vérifie ta boîte de réception (et tes spams)."),
+    );
+  }
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
-        <h1 className="text-xl font-medium text-[#333]">
-          {restriction.status === "banned" ? t("Compte banni") : t("Compte suspendu")}
-        </h1>
-        <p className="mt-1 text-sm text-[#777]">
-          {restriction.status === "banned"
-            ? t("Ton compte a été définitivement fermé pour non-respect du règlement.")
-            : restriction.until
-              ? t("Ton compte est suspendu jusqu'au {date}.", {
-                  date: new Date(restriction.until).toLocaleString(dateLocale),
-                })
-              : t("Ton compte est suspendu.")}{" "}
-          {t("Tu peux contester via la page contact.")}
+        <h1 className="text-xl font-medium text-[#333]">{t("Confirme ton e-mail")}</h1>
+        <p className="mt-2 text-sm text-[#5c5c66]">
+          {t("Ton e-mail est en attente de confirmation — clique sur le lien reçu par e-mail pour activer ton compte.")}
         </p>
+        <p className="mt-2 text-sm font-medium text-[#e60050]">{email}</p>
         <button
           type="button"
-          onClick={() => signOut()}
-          className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
+          onClick={resend}
+          disabled={busy}
+          className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white disabled:opacity-60"
         >
+          {busy ? t("Envoi…") : t("Renvoyer l'e-mail de confirmation")}
+        </button>
+        {msg && <p className="mt-2 text-sm text-[#333]">{msg}</p>}
+        <button type="button" onClick={signOut} className="mt-3 w-full text-center text-sm text-[#5c5c66] underline">
           {t("Se déconnecter")}
         </button>
       </div>
@@ -154,11 +141,79 @@ function GatedOutlet() {
   );
 }
 
+function GatedOutlet() {
+  const t = useT();
+  const dateLocale = useDateLocale();
+  const { restriction, loading, user, signOut } = useAuth();
+  // ponytail: server verdict keyed by uid; only an explicit "false" blocks, so an unreachable auth server never bricks a valid session
+  const [verdict, setVerdict] = useState<{ uid: string; ok: boolean } | null>(null);
+  useEffect(() => {
+    if (loading || !user) return;
+    let live = true;
+    isEmailConfirmed()
+      .then((c) => {
+        if (live) setVerdict({ uid: user.id, ok: c !== false });
+      })
+      .catch(() => null);
+    return () => {
+      live = false;
+    };
+  }, [loading, user]);
+  // optimistic value from the stored session avoids a card flash on every reload; the server verdict corrects stale sessions
+  const emailOk = user ? (verdict?.uid === user.id ? verdict.ok : !!user.email_confirmed_at) : true;
+  if (loading) return <Outlet />;
+  if (restriction) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-4">
+        <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
+          <h1 className="text-xl font-medium text-[#333]">
+            {restriction.status === "banned" ? t("Compte banni") : t("Compte suspendu")}
+          </h1>
+          <p className="mt-1 text-sm text-[#5c5c66]">
+            {restriction.status === "banned"
+              ? t("Ton compte a été définitivement fermé pour non-respect du règlement.")
+              : restriction.until
+                ? t("Ton compte est suspendu jusqu'au {date}.", {
+                    date: new Date(restriction.until).toLocaleString(dateLocale),
+                  })
+                : t("Ton compte est suspendu.")}{" "}
+            {t("Tu peux contester via la page contact.")}
+          </p>
+          <button
+            type="button"
+            onClick={signOut}
+            className="mt-4 w-full rounded-md bg-[#e60050] px-4 py-3 font-medium text-white"
+          >
+            {t("Se déconnecter")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (user && !emailOk) return <ConfirmEmailCard email={user.email ?? ""} signOut={signOut} />;
+  return <Outlet />;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useErrorLog();
 
   useEffect(() => {
     document.body.style.visibility = "visible";
+  }, []);
+
+  // Recovery links can land on "/" when no redirect_to is set (e.g. admin-generated
+  // links): forward them to the reset form, keeping the token in the hash/query.
+  useEffect(() => {
+    if (window.location.pathname === "/reset") return;
+    const { search, hash } = window.location;
+    if (hash.includes("type=recovery") || search.includes("type=recovery")) {
+      window.location.replace(`/reset${search}${hash}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
 
   useEffect(() => startChatSync(), []);
@@ -170,6 +225,7 @@ function RootComponent() {
       sessionStorage.setItem("swivv-catchup", "1");
     } catch {}
     void catchUpNotifs({ data: {} }).catch(() => {});
+    void sendDigestIfDue({ data: {} }).catch(() => {});
     void maybeRemindIncomplete().catch(() => {});
     // ponytail: one criteria pull per tab session — percentages/tooltips read localStorage, so every device converges on the newest save (notify repaints subscribers)
     void pullMatchCriteria().catch(() => {});
@@ -191,12 +247,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <VerifyBanner />
         <main id="main-content">
           <GatedOutlet />
         </main>
+        <SwivvMatchPopup />
+        <SwivvRequestPopup />
+        <SwivvRequestAnswerPopup />
         <Toaster />
-        <Analytics />
       </AuthProvider>
     </QueryClientProvider>
   );

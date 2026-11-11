@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { swivvContactReceived } from "@/lib/swivv-email-templates";
+import { MODERATION_EMAIL, swivvContactReceived } from "@/lib/swivv-email-templates";
 import { sendEmail } from "@/lib/email";
 
-// ponytail: one server call creates the ticket + first message + best-effort confirmation (admin client bypasses RLS so logged-out visitors land in the same admin inbox) — the visitor's uid rides along for linkage only, format-checked not ownership-checked; add a Resend copy to contact@swivvmatch.com once the domain is verified (test mode only reaches the account's own address)
+// ponytail: one server call creates the ticket + first message + best-effort confirmation (admin client bypasses RLS so logged-out visitors land in the same admin inbox) — the visitor's uid rides along for linkage only, format-checked not ownership-checked; add a contact@ copy if staff need the ticket by e-mail too
 export const submitContactTicket = createServerFn({ method: "POST" })
   .validator((data: unknown) =>
     z.object({
@@ -37,5 +37,19 @@ export const submitContactTicket = createServerFn({ method: "POST" })
     const { subject, html } = swivvContactReceived({ name: first, subject: data.subject, message: data.message.trim(), fileNames: data.fileNames });
     const r = await sendEmail({ to: data.email, subject, html });
     if (!r.ok) console.error("[contact] confirmation email failed", r.error);
+    const esc = (s: string) =>
+      s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+    const n = await sendEmail({
+      to: process.env.CONTACT_NOTIFY_EMAIL || MODERATION_EMAIL,
+      replyTo: data.email.trim(),
+      subject: `[Contact] ${data.subject.trim()} - ${data.name.trim()}`,
+      html: `<h2>Nouveau message via le formulaire de contact</h2>
+<p><b>Ticket :</b> ${tid}<br><b>Nom :</b> ${esc(data.name.trim())}<br><b>E-mail :</b> ${esc(data.email.trim())}<br><b>Sujet :</b> ${esc(data.subject.trim())}</p>
+<pre style="white-space:pre-wrap;font-family:inherit;font-size:14px">${esc(data.message.trim())}</pre>${
+        data.fileNames?.length ? `<p><b>Fichiers annonces (a reclamer par e-mail) :</b> ${esc(data.fileNames.join(", "))}</p>` : ""
+      }
+<p style="color:#6b6b73;font-size:12px">Reponds a cet e-mail : il part directement a l'expediteur.</p>`,
+    });
+    if (!n.ok) console.error("[contact] admin notification failed", n.error);
     return { ok: true as const };
   });

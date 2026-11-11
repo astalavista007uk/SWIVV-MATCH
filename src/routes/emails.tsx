@@ -81,15 +81,16 @@ function EmailsPage() {
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="text-2xl font-medium text-[#333]">E-mails SWIVV ({PREVIEWS.length})</h1>
-        <p className="mt-1 text-sm text-[#777]">Clique sur un modèle pour prévisualiser le rendu.</p>
+        <p className="mt-1 text-sm text-[#5c5c66]">Clique sur un modèle pour prévisualiser le rendu.</p>
         <div className="mt-6 space-y-3">
           {PREVIEWS.map((t, i) => (
             <details key={t.label} id={t.slug ?? `mail-${i}`} open={t.slug != null && openSlug === t.slug} onToggle={(e) => { if ((e.target as HTMLDetailsElement).open && t.slug) setOpenSlug(t.slug); }} className="overflow-hidden rounded-2xl border border-border bg-white scroll-mt-24">
               <summary className="cursor-pointer list-none px-5 py-4 [&::-webkit-details-marker]:hidden">
                 <span className="font-medium text-[#333]">{t.label}</span>
-                <span className="mt-0.5 block text-sm text-[#777]">Objet : {t.subject}</span>
+                <span className="mt-0.5 block text-sm text-[#5c5c66]">Objet : {t.subject}</span>
               </summary>
-              <iframe title={t.label} srcDoc={t.html} className="h-[600px] w-full border-t border-border bg-white" sandbox="" />
+              {/* preview only: templates emit production SITE urls, rewrite to relative so links and self-hosted assets resolve locally */}
+              <iframe title={t.label} srcDoc={t.html.replaceAll("https://swivvmatch.com/", "/")} className="h-[600px] w-full border-t border-border bg-white" sandbox="" />
             </details>
           ))}
         </div>

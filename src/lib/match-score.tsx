@@ -45,16 +45,17 @@ export const EMPTY: Record<string, string> = { gender: "Femme", ageMin: "18", ag
 type Test = (p: SwivvProfile, v: string) => boolean;
 export const TESTS: Record<string, Test> = {
   gender: (p, v) => p.gender === (v === "Femme" ? "woman" : "man"),
-  ageMin: (p, v) => p.age >= Number(v),
-  ageMax: (p, v) => p.age <= Number(v),
+  // ponytail: unknown age/size never disqualifies (null coerced to 0 and hid the member) — it does count as a pass in the %, swap for a "?" row if unknown values ever need honest scoring
+  ageMin: (p, v) => !Number.isFinite(p.age) || p.age >= Number(v),
+  ageMax: (p, v) => !Number.isFinite(p.age) || p.age <= Number(v),
   country: inc((p) => p.country),
   city: inc((p) => p.city),
   maxDistance: (p, v) => p.distanceKm <= Number(v),
   nationality: natTest,
   lookingFor: inc((p) => p.lookingFor),
   maritalStatus: inc((p) => p.maritalStatus),
-  heightMin: (p, v) => p.heightCm >= Number(v),
-  heightMax: (p, v) => p.heightCm <= Number(v),
+  heightMin: (p, v) => (p.heightCm == null ? true : p.heightCm >= Number(v)),
+  heightMax: (p, v) => (p.heightCm == null ? true : p.heightCm <= Number(v)),
   weightMin: (p, v) => (p.weightKg == null ? true : p.weightKg >= Number(v)),
   weightMax: (p, v) => (p.weightKg == null ? true : p.weightKg <= Number(v)),
   hair: adjTest((p) => p.hairColor),
@@ -88,7 +89,9 @@ export function load(): Record<string, string> {
   // ponytail: sought gender preloaded from the same cache as browse (+ signup fallback so Recherche Avancée is right on first mount) — profile fetch if both ever miss
   let sought = "";
   try {
-    const c = localStorage.getItem("swivv-seeking");
+    const uid = localStorage.getItem("swivv-uid");
+    const mine = uid ? localStorage.getItem(`swivv-seeking:${uid}`) : null;
+    const c = mine === "woman" || mine === "man" ? mine : localStorage.getItem("swivv-seeking");
     sought = c === "woman" ? "Femme" : c === "man" ? "Homme" : "";
     if (!sought) {
       const g = localStorage.getItem("swivv-signup-gender");
@@ -105,17 +108,21 @@ export function load(): Record<string, string> {
 export function score(p: SwivvProfile, c: Record<string, string>, getDist?: (p: SwivvProfile) => number): { pct: number; hard: boolean } {
   // ponytail: real geo distance when provided (matches page), static seed distance otherwise — migrate callers if seed distances ever go stale
   const dist = getDist ? getDist(p) : p.distanceKm;
+  // ponytail: a failed hard filter only disqualifies the match (hard=false) — it no longer zeroes the visible score, so one miss (e.g. age) leaves the other criteria counting
+  let hard = true;
   for (const k of HARD) {
     const v = (c[k] ?? "").trim();
     if (!v) continue;
     if (k === "maxDistance") {
-      if (dist > Number(v)) return { pct: 0, hard: false };
+      if (dist > Number(v)) hard = false;
       continue;
     }
-    if (!TESTS[k]!(p, v)) return { pct: 0, hard: false };
+    // the wrong gender is a true miss, not a scored criterion — keep the zero there
+    if (k === "gender" && !TESTS[k]!(p, v)) return { pct: 0, hard: false };
+    if (!TESTS[k]!(p, v)) hard = false;
   }
   // ponytail: importance weights mirror the "Comprendre le matching" blog post — retune here and there together
-  const WEIGHTS: Record<string, number> = { country: 11, city: 10, maritalStatus: 8, lookingFor: 7, religion: 6, heightMin: 5, heightMax: 5, weightMax: 4, haveChildren: 3, wantMoreChildren: 2, relocate: 1 };
+  const WEIGHTS: Record<string, number> = { country: 11, city: 10, maritalStatus: 8, lookingFor: 7, religion: 6, ageMin: 6, ageMax: 6, heightMin: 5, heightMax: 5, weightMax: 4, haveChildren: 3, wantMoreChildren: 2, relocate: 1 };
   const wOf = (k: string) => WEIGHTS[k] ?? 1;
   let pts = 0;
   let total = 0;
@@ -126,7 +133,8 @@ export function score(p: SwivvProfile, c: Record<string, string>, getDist?: (p: 
     pts += 9 * Math.max(0, 1 - dist / maxD);
   }
   for (const [key, test] of Object.entries(TESTS)) {
-    if (HARD.has(key)) continue;
+    // age stays a hard filter but also scores softly, so an out-of-range age dents the % without wiping it
+    if (HARD.has(key) && key !== "ageMin" && key !== "ageMax") continue;
     if (key === "interests") {
       const want = (c.interests ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
       if (!want.length) continue;
@@ -139,7 +147,8 @@ export function score(p: SwivvProfile, c: Record<string, string>, getDist?: (p: 
     total += wOf(key);
     if (test(p, v)) pts += wOf(key);
   }
-  return { pct: total === 0 ? 100 : Math.round((100 * pts) / total), hard: true };
+  // floor at 1 so a profile that fails every soft criterion still reads as "not zero"
+  return { pct: total === 0 ? 100 : Math.max(1, Math.round((100 * pts) / total)), hard };
 }
 
 // ponytail: criteria score is the single source of truth — homepage carousels mirror it via displayPct;

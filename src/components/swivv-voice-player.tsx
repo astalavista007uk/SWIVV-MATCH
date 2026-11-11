@@ -19,7 +19,7 @@ export function SwivvVoicePlayer({ src, dark = false }: { src: string | undefine
   const [menu, setMenu] = useState(false);
   const [err, setErr] = useState(false);
   const fg = dark ? "text-white" : "text-[#333]";
-  const sub = dark ? "text-white/70" : "text-[#999]";
+  const sub = dark ? "text-white/70" : "text-[#6b6b73]";
   if (!src) return null;
 
   return (

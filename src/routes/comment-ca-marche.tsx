@@ -9,6 +9,7 @@ import {
   Mic,
   ScanFace,
   ShieldAlert,
+  ShieldCheck,
   Smile,
   Sparkles,
   UserPlus,
@@ -19,14 +20,15 @@ import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
 import { SwivvCategoryNav } from "@/components/swivv-category-nav";
 import { SwivvFooter } from "@/components/swivv-footer";
-import { useT } from "@/lib/i18n";
+import { LegalHero } from "@/components/swivv-legal-hero";
+import { useT, useLang } from "@/lib/i18n";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/comment-ca-marche")({
   head: () =>
     pageHead(
       "Comment fonctionne SWIVV MATCH — rencontres gratuites",
-      "Comment fonctionne SWIVV MATCH : inscription gratuite en 2 minutes, profil, photos, score de compatibilité, likes, matchs, messages, vocaux et conseils de sécurité.",
+      "Comment fonctionne SWIVV MATCH : inscription gratuite en 2 minutes, profil, photos, vérification d'identité, score de compatibilité, likes, matchs, messages, vocaux et conseils de sécurité.",
       "/comment-ca-marche",
     ),
   component: HowItWorksPage,
@@ -37,6 +39,7 @@ const SECTIONS: {
   title: string;
   icon: LucideIcon;
   tint: string;
+  image: string;
   intro: string;
   points: string[];
 }[] = [
@@ -44,6 +47,7 @@ const SECTIONS: {
     title: "1. Compte en 2 minutes, profil à ton rythme",
     icon: UserPlus,
     tint: "bg-blue-100 text-blue-600",
+    image: "01-compte",
     intro:
       "Crée ton compte gratuit en 2 minutes avec ton e-mail et un mot de passe, puis complète ton profil à ton rythme : tu peux t'arrêter et reprendre à tout moment.",
     points: [
@@ -57,6 +61,7 @@ const SECTIONS: {
     title: "2. Créer un profil qui donne envie",
     icon: Sparkles,
     tint: "bg-violet-100 text-violet-600",
+    image: "02-profil",
     intro:
       "Les profils complets reçoivent nettement plus de matchs. L'algorithme et les autres membres se basent sur ce que tu partages.",
     points: [
@@ -69,6 +74,7 @@ const SECTIONS: {
     title: "3. Choisir de bonnes photos",
     icon: Camera,
     tint: "bg-amber-100 text-amber-600",
+    image: "03-photos",
     intro:
       "Tes photos font la première impression. SWIVV n'accepte que de vraies photos : ni dessins, ni illustrations, ni photos de célébrités.",
     points: [
@@ -82,6 +88,7 @@ const SECTIONS: {
     title: "4. Être honnête avec les autres",
     icon: BadgeCheck,
     tint: "bg-emerald-100 text-emerald-600",
+    image: "04-profil-honnete",
     intro:
       "La confiance est la base des belles histoires. Un profil honnête attire des personnes qui te correspondent vraiment.",
     points: [
@@ -94,6 +101,7 @@ const SECTIONS: {
     title: "5. Reconnaître les faux profils et les arnaques",
     icon: ShieldAlert,
     tint: "bg-red-100 text-red-600",
+    image: "05-arnaques",
     intro:
       "La plupart des profils sont sincères, mais reste vigilant. Voici les signaux qui doivent t'alerter.",
     points: [
@@ -108,11 +116,12 @@ const SECTIONS: {
     title: "6. Comment fonctionne le matching",
     icon: Heart,
     tint: "bg-pink-100 text-[#e60050]",
+    image: "06-matching",
     intro:
       "Swipe, découvre, like : tu parcours des profils sélectionnés, tu likes ceux qui te plaisent, et certains deviennent des matchs.",
     points: [
       "Parcours les profils par ville, âge, intention et centres d'intérêt.",
-      "Like les profils qui te plaisent et écris-leur librement. Quand l'intérêt est réciproque, cela devient un match et les vocaux et les photos se débloquent.",
+      "Like les profils qui te plaisent. Quand l'intérêt est réciproque, un match est annoncé aux deux membres par une notification et un message à l'écran. Pour discuter, envoie une demande de connexion : le texte, les vocaux et les pièces jointes ne s'ouvrent qu'après acceptation, chaque option devant être autorisée par l'autre membre.",
       "Chaque profil affiche un score de compatibilité calculé sur la ville, l'âge, les intérêts, la religion et les intentions.",
       "Personnalise ton premier message en rebondissant sur le profil : le taux de réponse triple.",
     ],
@@ -121,6 +130,7 @@ const SECTIONS: {
     title: "7. Se rencontrer en toute sécurité",
     icon: MapPin,
     tint: "bg-sky-100 text-sky-600",
+    image: "07-securite",
     intro:
       "Quand le courant passe en messages, passe au réel — prudemment, surtout les premières fois.",
     points: [
@@ -131,11 +141,12 @@ const SECTIONS: {
     ],
   },
   {
-    title: "8. Messages vocaux et envoi d'images",
+    title: "8. Messages texte, vocaux et envoi d'images",
     icon: Mic,
     tint: "bg-indigo-100 text-indigo-600",
+    image: "08-messages",
     intro:
-      "Les vocaux et les images se débloquent avec un match : tu dois liker et être liké(e) en retour. Tant que ce n'est pas réciproque, seuls les messages écrits sont possibles. Pour parler de vive voix, échange ton numéro quand tu es prêt(e).",
+      "Le texte, les vocaux et les pièces jointes ne s'ouvrent pas automatiquement, même entre matchs : envoie une demande de connexion, puis l'autre membre choisit ce qu'il autorise. Chaque permission peut être révoquée à tout moment. Quand l'autre membre répond, une fenêtre t'annonce sa décision et les fonctionnalités qu'il a autorisées, où que tu sois sur le site.",
     points: [
       "Messages vocaux : dans la conversation (popup sur le profil ou page Messages), touche le micro pour enregistrer, ■ pour envoyer, ✕ pour annuler. Tes vocaux sont écoutables des deux côtés, sur téléphone comme sur ordinateur.",
       "Signaler un vocal : touche l'icône drapeau à côté d'un message vocal et choisis le motif — la modération l'examine.",
@@ -148,6 +159,7 @@ const SECTIONS: {
     title: "9. Mes statistiques : comprendre ce qui marche",
     icon: BarChart3,
     tint: "bg-teal-100 text-teal-600",
+    image: "09-statistiques",
     intro:
       "Dans Mon compte, l'onglet Mes statistiques résume l'activité de ton profil. Choisis la période (7, 30, 90 jours ou depuis ton inscription) puis navigue entre 6 onglets.",
     points: [
@@ -164,6 +176,7 @@ const SECTIONS: {
     title: "10. SWIVV PROGRESS : suivre ta progression",
     icon: Flame,
     tint: "bg-orange-100 text-orange-600",
+    image: "10-progress",
     intro:
       "SWIVV PROGRESS, dans Mon compte, transforme ton activité en repères simples : régularité, succès débloqués et chiffres clés. Aucune course au volume : seuls les vrais échanges comptent.",
     points: [
@@ -178,12 +191,13 @@ const SECTIONS: {
     title: "11. Réagir aux photos avec un émoticône",
     icon: Smile,
     tint: "bg-fuchsia-100 text-fuchsia-600",
+    image: "11-reactions",
     intro:
       "Sur les photos des profils, tu peux réagir en un geste avec un émoticône. C'est plus léger qu'un message et ça dit tout de suite ce qui te plaît.",
     points: [
       "6 réactions : 😍 Craquant(e), ❤️ J'adore, 😊 Charmant(e), 🔥 Canon, 😉 Petit clin d'œil et ✨ Original(e).",
       "Une seule réaction par photo : touche le même émoticône pour l'enlever, ou un autre pour le remplacer.",
-      "Réagir compte aussi comme un like : ton intérêt est transmis au membre. S'il te like ou réagit en retour, vous êtes en match et les vocaux et les photos se débloquent.",
+      "Réagir compte aussi comme un like : ton intérêt est transmis au membre. S'il te like ou réagit en retour, vous êtes en match et recevez une notification. Pour discuter, envoyez-vous une demande de connexion.",
       "Les autres voient le nombre de réactions par photo, jamais qui a réagi. Toi, tu retrouves qui a réagi à tes photos dans Mes statistiques.",
       "Tu ne peux pas réagir à tes propres photos, et les réactions sont limitées en fréquence pour éviter le spam.",
     ],
@@ -192,6 +206,7 @@ const SECTIONS: {
     title: "12. Vérifier tes photos avec un selfie",
     icon: ScanFace,
     tint: "bg-cyan-100 text-cyan-600",
+    image: "12-selfie",
     intro:
       "Le badge vérifié rassure les autres membres. La comparaison utilise un modèle de reconnaissance faciale directement dans ton navigateur : le selfie n'est ni envoyé ni stocké.",
     points: [
@@ -203,11 +218,28 @@ const SECTIONS: {
       "Photos trop anciennes, floues ou retouchées : la comparaison peut échouer, même si c'est bien toi.",
     ],
   },
+  {
+    title: "13. Vérifier ton identité (badge Identité)",
+    icon: ShieldCheck,
+    tint: "bg-rose-100 text-rose-600",
+    image: "13-identite",
+    intro:
+      "En plus du badge photos, tu peux obtenir le badge Identité : il confirme qu'une pièce d'identité avec photo correspond à ton profil. La comparaison du visage se fait dans ton navigateur.",
+    points: [
+      "Depuis la page Vérification, prends en photo ta pièce d'identité (recto, portrait visible). Le visage est comparé à tes photos de profil directement sur ton appareil.",
+      "Si le visage correspond, le badge Identité s'affiche immédiatement : aucune pièce n'est envoyée ni conservée.",
+      "Si le contrôle automatique est douteux (photo floue, portrait peu visible), la pièce est envoyée dans un espace privé réservé à la modération, le temps de la décision.",
+      "La pièce est supprimée dès la décision, validée ou refusée. Seuls le badge, sa date et le motif de la décision restent enregistrés.",
+      "Aucune donnée lisible sur la pièce (numéro, date de naissance, adresse) n'est extraite ni conservée, et la pièce n'est jamais partagée avec les autres membres.",
+      "Le badge Identité est un signal de confiance, pas une preuve légale d'identité : reste prudent lors des rencontres.",
+    ],
+  },
 ];
 
 function HowItWorksPage() {
   const { user } = useAuth();
   const t = useT();
+  const lang = useLang();
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-black text-white">
@@ -219,34 +251,45 @@ function HowItWorksPage() {
         </div>
       </header>
       <SwivvCategoryNav />
+      <LegalHero
+        title={t("Découvrir comment ça marche")}
+        subtitle={t("Inscription, profil, photos, vérification d'identité, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.")}
+        icon={Heart}
+      />
 
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <h1 className="text-3xl font-medium text-[#333]">{t("Découvrir comment ça marche")}</h1>
-        <p className="mt-2 text-[#777]">
-          {t("Inscription, profil, photos, matching, sécurité et suivi de ta progression : tout ce qu'il faut savoir pour bien démarrer sur SWIVV et faire de belles rencontres en confiance.")}
-        </p>
-
-        {SECTIONS.map((s) => (
+      <main className="mx-auto max-w-6xl px-4 py-10">
+        {SECTIONS.map((s, i) => (
           <section
             key={s.title}
             aria-label={t(s.title)}
-            className="mt-8 rounded-2xl bg-white p-6 shadow-sm"
+            className="mt-8 rounded-2xl bg-white p-6 shadow-sm md:p-8"
           >
-            <div className="flex items-center gap-3">
-              <span
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.tint}`}
-                aria-hidden="true"
-              >
-                <s.icon className="h-5 w-5" />
-              </span>
-              <h2 className="text-xl font-medium text-[#333]">{t(s.title)}</h2>
+            <div className="grid gap-6 md:grid-cols-2 md:items-center">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.tint}`}
+                    aria-hidden="true"
+                  >
+                    <s.icon className="h-5 w-5" />
+                  </span>
+                  <h2 className="text-xl font-medium text-[#333]">{t(s.title)}</h2>
+                </div>
+                <p className="mt-2 leading-relaxed text-[#555]">{t(s.intro)}</p>
+                <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[#555]">
+                  {s.points.map((p) => (
+                    <li key={p}>{t(p)}</li>
+                  ))}
+                </ul>
+              </div>
+              <img
+                src={`/how-it-works/${s.image}.${lang}.jpg`}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className={`aspect-[4/3] w-full rounded-xl border border-border bg-[#f7f7f7] object-contain ${i % 2 ? "md:order-first" : ""}`}
+              />
             </div>
-            <p className="mt-2 leading-relaxed text-[#555]">{t(s.intro)}</p>
-            <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[#555]">
-              {s.points.map((p) => (
-                <li key={p}>{t(p)}</li>
-              ))}
-            </ul>
           </section>
         ))}
 
@@ -282,3 +325,4 @@ function HowItWorksPage() {
     </div>
   );
 }
+
