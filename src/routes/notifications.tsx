@@ -4,8 +4,9 @@ import { Bell, Eye, Heart, Info, LifeBuoy, Megaphone, MessageCircle, ShieldCheck
 import { supabase } from "@/integrations/supabase/client";
 import { SwivvSettingsTabs } from "@/components/swivv-settings-tabs";
 import { deleteNotif, listNotifs, markNotifsRead, type SwivvNotif } from "@/lib/swivv-notifs";
-import { loadServerPrefs, saveServerPrefs } from "@/lib/swivv-notify";
+import { loadServerPrefs, pingSelf, saveServerPrefs } from "@/lib/swivv-notify";
 import { validLink } from "@/lib/swivv-notify.logic";
+import { disablePushOnThisDevice, enablePushOnThisDevice, getPushState, type PushState } from "@/lib/swivv-push";
 import { getSettings, type SwivvSettings } from "@/lib/swivv-store";
 import { SwivvLogo } from "@/components/swivv-logo";
 import { SwivvAuthButtons } from "@/lib/swivv-auth";
@@ -109,6 +110,9 @@ function NotificationsPage() {
   const [shown, setShown] = useState(PAGE);
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pushState, setPushState] = useState<PushState>("loading");
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -145,6 +149,50 @@ function NotificationsPage() {
       if (ch) void supabase.removeChannel(ch);
     };
   }, []);
+
+  useEffect(() => {
+    let live = true;
+    getPushState().then((state) => { if (live) setPushState(state); });
+    return () => { live = false; };
+  }, []);
+
+  async function togglePush() {
+    setPushBusy(true);
+    setPushMessage(null);
+    try {
+      const next = pushState === "enabled"
+        ? await disablePushOnThisDevice()
+        : await enablePushOnThisDevice();
+      setPushState(next);
+      setPushMessage(next === "enabled"
+        ? t("Notifications push activées sur cet appareil.")
+        : next === "disabled"
+          ? t("Notifications push désactivées sur cet appareil.")
+          : null);
+    } catch {
+      setPushState("error");
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function sendPushTest() {
+    setPushBusy(true);
+    setPushMessage(null);
+    try {
+      const sent = await pingSelf(
+        "info",
+        "Test des notifications",
+        "Les notifications push sont activées sur cet appareil.",
+        "/notifications",
+      );
+      setPushMessage(sent ? t("Une notification test a été créée. Vérifie les notifications de tes appareils.") : t("Impossible de créer la notification test."));
+    } catch {
+      setPushMessage(t("Impossible de créer la notification test."));
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   async function persist(s: SwivvSettings, m: boolean, d: string) {
     setSaving(true);
@@ -278,6 +326,59 @@ function NotificationsPage() {
             onChange={(v) => flip("msgBadge", v)}
           />
         </div>
+        <section className="mt-6 rounded-xl bg-white p-4 shadow-sm">
+          <h2 className="text-xl font-bold text-[#333]">{t("Notifications push")}</h2>
+          <p className="mt-1 text-sm text-[#5c5c66]">
+            {t("Reçois une alerte sur cet appareil pour chaque notification, même lorsque SWIVV MATCH est fermé.")}
+          </p>
+          {pushState === "install-required" && (
+            <p className="mt-2 text-sm text-[#5c5c66]">
+              {t("Sur iPhone ou iPad, ajoute d'abord SWIVV MATCH à l'écran d'accueil depuis Safari, puis ouvre l'app installée pour activer les notifications.")}
+            </p>
+          )}
+          {pushState === "denied" && (
+            <p className="mt-2 text-sm text-[#5c5c66]">
+              {t("L'autorisation est refusée dans le navigateur. Modifie l'autorisation des notifications dans les réglages du site, puis réessaie.")}
+            </p>
+          )}
+          {pushState === "unsupported" && (
+            <p className="mt-2 text-sm text-[#5c5c66]">{t("Ce navigateur ne prend pas en charge les notifications push.")}</p>
+          )}
+          {pushState === "configuration-missing" && (
+            <p className="mt-2 text-sm text-[#5c5c66]">{t("Les notifications push ne sont pas encore configurées sur le serveur.")}</p>
+          )}
+          {pushState === "unauthenticated" && (
+            <p className="mt-2 text-sm text-[#5c5c66]">{t("Connecte-toi pour activer les notifications sur cet appareil.")}</p>
+          )}
+          {pushState === "error" && (
+            <p className="mt-2 text-sm text-[#5c5c66]">{t("Impossible de modifier les notifications push. Vérifie ta connexion et réessaie.")}</p>
+          )}
+          {pushMessage && <p className="mt-2 text-sm text-[#16713b]" role="status">{pushMessage}</p>}
+          {(pushState === "enabled" || pushState === "disabled") && (
+            <button
+              type="button"
+              onClick={togglePush}
+              disabled={pushBusy}
+              className="mt-3 rounded-md bg-[#e60050] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {pushBusy
+                ? t("Enregistrement…")
+                : pushState === "enabled"
+                  ? t("Désactiver sur cet appareil")
+                  : t("Activer sur cet appareil")}
+            </button>
+          )}
+          {pushState === "enabled" && (
+            <button
+              type="button"
+              onClick={sendPushTest}
+              disabled={pushBusy}
+              className="ml-2 mt-3 rounded-md border border-[#e60050] px-4 py-2 text-sm font-medium text-[#e60050] disabled:opacity-60"
+            >
+              {t("Envoyer une notification test")}
+            </button>
+          )}
+        </section>
         {sections.map((s) => (
           <section key={s.title} className="mt-6">
             <h2 className="mb-2 text-xl font-bold text-[#333]">{t(s.title)}</h2>

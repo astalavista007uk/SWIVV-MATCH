@@ -5,16 +5,23 @@ import { CHAT_CD, LIKE_WINDOW, MATCH_WIN, REACT_CD, validLink, VIEW_CD, windowEl
 import { reactionOf } from "./swivv-reactions";
 import { queueEventEmail } from "./notify.functions";
 
-// ponytail: recipient-scoped creation only (live realtime handler + login catch-up server fn — senders can never write someone else's inbox) — a push/cron worker replaces the realtime channels if they ever prove flaky
+// Recipient-scoped client creation for live UI events; database triggers create persisted social notifications when the recipient is offline.
 export type NotifType = "message" | "like" | "match" | "view" | "reaction" | "account" | "security" | "info";
 
-export async function pingSelf(type: NotifType, title: string, message: string, link?: string): Promise<boolean> {
+export async function pingSelf(type: NotifType, title: string, message: string, link?: string, dedupeKey?: string): Promise<boolean> {
   try {
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user.id;
     if (!uid) return false;
     const safeLink = link && validLink(link) ? link : null;
-    const { error } = await (supabase as any).from("swivv_notifications").insert({ user_id: uid, type, title, message, link: safeLink });
+    const { error } = await (supabase as any).from("swivv_notifications").insert({
+      user_id: uid,
+      type,
+      title,
+      message,
+      link: safeLink,
+      ...(dedupeKey ? { dedupe_key: dedupeKey } : {}),
+    });
     return !error;
   } catch {
     return false;
@@ -65,6 +72,9 @@ async function recentNotif(type: string, frag: string, winMs: number): Promise<b
     const { data } = await supabase.auth.getSession();
     const uid = data.session?.user.id;
     if (!uid) return true;
+    const base = (supabase as any).from("swivv_notifications").select("id").eq("user_id", uid).eq("type", type).gte("created_at", new Date(Date.now() - winMs).toISOString());
+    const keyed = await base.eq("dedupe_key", `${type}:${frag}`).limit(1);
+    if ((keyed.data ?? []).length > 0) return true;
     const r = await (supabase as any).from("swivv_notifications").select("id").eq("user_id", uid).eq("type", type).gte("created_at", new Date(Date.now() - winMs).toISOString()).like("link", `%${frag}%`).limit(1);
     return (r.data ?? []).length > 0;
   } catch {
@@ -94,7 +104,7 @@ export async function onIncomingChat(uid: string, peerId: string, kind?: "vocal"
   // ponytail: kind rides the realtime row (text is the default) — email keeps the fixed neutral preview by design
   const title = kind === "vocal" ? "Nouveau message vocal" : kind === "photo" ? "Nouvelle photo" : "Nouveau message";
   const body = kind === "vocal" ? `${name} t'a envoyé un message vocal.` : kind === "photo" ? `${name} t'a envoyé une photo.` : `${name} t'a écrit.`;
-  await pingSelf("message", title, body, `/messagerie?peer=${peerId}`);
+  await pingSelf("message", title, body, `/messagerie?peer=${peerId}`, `message:${bare}`);
   void queueEventEmail({ data: { kind: "message", ref: peerId } }).catch(() => {});
 }
 
@@ -111,7 +121,7 @@ export async function onLikeReceived(uid: string, likerId: string): Promise<void
   if (likerId === uid || isThreadBlocked(likerId)) return;
   if (await recentNotif("like", likerId, LIKE_WINDOW)) return;
   const name = await peerName(likerId);
-  await pingSelf("like", "Nouveau like", `${name} s'intéresse à ton profil.`, `/member/${likerId}`);
+  await pingSelf("like", "Nouveau like", `${name} s'intéresse à ton profil.`, `/member/${likerId}`, `like:${likerId}`);
   void queueEventEmail({ data: { kind: "like", ref: likerId } }).catch(() => {});
 }
 
@@ -119,7 +129,7 @@ export async function onMatchFound(uid: string, otherId: string): Promise<void> 
   if (!getSettings().rtLiked) return; // ponytail: no separate match toggle — likes cover matches until one is asked for
   if (await recentNotif("match", otherId, MATCH_WIN)) return;
   const name = await peerName(otherId);
-  await pingSelf("match", "C'est un match !", `Toi et ${name} vous êtes plu.`, `/messagerie?match=${otherId}`);
+  await pingSelf("match", "C'est un match !", `Toi et ${name} vous êtes plu.`, `/messagerie?match=${otherId}`, `match:${otherId}`);
   void queueEventEmail({ data: { kind: "match", ref: otherId } }).catch(() => {});
 }
 
@@ -132,7 +142,7 @@ export async function onViewReceived(uid: string, viewerId: string): Promise<voi
     if ((r.data ?? []).length > 0) return;
   } catch {}
   const name = await peerName(viewerId);
-  await pingSelf("view", "Visite de profil", `${name} a consulté ton profil.`, `/member/${viewerId}`);
+  await pingSelf("view", "Visite de profil", `${name} a consulté ton profil.`, `/member/${viewerId}`, `view:${viewerId}`);
 }
 
 export async function onReactionReceived(uid: string, reactorId: string, photo: string, emoji: string): Promise<void> {
@@ -148,7 +158,7 @@ export async function onReactionReceived(uid: string, reactorId: string, photo: 
   } catch {
     return;
   }
-  await pingSelf("reaction", "Réaction à ta photo", `${emoji} Un membre a réagi à l'une de tes photos.`, `/statistiques?tab=likes`);
+  await pingSelf("reaction", "Réaction à ta photo", `${emoji} Un membre a réagi à l'une de tes photos.`, `/statistiques?tab=likes`, `reaction:${reactorId}`);
 }
 
 export async function onVerified(): Promise<void> {

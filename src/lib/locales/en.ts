@@ -1287,6 +1287,26 @@ export const en = {
   "Reçois un résumé de l'activité sur ton profil et de tes conversations.":
     "Get a summary of activity on your profile and your conversations.",
   "Notifications en temps réel": "Real-time notifications",
+  "Notifications push": "Push notifications",
+  "Reçois une alerte sur cet appareil pour chaque notification, même lorsque SWIVV MATCH est fermé.":
+    "Get an alert on this device for every notification, even when SWIVV MATCH is closed.",
+  "Sur iPhone ou iPad, ajoute d'abord SWIVV MATCH à l'écran d'accueil depuis Safari, puis ouvre l'app installée pour activer les notifications.":
+    "On iPhone or iPad, first add SWIVV MATCH to your Home Screen from Safari, then open the installed app to enable notifications.",
+  "L'autorisation est refusée dans le navigateur. Modifie l'autorisation des notifications dans les réglages du site, puis réessaie.":
+    "Permission is blocked in your browser. Change this site's notification permission in browser settings, then try again.",
+  "Ce navigateur ne prend pas en charge les notifications push.": "This browser does not support push notifications.",
+  "Les notifications push ne sont pas encore configurées sur le serveur.": "Push notifications are not configured on the server yet.",
+  "Connecte-toi pour activer les notifications sur cet appareil.": "Sign in to enable notifications on this device.",
+  "Impossible de modifier les notifications push. Vérifie ta connexion et réessaie.":
+    "Could not change push notifications. Check your connection and try again.",
+  "Notifications push activées sur cet appareil.": "Push notifications are enabled on this device.",
+  "Notifications push désactivées sur cet appareil.": "Push notifications are disabled on this device.",
+  "Désactiver sur cet appareil": "Disable on this device",
+  "Activer sur cet appareil": "Enable on this device",
+  "Envoyer une notification test": "Send a test notification",
+  "Une notification test a été créée. Vérifie les notifications de tes appareils.":
+    "A test notification was created. Check your devices' notifications.",
+  "Impossible de créer la notification test.": "Could not create the test notification.",
   "Reçois une alerte dès qu'un nouveau message arrive.": "Get an alert as soon as a new message arrives.",
   "Sois averti lorsqu'un membre aime ton profil.": "Be notified when a member likes your profile.",
   "Quelqu'un a consulté ton profil": "Someone viewed your profile",

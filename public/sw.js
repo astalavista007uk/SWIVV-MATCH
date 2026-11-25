@@ -20,7 +20,7 @@ self.addEventListener("push", (event) => {
   }
   const title = payload.title || "SWIVV MATCH";
   const options = {
-    body: payload.message || "",
+    body: payload.message || "Tu as une nouvelle notification.",
     icon: payload.icon || "/favicon.png",
     badge: "/favicon.png",
     dir: "ltr",
@@ -35,11 +35,13 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     (async () => {
       const url = new URL(target, self.location.origin);
+      if (url.origin !== self.location.origin) return;
       const windowClients = await self.clients.matchAll({
         type: "window",
         includeUncontrolled: true,
       });
       for (const client of windowClients) {
+        if (!client.url.startsWith(self.location.origin)) continue;
         if ("navigate" in client) {
           await client.navigate(url.href);
           return client.focus();

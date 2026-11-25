@@ -1292,6 +1292,26 @@ export const es: Record<EnKey, string> = {
   "Reçois un résumé de l'activité sur ton profil et de tes conversations.":
     "Recibe un resumen de la actividad de tu perfil y de tus conversaciones.",
   "Notifications en temps réel": "Notificaciones en tiempo real",
+  "Notifications push": "Notificaciones push",
+  "Reçois une alerte sur cet appareil pour chaque notification, même lorsque SWIVV MATCH est fermé.":
+    "Recibe un aviso en este dispositivo por cada notificación, incluso cuando SWIVV MATCH esté cerrado.",
+  "Sur iPhone ou iPad, ajoute d'abord SWIVV MATCH à l'écran d'accueil depuis Safari, puis ouvre l'app installée pour activer les notifications.":
+    "En iPhone o iPad, añade primero SWIVV MATCH a la pantalla de inicio desde Safari y abre la app instalada para activar las notificaciones.",
+  "L'autorisation est refusée dans le navigateur. Modifie l'autorisation des notifications dans les réglages du site, puis réessaie.":
+    "El permiso está bloqueado en el navegador. Cambia el permiso de notificaciones de este sitio en los ajustes del navegador e inténtalo de nuevo.",
+  "Ce navigateur ne prend pas en charge les notifications push.": "Este navegador no admite notificaciones push.",
+  "Les notifications push ne sont pas encore configurées sur le serveur.": "Las notificaciones push aún no están configuradas en el servidor.",
+  "Connecte-toi pour activer les notifications sur cet appareil.": "Inicia sesión para activar las notificaciones en este dispositivo.",
+  "Impossible de modifier les notifications push. Vérifie ta connexion et réessaie.":
+    "No se pudieron cambiar las notificaciones push. Comprueba tu conexión e inténtalo de nuevo.",
+  "Notifications push activées sur cet appareil.": "Las notificaciones push están activadas en este dispositivo.",
+  "Notifications push désactivées sur cet appareil.": "Las notificaciones push están desactivadas en este dispositivo.",
+  "Désactiver sur cet appareil": "Desactivar en este dispositivo",
+  "Activer sur cet appareil": "Activar en este dispositivo",
+  "Envoyer une notification test": "Enviar una notificación de prueba",
+  "Une notification test a été créée. Vérifie les notifications de tes appareils.":
+    "Se creó una notificación de prueba. Comprueba las notificaciones de tus dispositivos.",
+  "Impossible de créer la notification test.": "No se pudo crear la notificación de prueba.",
   "Reçois une alerte dès qu'un nouveau message arrive.": "Recibe un aviso en cuanto llegue un mensaje nuevo.",
   "Sois averti lorsqu'un membre aime ton profil.": "Recibe un aviso cuando a un miembro le guste tu perfil.",
   "Quelqu'un a consulté ton profil": "Alguien ha visto tu perfil",

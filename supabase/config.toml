@@ -12,6 +12,9 @@ port = 55324
 [analytics]
 port = 55327
 
+[functions.swivv-push]
+verify_jwt = false
+
 [auth]
 site_url = "http://localhost:5273"
 additional_redirect_urls = ["http://localhost:5273", "http://127.0.0.1:5273"]

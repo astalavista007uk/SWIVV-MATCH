@@ -177,15 +177,17 @@ export const catchUpNotifs = createServerFn({ method: "POST" })
     const counts = { message: 0, like: 0, match: 0, view: 0, reaction: 0 };
     const recent = async (type: string, frag: string, winMs: number): Promise<boolean> => {
       try {
+        const keyed = await db.from("swivv_notifications").select("id").eq("user_id", uid).eq("type", type).eq("dedupe_key", `${type}:${frag}`).gte("created_at", ago(winMs)).limit(1);
+        if ((keyed.data ?? []).length > 0) return true;
         const r = await db.from("swivv_notifications").select("id").eq("user_id", uid).eq("type", type).gte("created_at", ago(winMs)).like("link", `%${frag}%`).limit(1);
         return (r.data ?? []).length > 0;
       } catch {
         return true;
       }
     };
-    const add = async (type: keyof typeof counts, title: string, message: string, link: string) => {
+    const add = async (type: keyof typeof counts, title: string, message: string, link: string, dedupeKey: string) => {
       try {
-        const r = await db.from("swivv_notifications").insert({ user_id: uid, type, title, message, link });
+        const r = await db.from("swivv_notifications").insert({ user_id: uid, type, title, message, link, dedupe_key: dedupeKey });
         if (!r.error) counts[type]++;
       } catch {}
     };
@@ -206,7 +208,7 @@ export const catchUpNotifs = createServerFn({ method: "POST" })
         const kind = (m as any).audio_url ? "vocal" : (m as any).image_url ? "photo" : null;
         const title = kind === "vocal" ? "Nouveau message vocal" : kind === "photo" ? "Nouvelle photo" : "Nouveau message";
         const body = kind === "vocal" ? `${m.peer_name || "Quelqu'un"} t'a envoyé un message vocal.` : kind === "photo" ? `${m.peer_name || "Quelqu'un"} t'a envoyé une photo.` : `${m.peer_name || "Quelqu'un"} t'a écrit.`;
-        await add("message", title, body, `/messagerie?peer=${m.peer_id}`);
+        await add("message", title, body, `/messagerie?peer=${m.peer_id}`, `message:${bare}`);
       }
     }
     if (on.liked) {
@@ -216,13 +218,13 @@ export const catchUpNotifs = createServerFn({ method: "POST" })
         const id = String(l.liker_id);
         if (id === uid || blocked.has(id)) continue;
         if (await recent("like", id, LIKE_WINDOW)) continue;
-        await add("like", "Nouveau like", `${await nameOf(id)} s'intéresse à ton profil.`, `/member/${id}`);
+        await add("like", "Nouveau like", `${await nameOf(id)} s'intéresse à ton profil.`, `/member/${id}`, `like:${id}`);
       }
       for (const m of latestBy((match.data ?? []) as any[], (x) => (x.user_a === uid ? String(x.user_b) : String(x.user_a)), (x) => Date.parse(x.created_at))) {
         const other = m.user_a === uid ? String(m.user_b) : String(m.user_a);
         if (!other || blocked.has(other)) continue;
         if (await recent("match", other, MATCH_WIN)) continue;
-        await add("match", "C'est un match !", `Toi et ${await nameOf(other)} vous êtes plu.`, `/messagerie?match=${other}`);
+        await add("match", "C'est un match !", `Toi et ${await nameOf(other)} vous êtes plu.`, `/messagerie?match=${other}`, `match:${other}`);
       }
     }
     if (on.viewed) {
@@ -231,7 +233,7 @@ export const catchUpNotifs = createServerFn({ method: "POST" })
         const id = String(v.viewer_id);
         if (id === uid || blocked.has(id)) continue;
         if (await recent("view", id, VIEW_CD)) continue;
-        await add("view", "Visite de profil", `${await nameOf(id)} a consulté ton profil.`, `/member/${id}`);
+        await add("view", "Visite de profil", `${await nameOf(id)} a consulté ton profil.`, `/member/${id}`, `view:${id}`);
       }
     }
     if (on.reactions) {
@@ -243,7 +245,7 @@ export const catchUpNotifs = createServerFn({ method: "POST" })
           const id = String(x.reactor_id);
           if (id === uid || blocked.has(id) || !photos.includes(String(x.photo))) continue;
           if (await recent("reaction", id, REACT_CD)) continue;
-          await add("reaction", "Réaction à ta photo", "Un membre a réagi à l'une de tes photos.", `/statistiques?tab=likes`);
+          await add("reaction", "Réaction à ta photo", "Un membre a réagi à l'une de tes photos.", `/statistiques?tab=likes`, `reaction:${id}`);
         }
       }
     }
